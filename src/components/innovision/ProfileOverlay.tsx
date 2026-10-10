@@ -458,7 +458,7 @@ export default function ProfileOverlay({
             ) : (
               <div>
                 <p style={{ margin: '0 0 18px', fontSize: '14px', lineHeight: 1.5, color: 'rgba(236,232,223,0.75)' }}>
-                  You have not registered for Innovision 2026 events yet. {isInternal ? 'As an NIT Rourkela student, your registration is free!' : 'Complete registration to secure your delegate pass.'}
+                  You have not registered for Innovision 2026 events yet. Complete registration to secure your delegate pass.
                 </p>
 
                 <button

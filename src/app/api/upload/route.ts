@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { uploadPaymentProof } from '@/lib/payment-proofs';
+import { registrationsClosedResponse, registrationsOpen } from '@/lib/registration-gate';
 import {
   buildPaymentProofPath,
   createRateLimiter,
@@ -38,10 +39,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Server-side closure: payment proofs are only accepted while registrations are open. Checked before the rate
+    // limiter, the body and any database or Storage call.
+    if (!registrationsOpen()) return registrationsClosedResponse();
+
     if (!uploadLimiter.hit(auth.user.id)) {
       return NextResponse.json(
         { error: 'Too many uploads. Please wait a few minutes and try again.' },
-        { status: 429 }
+        { status: 429, headers: { 'Retry-After': String(uploadLimiter.retryAfterSeconds(auth.user.id)) } }
       );
     }
 

@@ -226,13 +226,13 @@ export default function HomeView({ v }: { v: V }) {
             <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>OFFICIAL MERCH</p>
             <h2 style={{ margin: "0 0 18px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(40px,5.4vw,88px)", lineHeight: "1" }}>Wear the odyssey.</h2>
             <p style={{ margin: "0 0 32px", maxWidth: "420px", fontSize: "17px", lineHeight: "1.6", color: "rgba(236,232,223,.82)", textWrap: "pretty" }}>Limited-run tees, hoodies and keepsakes. Pre-order online, collect on campus during the fest.</p>
-            <a href="#/merch" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF" }} className="hv-gold-fill">
+            <a href={v.merchHref} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF" }} className="hv-gold-fill">
               <span data-scr="">VISIT THE STORE</span>
             </a>
           </div>
           <div data-reveal="" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "14px" }}>
             {v.merchTeaser.map((t, tI) => (
-              <a key={tI} href="#/merch" style={{ display: "flex", flexDirection: "column", gap: "10px", textDecoration: "none", color: "#ECE8DF" }}>
+              <a key={tI} href={v.merchHref} style={{ display: "flex", flexDirection: "column", gap: "10px", textDecoration: "none", color: "#ECE8DF" }}>
                 <div style={{ position: "relative", aspectRatio: "4 / 5", background: "#26241f", pointerEvents: "none" }}>
                   <ImageSlot id={t.slot} shape="rect" placeholder={t.ph} style={{ position: "absolute", inset: "0", width: "100%", height: "100%" }} />
                 </div>

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { clientIp, createRateLimiter, isCrossSiteMutation } from '@/lib/security';
+import { REGISTRATIONS_OPEN } from '@/config/launch';
 
 // Largest legitimate body: a 2MB upload plus multipart overhead. Bigger requests are refused before buffering.
 const MAX_API_BODY_BYTES = 3 * 1024 * 1024;
 
-// Per-IP flood limits (best-effort, per server instance; put Cloudflare rate limiting in front for global limits).
+// Per-IP flood limits. In memory, so they count PER SERVER INSTANCE: Vercel runs several, and a client spread across
+// them gets this allowance on each. Cross-instance limits need the Vercel WAF (counted per region) or a shared store.
 // Deliberately generous: many students share one campus NAT address. Per-user limits live in the routes.
 const mutationLimiter = createRateLimiter({ limit: 300, windowMs: 60 * 1000 });
 const authLimiter = createRateLimiter({ limit: 300, windowMs: 60 * 1000 });
@@ -41,16 +43,22 @@ export function proxy(request: NextRequest) {
       return NextResponse.json({ error: 'Payload Too Large' }, { status: 413 });
     }
 
-    const ip = clientIp(request.headers);
-    if (pathname.startsWith('/api/auth/') && !authLimiter.hit(ip)) return tooMany();
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && !mutationLimiter.hit(ip)) return tooMany();
+    // Only Vercel's own (overwritten) IP headers are trusted; elsewhere there is no trustworthy IP and these limits are
+    // skipped rather than keyed on a header the client picks (see clientIp).
+    const ip = clientIp(request.headers, { trustPlatformHeaders: process.env.VERCEL === '1' });
+    if (ip) {
+      if (pathname.startsWith('/api/auth/') && !authLimiter.hit(ip)) return tooMany();
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && !mutationLimiter.hit(ip)) return tooMany();
+    }
   }
 
+  // While registrations are closed, /register is a public "opening soon" page (src/config/launch.ts).
   const isRegisterPage =
-    pathname === '/register' ||
-    pathname.startsWith('/register/') ||
-    pathname === '/registration' ||
-    pathname.startsWith('/registration/');
+    REGISTRATIONS_OPEN &&
+    (pathname === '/register' ||
+      pathname.startsWith('/register/') ||
+      pathname === '/registration' ||
+      pathname.startsWith('/registration/'));
 
   const isRegisterApi =
     pathname === '/api/register' || pathname.startsWith('/api/register/');

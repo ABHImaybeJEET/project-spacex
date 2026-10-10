@@ -140,7 +140,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                           }}
                           style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)"
                         />
-                        {v.isInternal && <span style={{ fontSize: "12px", color: "oklch(0.8 0.12 85)" }}>Verified NIT Rourkela student registration (Free).</span>}
+                        {v.isInternal && <span style={{ fontSize: "12px", color: "oklch(0.8 0.12 85)" }}>Verified NIT Rourkela student.</span>}
                         {!v.isInternal && !isBlockedCollege && (
                           <span style={{ fontSize: "12px", color: "rgba(236,232,223,0.5)" }}>
                             Note: Students from ITER - SOA are not eligible to register.
@@ -255,6 +255,13 @@ export default function AuthOverlay({ v }: { v: V }) {
 <button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">REMOVE</button>
 </span>
 </div>
+<div data-s-in="" style={{ display: v.upPay.failD, alignItems: "center", justifyContent: "space-between", gap: "10px 16px", flexWrap: "wrap" }}>
+<span style={{ minWidth: "0", flex: "1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "15px" }}>{v.upPay.name}</span>
+<span style={{ display: "flex", gap: "18px" }}>
+<button type="button" onClick={v.upPay.retry} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">RETRY UPLOAD</button>
+<button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">REMOVE</button>
+</span>
+</div>
 {v.err.payfile ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.payfile}</span>) : null}
                       </div>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -311,6 +318,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                       </div>
                     </div>
 
+                    {v.err.form ? (<p role="alert" style={{ margin: "24px 0 0", fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.form}</p>) : null}
                     <div data-auth-act="" style={{ display: v.d.act, alignItems: "stretch", gap: "12px", marginTop: "32px" }}>
                       {v.canBack ? (
                         <button type="button" onClick={v.stepBack} onMouseEnter={v.hover} style={{ position: "relative", isolation: "isolate", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 26px", border: "0", cursor: "pointer", fontWeight: "700", fontSize: "14px", letterSpacing: ".08em", color: "#ECE8DF", background: "rgba(236,232,223,.7)", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)" }} style-active="transform:scale(.98)"><span style={{ position: "absolute", inset: "1.5px", zIndex: "-1", background: "#100f0e", clipPath: "polygon(11.4px 0,100% 0,100% calc(100% - 11.4px),calc(100% - 11.4px) 100%,0 100%,0 11.4px)" }}></span><span data-scr="">BACK</span></button>

@@ -373,6 +373,8 @@ UPDATE TO authenticated USING (public.is_registration_staff(auth.uid())) WITH CH
 
 -- Registrations inserted directly through the Supabase API by an end user can't choose their own status, fee,
 -- student type or email: these are derived from the verified auth account exactly like /api/register does.
+-- There is no free tier: every registration starts 'pending' at 499 whatever the email domain; student_type is only
+-- a reporting label (classifyStudentType in src/lib/security.ts).
 CREATE OR REPLACE FUNCTION public.enforce_registration_insert() RETURNS TRIGGER AS $$
 DECLARE
   v_email TEXT;
@@ -394,15 +396,9 @@ BEGIN
   NEW.registration_id := 'IV26-' || (1000 + (('x' || substr(md5(gen_random_uuid()::text), 1, 7))::bit(28)::int % 9000))::text;
   NEW.reviewed_by := NULL;
   NEW.reviewed_at := NULL;
-  IF v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN
-    NEW.student_type := 'internal';
-    NEW.status := 'confirmed';
-    NEW.amount := 0;
-  ELSE
-    NEW.student_type := 'external';
-    NEW.status := 'pending';
-    NEW.amount := 499;
-  END IF;
+  NEW.student_type := CASE WHEN v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN 'internal' ELSE 'external' END;
+  NEW.status := 'pending';
+  NEW.amount := 499;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -685,4 +681,4 @@ DROP POLICY IF EXISTS "Payment proofs: never outside the owner's folder" ON stor
 CREATE POLICY "Payment proofs: never outside the owner's folder" ON storage.objects AS RESTRICTIVE FOR
 ALL TO anon, authenticated
 USING (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text)
-WITH CHECK (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text);
+WITH CHECK (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text);

@@ -44,7 +44,7 @@ export default function Hud({ v }: { v: V }) {
         </div>
         {v.wide && (
           <nav aria-label="Primary" style={{ display: "flex", alignItems: "center", gap: "clamp(14px,2.2vw,36px)", pointerEvents: "auto" }}>
-            {v.navLinks.map((l, lI) => (
+            {v.hudLinks.map((l, lI) => (
               <a key={lI} href={l.href} onClick={l.onClick} onMouseEnter={v.hover} aria-current={l.cur === 'true' ? 'page' : undefined} className="hud-link" style={{ position: "relative", display: "inline-block", padding: "8px 0", textDecoration: "none", fontWeight: "500", fontSize: LABEL, letterSpacing: ".14em", color: "inherit", opacity: l.o, transition: "opacity .4s" }}>
                 <span data-scr="">{l.label}</span>
                 <span style={{ position: "absolute", left: "0", right: "0", bottom: "2px", height: "1.5px", background: "currentColor", transform: `scaleX(${l.bar})`, transformOrigin: "left", transition: `transform .5s ${EASE}` }}></span>

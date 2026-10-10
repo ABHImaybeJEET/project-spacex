@@ -8,6 +8,7 @@ import { csvCell, GENDER_OPTIONS, safeHttpUrl } from '@/lib/validation';
 const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === value)?.label ?? value;
 import EventsManager from './admin/EventsManager';
 import GalleryManager from './admin/GalleryManager';
+import { httpErrorMessage } from '@/lib/api-errors';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -114,8 +115,8 @@ export default function AdminDashboard({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error || 'Failed to load payment screenshot');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) throw new Error(httpErrorMessage(res) || data.error || 'Failed to load payment screenshot');
       setPreviewImage({ url: data.url, title: `Payment Screenshot · ${reg.name}` });
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Failed to load payment screenshot', 'error');
@@ -145,8 +146,8 @@ export default function AdminDashboard({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch registrations');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch registrations');
       setRegistrations(data.registrations || []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error loading registrations';
@@ -173,8 +174,8 @@ export default function AdminDashboard({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch users');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch users');
       setUsers(data.users || []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error loading users';
@@ -243,8 +244,8 @@ export default function AdminDashboard({
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update registration status');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to update registration status');
 
       showToast(`Registration ${reg.registration_id} marked as ${newStatus.toUpperCase()}`, 'success');
       // Update local state
@@ -290,8 +291,8 @@ export default function AdminDashboard({
         body: JSON.stringify({ userId, role: newRole }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to change role');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to change role');
 
       showToast(`Updated role for ${userEmail} to ${newRole.toUpperCase()}`, 'success');
       setUsers((prev) =>

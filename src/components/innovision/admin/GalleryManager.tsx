@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { UserProfile, GalleryItem } from '@/lib/supabase';
+import { httpErrorMessage } from '@/lib/api-errors';
 
 interface GalleryManagerProps {
   currentUser: UserProfile;
@@ -57,8 +58,8 @@ export default function GalleryManager({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch gallery images');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch gallery images');
       setGallery(data.gallery || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error fetching gallery';
@@ -81,9 +82,9 @@ export default function GalleryManager({
           headers,
           credentials: 'include',
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!isMounted) return;
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch gallery images');
+        if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch gallery images');
         setGallery(data.gallery || []);
       } catch (err: unknown) {
         if (!isMounted) return;
@@ -164,8 +165,8 @@ export default function GalleryManager({
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload gallery image');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to upload gallery image');
 
       showToast('Image uploaded to gallery successfully!', 'success');
       setUploadFile(null);
@@ -212,8 +213,8 @@ export default function GalleryManager({
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update photo title');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to update photo title');
 
       showToast('Gallery image title updated!', 'success');
       setIsEditTitleModalOpen(false);
@@ -248,8 +249,8 @@ export default function GalleryManager({
             credentials: 'include',
           });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed to delete photo');
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to delete photo');
 
           showToast('Image deleted from gallery.', 'info');
           setGallery((prev) => prev.filter((p) => p.id !== photo.id));
