@@ -1,4 +1,6 @@
-import type { SVGProps } from 'react';
+import type { HTMLAttributes, SVGProps } from 'react';
+
+const LOGO_SRC = '/assets/INNOVISION%20LOGO.png';
 
 /** Four-point star used throughout the design. */
 export function Sparkle(props: SVGProps<SVGSVGElement>) {
@@ -9,12 +11,24 @@ export function Sparkle(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Ringed-planet INNOVISION mark. */
-export function Logo(props: SVGProps<SVGSVGElement>) {
+/**
+ * The INNOVISION mark. The art is white on transparent, so it is drawn as a mask over currentColor and
+ * follows the surrounding text colour, like an inline SVG would. Size it with width (it stays square).
+ */
+export function Logo({ style, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
-    <svg viewBox="0 0 40 40" aria-hidden="true" {...props}>
-      <ellipse cx="20" cy="20" rx="18" ry="18" fill="none" stroke="currentColor" strokeWidth="4"></ellipse>
-      <ellipse cx="20" cy="22" rx="11" ry="7" fill="none" stroke="currentColor" strokeWidth="3.5"></ellipse>
-    </svg>
+    <span
+      aria-hidden="true"
+      {...props}
+      style={{
+        display: 'inline-block',
+        flex: 'none',
+        aspectRatio: '1',
+        backgroundColor: 'currentColor',
+        WebkitMask: `url("${LOGO_SRC}") center / contain no-repeat`,
+        mask: `url("${LOGO_SRC}") center / contain no-repeat`,
+        ...style,
+      }}
+    />
   );
 }
