@@ -1264,9 +1264,12 @@ export default class Innovision extends Component<Props, State> {
     const g = gsap, L = this.$$('[data-c-layer]'), c = this.$('[data-curtain]');
     return new Promise<void>((resolve) => {
       g.set(c, { pointerEvents: 'auto' });
-      g.set(L, { y: 0, yPercent: 100 / 3 });
+      // The banks stay on their own GPU layers for the whole fall and lift. With GSAP's default force3D 'auto' each
+      // tween ends on a 2D transform, so the pause while covered dropped the layers and the lift re-promoted five
+      // screen-sized layers at once, right as the next view paints: on phones that stutters and reads as shaking.
+      g.set(L, { y: 0, yPercent: 100 / 3, force3D: true, willChange: 'transform' });
       c?.removeAttribute('data-idle'); this.syncLoops();
-      const tl = g.timeline({ delay, onComplete: () => { g.set(c, { pointerEvents: 'none' }); c?.setAttribute('data-idle', ''); this.syncLoops(); resolve(); } });
+      const tl = g.timeline({ delay, defaults: { force3D: true }, onComplete: () => { g.set(L, { willChange: 'auto' }); g.set(c, { pointerEvents: 'none' }); c?.setAttribute('data-idle', ''); this.syncLoops(); resolve(); } });
       tl.to(L, { yPercent: -100 / 3, duration: 1.3, ease: 'power3.inOut', stagger: .09 })
         .add(() => {
           tl.pause();
