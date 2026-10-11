@@ -155,6 +155,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .hero-ringed{width:calc(var(--d) * .286);height:calc(var(--d) * .286);margin:calc(var(--d) * -.143) 0 0 calc(var(--d) * -.143)}
 .hero-planet{position:absolute;left:-14vh;bottom:-26vh;width:60vh;height:60vh}
 .hero-astro{position:absolute;right:clamp(12px,5vw,110px);bottom:max(7vh,48px);width:38vh;height:38vh}
+.hero-date{position:absolute;top:clamp(100px,12vh,142px);right:clamp(24px,4vw,64px);display:flex;flex-direction:column;align-items:flex-end;min-width:176px;padding:14px 0 12px 18px;border-top:1px solid rgba(20,19,18,.6);border-bottom:1px solid rgba(20,19,18,.28);color:#141312;text-align:right}
+.hero-date-label,.hero-date-foot{font-family:var(--font-sans);font-size:10px;font-weight:700;letter-spacing:.2em;white-space:nowrap}
+.hero-date-label{display:inline-flex;align-items:center;gap:8px}
+.hero-date-dot{width:5px;height:5px;flex:none;border-radius:50%;background:#8a6a2a;box-shadow:0 0 0 3px rgba(138,106,42,.12)}
+.hero-date-range{display:flex;align-items:center;gap:10px;margin:5px 0 1px;font-family:var(--font-display);font-size:clamp(36px,3.6vw,54px);font-weight:400;line-height:1;letter-spacing:.015em}
+.hero-date-dash{width:22px;height:1px;background:currentColor;opacity:.5}
+.hero-date-foot{color:#8a6a2a}
 .hero-copy{position:absolute;inset:0;justify-content:center;padding:6vh 16px 0}
 .hero-copy-disc{display:contents}
 /* --ls is the tracking; the same amount of left padding balances the trailing letter-space so the text centres. */
@@ -191,6 +198,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .hero-cta-secondary.hv-gold:hover{color:#8a6a2a !important}
   .hero-astro{top:calc(var(--cy) - var(--d) * .56);bottom:auto;right:max(4px,50% - var(--d) * .62);width:calc(var(--d) * .36);height:calc(var(--d) * .36)}
   .hero-planet{--p:min(60vw,38vh);left:calc(var(--p) * -.32);bottom:calc(var(--p) * -.62);width:var(--p);height:var(--p)}
+  .hero-date{top:90px;right:clamp(18px,5vw,36px);min-width:0;padding:10px 0 8px 12px}
+  .hero-date-range{font-size:34px}
   .hero-coords{display:none}
 }
 /* Phones: the buttons stack full width, so the disc gives up the extra height. */
@@ -199,6 +208,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .hero-ctas{flex-direction:column;align-items:stretch;width:min(100%,300px)}
   .hero-cta{width:100%}
   .hero-sub-rule{display:none}
+}
+@media (max-width:459px){
+  .hero-date{top:82px;right:18px}
+  .hero-date-label,.hero-date-foot{font-size:8px;letter-spacing:.16em}
+  .hero-date-range{font-size:29px;gap:7px}
+  .hero-date-dash{width:15px}
 }
 /* The closing REGISTER / EXPLORE THE WORLDS pair stacks at the same width as the hero buttons on phones. */
 @media (max-width:459px){
