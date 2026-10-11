@@ -20,7 +20,7 @@ export default function EventsChrome({ trail, children }: { trail: [string, stri
       <div className={styles.wrap}>
         <header className={styles.top}>
           <Link href="/" className={styles.brand} aria-label="INNOVISION 2026 home">
-            <Logo style={{ width: '22px', height: 'auto' }} />
+            <Logo style={{ width: '22px' }} />
             INNOVISION
           </Link>
           <nav aria-label="Breadcrumb" className={styles.crumbs}>

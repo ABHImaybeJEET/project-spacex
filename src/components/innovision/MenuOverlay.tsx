@@ -15,7 +15,7 @@ export default function MenuOverlay({ v }: { v: V }) {
         <img decoding="async" src="/assets/starfield.svg" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", opacity: ".45", pointerEvents: "none" }} />
         <div className="menu-top">
           <a href="#/" onClick={(e) => { v.closeMenu(); v.goHome(e); }} aria-label="Innovision home" className="menu-brand">
-            <Logo style={{ width: "24px", height: "auto" }} />
+            <Logo style={{ width: "24px" }} />
             <span style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "17px", letterSpacing: ".04em" }}>INNOVISION</span>
           </a>
           <button type="button" onClick={v.closeMenu} onMouseEnter={v.hover} className="menu-close">

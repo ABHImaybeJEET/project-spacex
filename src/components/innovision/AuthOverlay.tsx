@@ -4,6 +4,7 @@
 /* eslint-disable @next/next/no-img-element -- decorative/user-uploaded images not suited for next/image */
 import React, { useState } from 'react';
 import type { V } from './types';
+import { Logo } from './icons';
 import { isIterSoaCollege, isIterSoaEmail } from '@/lib/validation';
 
 export default function AuthOverlay({ v }: { v: V }) {
@@ -26,7 +27,7 @@ export default function AuthOverlay({ v }: { v: V }) {
         <div data-a-ui="" style={{ position: "relative", minHeight: "100%", display: "flex", flexDirection: "column" }}>
           <div data-a-in="" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", padding: "clamp(14px,1.8vw,26px) clamp(16px,2.6vw,44px)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
-              <svg viewBox="0 0 40 40" aria-hidden="true" style={{ width: "clamp(24px,2vw,32px)", height: "auto" }}><ellipse cx="20" cy="20" rx="18" ry="18" fill="none" stroke="currentColor" strokeWidth="4"></ellipse><ellipse cx="20" cy="22" rx="11" ry="7" fill="none" stroke="currentColor" strokeWidth="3.5"></ellipse></svg>
+              <Logo style={{ width: "clamp(24px,2vw,32px)" }} />
               <span style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(17px,1.6vw,24px)", letterSpacing: ".04em" }}>INNOVISION</span>
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: "clamp(16px,2.4vw,36px)" }}>

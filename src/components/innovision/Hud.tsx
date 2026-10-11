@@ -38,7 +38,7 @@ export default function Hud({ v }: { v: V }) {
             </>
           )}
           <a href="#/" onClick={v.goHome} aria-label="Innovision home" className="hud-link" style={{ display: "inline-flex", alignItems: "center", gap: "10px", color: "inherit", textDecoration: "none" }}>
-            <Logo style={{ width: "clamp(24px,2vw,32px)", height: "auto" }} />
+            <Logo style={{ width: "clamp(24px,2vw,32px)" }} />
             <span className={v.isDetail ? "hud-wordmark hud-wordmark-detail" : "hud-wordmark"} style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(17px,1.6vw,24px)", letterSpacing: ".04em" }}>INNOVISION</span>
           </a>
         </div>
