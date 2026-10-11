@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
 import { httpErrorMessage } from './api-errors';
+import { SITE_URL } from '@/config/site';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey =
@@ -254,10 +255,10 @@ export function getSupabaseAdmin(token?: string): SupabaseClient {
  * - passes `hd: nitrkl.ac.in` to hint Google to select @nitrkl.ac.in account
  * - records the internal intent to validate upon callback (in sessionStorage, NEVER localStorage)
  */
-/** Public site OAuth returns to. Must also be listed in Supabase -> Authentication -> URL Configuration. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://project-spacex-seven.vercel.app').replace(/\/+$/, '');
-
-/** Where Google sends the visitor back: the deployed site, or this machine when running locally (the PKCE verifier cookie lives there). */
+/**
+ * Where Google sends the visitor back: the deployed site (SITE_URL, which must also be listed in Supabase ->
+ * Authentication -> URL Configuration), or this machine when running locally (the PKCE verifier cookie lives there).
+ */
 export function getAuthRedirectUrl(): string {
   if (typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)) {
     return `${window.location.origin}/`;
