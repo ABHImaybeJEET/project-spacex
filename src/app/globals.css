@@ -178,9 +178,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .hero-cta:active{transform:translateY(1px)}
 /* Stacked screens (portrait, or narrower than 720px): the kicker, title and subtitle fit inside the disc, the buttons
    sit on the paper below it, the astronaut drifts off the disc's upper right and the storm planet tucks into the
-   bottom-left corner. The disc + buttons group is centred between the top HUD bar (72px) and a 24px bottom margin. */
+   bottom-left corner. The fest dates head the column, centred just above the disc: in the top-right corner they met
+   the astronaut whenever the screen was short for its width. The dates band (--dh) + disc + buttons group is centred
+   between the top HUD bar (72px) and a 24px bottom margin. */
 @media (max-aspect-ratio:1/1),(max-width:719px) and (min-height:520px){
-  .hero{--cta-h:48px;--ctas:var(--cta-h);--d:min(80vw,100vh - 220px,640px);--cy:calc(50% + 12px - var(--ctas) / 2)}
+  .hero{--cta-h:48px;--ctas:var(--cta-h);--dh:102px;--d:min(80vw,100vh - 220px - var(--dh),640px);--cy:calc(50% + 12px - var(--ctas) / 2 + var(--dh) / 2)}
   .hero-copy{top:calc(var(--cy) - var(--d) / 2);bottom:auto;justify-content:flex-start;padding:0 16px}
   .hero-copy-disc{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;height:var(--d)}
   /* .hero-copy starts at the disc's top edge here. */
@@ -198,19 +200,22 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .hero-cta-secondary.hv-gold:hover{color:#8a6a2a !important}
   .hero-astro{top:calc(var(--cy) - var(--d) * .56);bottom:auto;right:max(4px,50% - var(--d) * .62);width:calc(var(--d) * .36);height:calc(var(--d) * .36)}
   .hero-planet{--p:min(60vw,38vh);left:calc(var(--p) * -.32);bottom:calc(var(--p) * -.62);width:var(--p);height:var(--p)}
-  .hero-date{top:90px;right:clamp(18px,5vw,36px);min-width:0;padding:10px 0 8px 12px}
+  /* Bottom edge 12px above the disc's top, centred over it; --dh leaves room for it under the HUD. */
+  .hero-date{top:auto;bottom:calc(100% - var(--cy) + var(--d) / 2 + 12px);right:auto;left:50%;translate:-50% 0;align-items:center;min-width:0;padding:10px 14px 8px;text-align:center}
   .hero-date-range{font-size:34px}
   .hero-coords{display:none}
 }
 /* Phones: the buttons stack full width, so the disc gives up the extra height. */
 @media (max-width:459px) and (min-height:520px){
-  .hero{--cta-h:46px;--ctas:calc(var(--cta-h) * 2 + 10px);--d:min(86vw,100vh - 270px)}
+  .hero{--cta-h:46px;--ctas:calc(var(--cta-h) * 2 + 10px);--dh:90px;--d:min(86vw,100vh - 270px - var(--dh))}
+  /* The centred dates reach over the astronaut's side of the disc here, so it starts just inside the disc's top edge:
+     even at the top of its 22px bob it stays clear of the dates (whose bottom is 12px above the disc). */
+  .hero-astro{top:calc(var(--cy) - var(--d) / 2 + 12px)}
   .hero-ctas{flex-direction:column;align-items:stretch;width:min(100%,300px)}
   .hero-cta{width:100%}
   .hero-sub-rule{display:none}
 }
 @media (max-width:459px){
-  .hero-date{top:82px;right:18px}
   .hero-date-label,.hero-date-foot{font-size:8px;letter-spacing:.16em}
   .hero-date-range{font-size:29px;gap:7px}
   .hero-date-dash{width:15px}
@@ -295,6 +300,22 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 @media (orientation:portrait){
   .d-tagline{top:50%;translate:0 -50%}
   .td-tagline{top:44%}
+}
+
+/* ---------- Flagship Events (takeoff) scene (DetailView.tsx) ---------- */
+/* Wide: the ringed planet centred behind the title, the rocket off to its right. */
+.to-planet{--s:max(47vw,60vh);position:absolute;left:calc(50% - var(--s) / 2);top:calc(77% - var(--s) * 1.329);width:var(--s);pointer-events:none}
+.to-rocket{position:absolute;right:max(9%,40px);top:17%;height:min(30vh,290px);pointer-events:none}
+/* Portrait phones and tablets (the compact layout, with the tagline over the scene): one column has no room for the
+   wide layout, where the planet overflows the screen and the rocket sits on its rings over the title. The planet
+   shrinks to the upper left, the rocket gets the open sky on the right, and the tagline takes the open floor under the
+   lander instead of the middle of the screen, where the lander ends its climb (see Innovision#setupDetailScroll). */
+@media (orientation:portrait) and (max-width:1099px){
+  /* --s: the planet's size. Its art (110% wide, 4% down) ends 1.14 --s below its top: just above the title at 43%. */
+  .to-planet,.to-rocket{--s:min(70vw,40vh)}
+  .to-planet{left:-8vw;top:calc(43% - var(--s) * 1.14)}
+  .to-rocket{right:5vw;top:calc(43% - var(--s) * .6 - min(9.5vh,85px));height:min(19vh,170px)}
+  .to-tagline{top:74%}
 }
 
 /* ---------- worlds slider decoration (WorldsView.tsx) ---------- */
