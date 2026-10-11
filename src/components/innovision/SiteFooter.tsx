@@ -38,9 +38,11 @@ export default function SiteFooter({ v }: { v: V }) {
           <nav aria-label="Worlds" style={{ flex: "1 1 160px" }}>
             <p style={{ margin: "0 0 18px", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>WORLDS</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {/* Real pages for search engines and new tabs (src/app/events); a plain click opens the world in the explorer. */}
               {v.worlds.map((w, wI) => (
-                <a key={wI} href={w.href} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">{w.name}</a>
+                <a key={wI} href={w.pageHref} onClick={w.openPage} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">{w.name}</a>
               ))}
+              <a href={v.eventsHref} onClick={v.openEvents} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">All events</a>
             </div>
           </nav>
           <nav aria-label="Connect" style={{ flex: "1 1 140px" }}>

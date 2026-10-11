@@ -54,27 +54,29 @@ export default function HomeView({ v }: { v: V }) {
               <span className="hero-date-foot">NOVEMBER · NIT ROURKELA</span>
             </div>
             <div className="hero-copy" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", pointerEvents: "none" }}>
-              {/* Wide screens: display contents, so copy and buttons share one centred column. Stacked screens: a box the size of the disc. */}
-              <div className="hero-copy-disc">
-                <div data-h-kicker="" className="hero-kicker" style={{ display: "flex", alignItems: "center", color: "#ECE8DF", fontFamily: "var(--font-sans)", fontWeight: "700", whiteSpace: "nowrap" }}>
+              {/* Wide screens: display contents, so copy and buttons share one centred column. Stacked screens: a box the size of the disc.
+                  The page's one heading is the whole visible line-up: NIT ROURKELA PRESENTS / INNOVISION / 2026 · THE CELESTIAL ODYSSEY.
+                  Its parts are spans (phrasing content); the spaces between them are not rendered between flex items but keep the words apart in the text. */}
+              <h1 aria-label="NIT Rourkela presents Innovision 2026: The Celestial Odyssey" className="hero-copy-disc" style={{ margin: "0", fontSize: "inherit", fontWeight: "inherit" }}>
+                <span data-h-kicker="" className="hero-kicker" style={{ display: "flex", alignItems: "center", color: "#ECE8DF", fontFamily: "var(--font-sans)", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <span className="hero-track">NIT ROURKELA PRESENTS</span>
-                </div>
-                <h1 aria-label="Innovision" className="hero-title" style={{ display: "flex", fontFamily: "var(--font-display)", fontWeight: "400", lineHeight: ".95", letterSpacing: ".01em", color: "#fff", mixBlendMode: "difference", whiteSpace: "nowrap" }}>
+                </span>{" "}
+                <span className="hero-title" style={{ display: "flex", fontFamily: "var(--font-display)", fontWeight: "400", lineHeight: ".95", letterSpacing: ".01em", color: "#fff", mixBlendMode: "difference", whiteSpace: "nowrap" }}>
                   {v.heroChars.map((c, cI) => (
                     <span key={cI} data-h-ch="" data-attract=".22" style={{ display: "inline-block" }}>{c.ch}</span>
                   ))}
-                </h1>
+                </span>{" "}
                 {/* Radar sweep, painted just above the title with lighten: it brightens the dark disc but not the letters, so it reads
                     as passing behind INNOVISION (under the difference-blended title it dimmed them instead). Same box as the disc; the subtitle, buttons, planet and astronaut are painted after it, so they stay in front of it. */}
-                <div data-hero-sweep="" aria-hidden="true" className="hero-sweep" style={{ borderRadius: "50%", overflow: "hidden", mixBlendMode: "lighten", pointerEvents: "none" }}>
+                <span data-hero-sweep="" aria-hidden="true" className="hero-sweep" style={{ borderRadius: "50%", overflow: "hidden", mixBlendMode: "lighten", pointerEvents: "none" }}>
                   <span style={{ position: "absolute", inset: "0", borderRadius: "50%", background: "conic-gradient(from 0deg,transparent 0 292deg,rgba(236,232,223,.16) 360deg)", animation: "iv-spin 14s linear infinite" }}></span>
-                </div>
-                <div data-h-sub="" className="hero-sub" style={{ position: "relative", display: "flex", alignItems: "center", color: "oklch(0.8 0.12 85)", fontFamily: "var(--font-sans)", fontWeight: "700", whiteSpace: "nowrap" }}>
+                </span>
+                <span data-h-sub="" className="hero-sub" style={{ position: "relative", display: "flex", alignItems: "center", color: "oklch(0.8 0.12 85)", fontFamily: "var(--font-sans)", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <span className="hero-sub-rule" style={{ height: "1px", background: "currentColor" }}></span>
                   <span className="hero-track">2026 · THE CELESTIAL ODYSSEY</span>
                   <span className="hero-sub-rule" style={{ height: "1px", background: "currentColor" }}></span>
-                </div>
-              </div>
+                </span>
+              </h1>
               <div className="hero-ctas" style={{ position: "relative", zIndex: "1", display: "flex", justifyContent: "center", pointerEvents: "auto" }}>
                 <div data-h-cta="" className="hero-cta-slot">
                   <a href="#/worlds/flagship-events" onMouseEnter={v.hover} className="hero-cta hero-cta-primary hv-gold-fill" style={{ clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1), color .4s cubic-bezier(.25,1,.1,1)" }}>

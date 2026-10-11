@@ -82,6 +82,8 @@ const slowNet = () => {
   const c = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   return !!c && (!!c.saveData || c.effectiveType === 'slow-2g' || c.effectiveType === '2g');
 };
+/** A left click with no modifier: links with a page of their own (e.g. /events/...) stay in the experience for these. */
+const plainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 const LOAD_FAIL = "Couldn't load that part of the site. Check your connection and try again.";
 /** Teaser pages (src/config/launch.ts) live while their flow is closed; they open without reloading the site (leaveTo). */
 const TEASERS = [!REGISTRATIONS_OPEN && REGISTRATIONS_SOON_PATH, !MERCH_STORE_OPEN && MERCH_SOON_PATH].filter(Boolean) as string[];
@@ -2613,7 +2615,12 @@ export class Innovision extends Component<Props, State> {
         astroBottom: x.astroSit ? 'calc(100% - 7vh)' : 'calc(100% - 3.5vh)', astroH: x.astroSit ? (s.narrow ? '32vh' : '42vh') : (s.narrow ? '30vh' : '40vh'),
         onExplore: () => this.go('#/world/' + x.slug),
         onEnter: () => this.openMap(k),
+        // Footer links: crawlable /events/<slug> pages, but a plain click opens the world here, as before.
+        pageHref: '/events/' + x.slug,
+        openPage: (e: MouseEvent<HTMLAnchorElement>) => { if (plainClick(e)) { e.preventDefault(); this.go('#/world/' + x.slug); } },
       })),
+      eventsHref: '/events',
+      openEvents: (e: MouseEvent<HTMLAnchorElement>) => { if (plainClick(e)) { e.preventDefault(); this.go('#/worlds/' + WORLDS[0].slug); } },
 
       cw: (() => {
         // Events belong to the world that lists their category; an event without one shows in every world.

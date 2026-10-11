@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MERCH_STORE_OPEN } from '@/config/launch';
 import MerchDroppingSoon from '@/components/coming-soon/MerchDroppingSoon';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Exclusive Merch Dropping Soon · INNOVISION 2026',
-  description: 'The official Innovision 2026 merch collection drops soon.',
-};
+export const metadata = pageMetadata({
+  title: 'Official Merch Dropping Soon',
+  description:
+    'The official Innovision 2026 merch collection from NIT Rourkela drops soon: limited-run tees, hoodies and keepsakes, pre-ordered online and collected on campus during the fest.',
+  path: '/merch',
+});
 
 /**
  * /merch page route.

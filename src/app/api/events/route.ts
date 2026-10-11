@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { PUBLIC_EVENT_COLUMNS } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
@@ -20,7 +21,7 @@ export async function GET() {
     const { data: events, error } = await supabase
       .from('events')
       // Public columns only: no staff user ids or storage file ids.
-      .select('id, title, description, poster_url, brochure_url, category, format, duration, venue, created_at, updated_at')
+      .select(PUBLIC_EVENT_COLUMNS)
       .order('created_at', { ascending: false })
       .limit(500);
 
