@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
   // The default dev badge sits on top of the fixed HUD's INSTAGRAM link.
   // Compile/runtime errors are still surfaced with this off.
   devIndicators: false,
+  // Dev-only: lets a phone on the same Wi-Fi load HMR and other dev resources from this laptop's LAN IP.
+  // Hostnames only (no scheme/port); update it if the laptop's IPv4 address changes.
+  allowedDevOrigins: ["192.168.0.129"],
   poweredByHeader: false,
   async headers() {
     return [

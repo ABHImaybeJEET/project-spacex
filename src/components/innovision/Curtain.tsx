@@ -66,7 +66,8 @@ export default function Curtain({ v }: { v: V }) {
   return (
     <div data-curtain="" aria-hidden="true" style={{ position: "fixed", inset: "0", zIndex: "40", overflow: "hidden", pointerEvents: "none" }}>
       {LAYERS.map((l, k) => (
-        <div key={k} data-c-layer="" style={{ position: "absolute", top: "0", left: "0", width: "100%", height: "300vh", transform: "translateY(100%)" }}>
+        // Low-power mode drops two of the dark middle banks (globals.css [data-lp-skip]); the front one carries the label.
+        <div key={k} data-c-layer="" data-lp-skip={k === 1 || k === 3 ? "" : undefined} style={{ position: "absolute", top: "0", left: "0", width: "100%", height: "300vh", transform: "translateY(100%)", backfaceVisibility: "hidden" }}>
           <Clouds l={l} />
           {k === LAYERS.length - 1 ? (
             <div style={{ position: "relative", height: "calc(100vh + 4px)", margin: "-2px 0", background: l.color, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "14px", textAlign: "center", color: "#141312", padding: "0 20px" }}>
