@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- decorative layers are animated directly by GSAP */
 import { createContext, useContext } from 'react';
+import { CONTACTS } from './data';
 import type { V } from './types';
 
 /** The latest render values, for parts of memoised views that must track state. */
@@ -54,6 +55,17 @@ export default function SiteFooter({ v }: { v: V }) {
               <a href="#about" onClick={v.openAbout} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">About the fest</a>
             </div>
           </nav>
+          <div aria-label="Contact us" role="group" style={{ flex: "1 1 180px" }}>
+            <p style={{ margin: "0 0 18px", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>CONTACT US</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {CONTACTS.map((c) => (
+                <div key={c.phone} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <span style={{ fontSize: "15px", color: "#ECE8DF" }}>{c.name}</span>
+                  <a href={"tel:+91" + c.phone} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s", letterSpacing: ".04em" }} className="hv-link-paper">+91 {c.phone.slice(0, 5)} {c.phone.slice(5)}</a>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 32px", justifyContent: "space-between", alignItems: "center", paddingTop: "28px", fontSize: "14px", color: "rgba(236,232,223,.78)" }}>
           <span>© 2026 Innovision · NIT Rourkela, Odisha</span>

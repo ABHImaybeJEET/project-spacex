@@ -162,6 +162,12 @@ export const GALLERY: GalleryItem[] = ARCHIVE.map((p, i) => ({
   id: p.id, no: String(i + 1).padStart(2, '0'), title: p.title, titleU: p.title.toUpperCase(),
   imageUrl: ikWidth(p.url, 900), ...gFrame(p.height > p.width) }));
 
+/** Footer "Contact us" column: name and a 10-digit Indian mobile number (dialled as +91). */
+export const CONTACTS: { name: string; phone: string }[] = [
+  { name: 'Rishav Bansal', phone: '7978888164' },
+  { name: 'Manjeet Srichandan', phone: '7735510636' },
+];
+
 /** Top navigation: [label, key]. Events/Schedule/Gallery/Merch are routes; the rest scroll the home page. */
 export const LINKS: [string, string][] = [['Home', 'home'], ['Events', 'events'], ['Schedule', 'schedule'], ['Gallery', 'gallery'], ['Sponsors', 'sponsors'], ['Merch', 'merch']];
 /** LINKS keys left out of the navbar (top bar and phone menu) for now. Their views and routes still work. */
