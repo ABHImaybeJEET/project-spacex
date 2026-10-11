@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Logo, Sparkle } from '@/components/innovision/icons';
+import SkipIntroOnReturn from './SkipIntroOnReturn';
 import styles from './ComingSoon.module.css';
 
 type ComingSoonProps = {
@@ -26,6 +27,7 @@ type ComingSoonProps = {
 export default function ComingSoon({ eyebrow, title, lede, status, art, secondary, notes }: ComingSoonProps) {
   return (
     <div className={styles.page}>
+      <SkipIntroOnReturn />
       <img decoding="async" src="/assets/starfield.svg" alt="" className={styles.stars} />
       <div aria-hidden="true" className={styles.rings} />
 

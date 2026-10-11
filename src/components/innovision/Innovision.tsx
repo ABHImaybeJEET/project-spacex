@@ -7,6 +7,7 @@ import { CLICKABLE, preloadClick, unlockClick, playClick } from './clickSound';
 
 import { Component, createRef, memo, type ComponentType, type FormEvent, type MouseEvent, type TouchEvent, type WheelEvent } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
@@ -49,6 +50,7 @@ import {
   type GalleryPhoto,
 } from '@/lib/supabase';
 import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_STORE_OPEN, MERCH_SOON_PATH } from '@/config/launch';
+import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
 import { isIterSoaCollege, isIterSoaEmail, ITER_SOA_ERROR_MESSAGE, isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
 import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
 
@@ -81,6 +83,8 @@ const slowNet = () => {
   return !!c && (!!c.saveData || c.effectiveType === 'slow-2g' || c.effectiveType === '2g');
 };
 const LOAD_FAIL = "Couldn't load that part of the site. Check your connection and try again.";
+/** Teaser pages (src/config/launch.ts) live while their flow is closed; they open without reloading the site (leaveTo). */
+const TEASERS = [!REGISTRATIONS_OPEN && REGISTRATIONS_SOON_PATH, !MERCH_STORE_OPEN && MERCH_SOON_PATH].filter(Boolean) as string[];
 /**
  * Devices that start in low-power mode: few cores or little memory, Save-Data, or reduced motion.
  * iOS Safari reports 2-4 cores whatever the phone (anti-fingerprinting), so there only the frame-rate check judges.
@@ -120,6 +124,8 @@ interface Props {
   roverPauses?: boolean;
   /** Flagship rover driving speed multiplier (min .25). */
   roverSpeed?: number;
+  /** The app router (InnovisionApp), for client-side navigation to other pages; without it they load in full. */
+  router?: { push(href: string): void; replace(href: string): void; prefetch(href: string): void };
 }
 
 interface State {
@@ -171,7 +177,7 @@ const parts = (s: Element): SlideParts => ({
 });
 const partList = (p: SlideParts) => [p.hero, p.rot, ...p.astro, p.outline, ...p.labels, ...p.link];
 
-export default class Innovision extends Component<Props, State> {
+export class Innovision extends Component<Props, State> {
   rootRef = createRef<HTMLDivElement>();
   state: State = { view: 'loading', index: 0, dIndex: 0, about: false, compact: false, narrow: false, menu: false, toastOn: false, toastMsg: '', curtainLabel: 'INNOVISION', curtainKicker: 'NOW ENTERING',
     auth: false, authMode: 'register', step: 0, err: {} as any, busyLbl: '', user: null, files: {} as any, drag: '', copied: false, gIdx: 0, sel: {}, bag: [], bagOpen: false, added: null, schedDay: 0, schedFilter: 'all', saved: [], hudSolid: false, gBusy: false, gErr: '', gUser: null, hint: false, notice: false, coarse: false, lowPower: false, lazy: {},
@@ -191,6 +197,19 @@ export default class Innovision extends Component<Props, State> {
   hintSeen = false; _hintT?: ReturnType<typeof setTimeout>; _noticeT?: ReturnType<typeof setTimeout>;
   /** Home section to scroll to once the home view has been prepared. */
   pendingSec: string | null = null;
+  /**
+   * Whether this load skips the loader: the skipLoader prop, or a visitor coming back from a teaser page
+   * (SkipIntroOnReturn). Read once, so a dev strict-mode remount (same instance) doesn't replay the loader.
+   */
+  _skipIntro?: boolean;
+  skipIntro() {
+    if (this._skipIntro === undefined) {
+      let back = false;
+      try { back = sessionStorage.getItem(SKIP_INTRO_KEY) === '1'; sessionStorage.removeItem(SKIP_INTRO_KEY); } catch {}
+      this._skipIntro = !!this.props.skipLoader || back;
+    }
+    return this._skipIntro;
+  }
 
   // lifecycle bookkeeping
   private alive = false;
@@ -312,11 +331,25 @@ export default class Innovision extends Component<Props, State> {
       this.smoothWheel(this.$('[data-d-scroller]'));
       this.listen(window, 'hashchange', () => this.route());
       this.listen(window, 'keydown', (e) => this.onKey(e as KeyboardEvent));
-      if (this.props.skipLoader) { this.hideLoader(); this.firstPaint(); return; }
+      // A page restored from the back/forward cache doesn't boot again, so a flag set meanwhile by a teaser page
+      // must not carry over to the next real load.
+      this.listen(window, 'pageshow', (e) => { if ((e as PageTransitionEvent).persisted) { try { sessionStorage.removeItem(SKIP_INTRO_KEY); } catch {} } });
+      // Plain links to a teaser page (MERCH in the navbar, menu, footer and merch section) switch pages client-side.
+      this.listen(document, 'click', (e) => {
+        const ev = e as globalThis.MouseEvent;
+        if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+        const a = (ev.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+        if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+        const u = new URL(a.href);
+        if (u.origin !== location.origin || !TEASERS.includes(u.pathname)) return;
+        ev.preventDefault();
+        this.leaveTo(u.pathname + u.search);
+      });
+      if (this.skipIntro()) { this.hideLoader(); this.firstPaint(); return; }
       this.loaderIntro();
     }, R);
     this.cleanups.push(() => { R.setAttribute('data-booting', ''); R.querySelectorAll('[data-idle]').forEach((el) => el.removeAttribute('data-idle')); });
-    if (!this.props.skipLoader) this.runLoader().then(() => { if (this.alive) this.loaderExit(); });
+    if (!this.skipIntro()) this.runLoader().then(() => { if (this.alive) this.loaderExit(); });
 
     // Auth Middleware Route Inspector: Check for middleware redirects (?auth=login, ?required=register, ?open=register, or #register)
     if (typeof window !== 'undefined') {
@@ -631,7 +664,8 @@ export default class Innovision extends Component<Props, State> {
     this._warmed = true;
     if (slowNet()) return;
     // The overlay and view a visitor is most likely to open next are fetched ahead too (their own hover/tap also does).
-    this.cleanups.push(this.idle(() => { this.prefetch('auth'); this.prefetch('detail'); }));
+    // The teaser pages too, so REGISTER / MERCH open at once (a no-op on the dev server).
+    this.cleanups.push(this.idle(() => { this.prefetch('auth'); this.prefetch('detail'); TEASERS.forEach((p) => this.props.router?.prefetch(p)); }));
     const queue = [...PRELOAD_DEFERRED];
     let cancel = () => {}, live = true;
     const batch = () => {
@@ -1292,7 +1326,7 @@ export default class Innovision extends Component<Props, State> {
     if (v === 'worlds') return { view: 'worlds', index: f >= 0 ? f : idx };
     if (v === 'world' && f >= 0) return { view: 'detail', index: f };
     // Store closed (src/config/launch.ts): #/merch bookmarks go to the "dropping soon" page.
-    if (v === 'merch' && !MERCH_STORE_OPEN) { location.replace(MERCH_SOON_PATH); return { view: 'home', index: idx }; }
+    if (v === 'merch' && !MERCH_STORE_OPEN) { this.leaveTo(MERCH_SOON_PATH, true); return { view: 'home', index: idx }; }
     if (v === 'gallery' || v === 'merch' || v === 'schedule') return { view: v, index: idx };
     if (v === 'sponsors') return { view: 'home', section: 'sponsors', index: idx };
     return { view: 'home', index: idx };
@@ -1476,7 +1510,13 @@ export default class Innovision extends Component<Props, State> {
   showRegistrationsSoon(replace?: boolean) {
     if (typeof window === 'undefined') return;
     sessionStorage.removeItem('inv_pending_action');
-    if (replace) location.replace(REGISTRATIONS_SOON_PATH); else location.assign(REGISTRATIONS_SOON_PATH);
+    this.leaveTo(REGISTRATIONS_SOON_PATH, replace);
+  }
+  /** Goes to another page of the app: a client-side navigation (no full reload) when the router is at hand. */
+  leaveTo(href: string, replace?: boolean) {
+    const r = this.props.router;
+    if (r) { if (replace) r.replace(href); else r.push(href); return; }
+    if (replace) location.replace(href); else location.assign(href);
   }
   // @ts-ignore
   loginClick = async (e) => {
@@ -2776,3 +2816,9 @@ export default class Innovision extends Component<Props, State> {
   }
 }
 
+
+/** Innovision with the app router, so REGISTER / MERCH open their pages without reloading the site. */
+export default function InnovisionApp(props: Omit<Props, 'router'>) {
+  const router = useRouter();
+  return <Innovision {...props} router={router} />;
+}
