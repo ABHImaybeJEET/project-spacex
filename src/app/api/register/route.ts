@@ -3,6 +3,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { paymentProofExists } from '@/lib/payment-proofs';
+import { registrationsClosedResponse, registrationsOpen } from '@/lib/registration-gate';
 import {
   isDuplicatePhoneError,
   isIterSoaCollege,
@@ -11,10 +12,14 @@ import {
   PHONE_IN_USE_ERROR_MESSAGE,
 } from '@/lib/validation';
 import {
+  classifyStudentType,
   createRateLimiter,
   generateRegistrationId,
   isFilterSafeEmail,
+  NEW_REGISTRATION_STATUS,
+  NIT_ROURKELA_COLLEGE,
   readJsonObject,
+  REGISTRATION_FEE_INR,
   validateRegistrationInput,
 } from '@/lib/security';
 
@@ -32,6 +37,33 @@ async function findExistingRegistration(client: SupabaseClient, user: User, veri
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+}
+
+/**
+ * Answer to a UTR that's already taken. A retry whose first attempt was saved (but whose response was lost) also
+ * lands here, so first look for the caller's OWN registration, by the verified session user id only: a matching UTR
+ * alone never proves who registered. Otherwise the UTR belongs to someone else: 409, without any of their details.
+ */
+async function utrConflictResponse(client: SupabaseClient, userId: string) {
+  const { data: own, error } = await client
+    .from('registrations')
+    .select('*')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+  if (error) console.warn('Registration lookup after a UTR conflict failed:', error);
+  if (own) {
+    return NextResponse.json({
+      success: true,
+      alreadyRegistered: true,
+      message: 'You have already registered for Innovision 2026.',
+      registration: own,
+    });
+  }
+  return NextResponse.json(
+    { error: 'This UPI transaction ID (UTR) has already been used for another registration.' },
+    { status: 409 }
+  );
 }
 
 /**
@@ -92,25 +124,20 @@ export async function POST(req: NextRequest) {
     }
     const { user, token } = auth;
 
+    // Server-side closure: before the rate limiter, the body and any database or Storage call.
+    if (!registrationsOpen()) return registrationsClosedResponse();
+
     if (!registerLimiter.hit(user.id)) {
       return NextResponse.json(
         { error: 'Too many registration attempts. Please wait a few minutes and try again.' },
-        { status: 429 }
+        { status: 429, headers: { 'Retry-After': String(registerLimiter.retryAfterSeconds(user.id)) } }
       );
     }
 
-    // Determine student type from the identity provider's verified email, never from the request body.
+    // Student type is a reporting label from the identity provider's verified email, never from the request body.
+    // It does not change the fee, the status or what has to be submitted: every registration is paid and reviewed.
     const verifiedEmail = user.email!.toLowerCase().trim();
-    const isInternal = verifiedEmail.endsWith('@nitrkl.ac.in');
-    const studentType = isInternal ? 'internal' : 'external';
-
-    // The free, auto-confirmed internal tier is only for addresses the identity provider has verified.
-    if (isInternal && !user.email_confirmed_at) {
-      return NextResponse.json(
-        { error: 'Please verify your @nitrkl.ac.in email address before registering.' },
-        { status: 403 }
-      );
-    }
+    const studentType = classifyStudentType(verifiedEmail, !!user.email_confirmed_at);
 
     // 2. Parse and Validate Form Payload
     const body = await readJsonObject(req);
@@ -119,17 +146,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ownerId comes from the verified session: a payment proof path is only accepted inside this user's own folder.
-    const parsed = validateRegistrationInput(body.value, {
-      isInternal,
-      ownerId: user.id,
-    });
+    const parsed = validateRegistrationInput(body.value, { ownerId: user.id });
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const input = parsed.data;
+    const college = studentType === 'internal' ? NIT_ROURKELA_COLLEGE : input.college;
 
     // Exclusion rule: Students from ITER - SOA are not allowed to register
-    if (!isInternal && (isIterSoaCollege(input.college) || isIterSoaEmail(verifiedEmail))) {
+    if (isIterSoaCollege(college) || isIterSoaEmail(verifiedEmail)) {
       return NextResponse.json(
         { error: ITER_SOA_ERROR_MESSAGE },
         { status: 403 }
@@ -154,43 +179,32 @@ export async function POST(req: NextRequest) {
     }
 
     // A UPI transaction can only pay for one registration.
-    if (input.utr) {
-      const { data: utrOwner } = await adminClient
-        .from('registrations')
-        .select('id')
-        .eq('utr', input.utr)
-        .neq('status', 'rejected')
-        .limit(1)
-        .maybeSingle();
-      if (utrOwner) {
-        return NextResponse.json(
-          { error: 'This UPI transaction ID (UTR) has already been used for another registration.' },
-          { status: 409 }
-        );
-      }
-    }
+    const { data: utrOwner } = await adminClient
+      .from('registrations')
+      .select('id')
+      .eq('utr', input.utr)
+      .neq('status', 'rejected')
+      .limit(1)
+      .maybeSingle();
+    if (utrOwner) return utrConflictResponse(adminClient, user.id);
 
-    // The proof must be an object this user actually uploaded (checked with their own token, so Storage RLS only
-    // lets them see their own folder).
-    if (input.payment_proof_path && !(await paymentProofExists(token, input.payment_proof_path))) {
+    // The proof (required for everyone) must be an object this user actually uploaded (checked with their own token,
+    // so Storage RLS only lets them see their own folder).
+    if (!(await paymentProofExists(token, input.payment_proof_path))) {
       return NextResponse.json(
         { error: 'Payment screenshot not found. Please re-upload your screenshot.' },
         { status: 400 }
       );
     }
 
-    // 4. Status and Fee Logic:
-    // Internal students: ₹0 fee, auto-CONFIRMED, no payment or approval required!
-    // External students: ₹499 fee, pending review by IT-Team.
-    const status = isInternal ? 'confirmed' : 'pending';
-    const amount = isInternal ? 0 : 499;
-
+    // 4. Status and fee are server constants, the same for every registrant (no free tier): any status, amount or
+    // student_type in the body is ignored. Staff confirm or reject after checking the payment.
     // 5. Insert Registration into Database (retrying if the random IV26-XXXX id collides)
     const basePayload = {
       user_id: user.id,
       name: input.name,
       email: verifiedEmail,
-      college: isInternal ? 'National Institute of Technology Rourkela' : input.college,
+      college,
       phone: input.phone,
       enrollment_no: input.enrollment_no,
       gender: input.gender,
@@ -198,8 +212,8 @@ export async function POST(req: NextRequest) {
       // Only the private storage object path is stored, never a URL or the image itself.
       payment_proof_path: input.payment_proof_path,
       utr: input.utr,
-      amount,
-      status,
+      amount: REGISTRATION_FEE_INR,
+      status: NEW_REGISTRATION_STATUS,
     };
 
     let newReg = null;
@@ -214,12 +228,10 @@ export async function POST(req: NextRequest) {
       regError = result.error;
       if (!regError) break;
       if (regError.code !== '23505') break;
-      // Unique violation on utr: another registration claimed this UTR between the pre-check and the insert.
+      // Unique violation on utr: another registration claimed this UTR between the pre-check and the insert (possibly
+      // this user's own concurrent submit, when the UTR index is checked before the user_id index).
       if (/utr/i.test(`${regError.message} ${regError.details ?? ''}`)) {
-        return NextResponse.json(
-          { error: 'This UPI transaction ID (UTR) has already been used for another registration.' },
-          { status: 409 }
-        );
+        return utrConflictResponse(adminClient, user.id);
       }
       if (isDuplicatePhoneError(regError)) {
         return NextResponse.json({ error: PHONE_IN_USE_ERROR_MESSAGE }, { status: 409 });
@@ -259,9 +271,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: isInternal
-        ? 'Registration confirmed for NIT Rourkela student!'
-        : 'Registration submitted successfully. Pending verification.',
+      message: 'Registration submitted successfully. Pending verification.',
       registration: newReg,
     });
   } catch (err: unknown) {

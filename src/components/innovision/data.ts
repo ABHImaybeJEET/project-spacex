@@ -149,6 +149,8 @@ export const G_MAX = (GALLERY.length - 1) * GAP + 900;
 
 /** Top navigation: [label, key]. Events/Schedule/Gallery/Merch are routes; the rest scroll the home page. */
 export const LINKS: [string, string][] = [['Home', 'home'], ['Events', 'events'], ['Schedule', 'schedule'], ['Gallery', 'gallery'], ['Sponsors', 'sponsors'], ['Merch', 'merch']];
+/** LINKS keys left out of the navbar (top bar and phone menu) for now. Their views and routes still work. */
+export const NAVBAR_HIDDEN: string[] = ['schedule'];
 
 /** Frames in the home page's gallery tunnel: [caption, x offset, y offset, aspect ratio]. */
 export const TUNNEL: [string, string, string, string][] = [['Opening night', '-15vw', '-6vh', '4 / 3'], ['Hackathon floor', '17vw', '7vh', '3 / 4'], ['Robo Wars arena', '-18vw', '9vh', '4 / 3'], ['Guest lecture', '15vw', '-10vh', '1 / 1'], ['Project expo', '-8vw', '-11vh', '3 / 4'], ['Closing ceremony', '6vw', '5vh', '16 / 10']];

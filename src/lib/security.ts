@@ -5,6 +5,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { isIP } from 'node:net';
 
 /* ---------------------------------------------------------------------------------------------------------------
  * Upload validation
@@ -232,9 +233,10 @@ export interface RegistrationInput {
   phone: string;
   enrollment_no: string | null;
   gender: RegistrationGender;
-  /** Storage object path in the private payment-proofs bucket (never a URL). */
-  payment_proof_path: string | null;
-  utr: string | null;
+  /** Storage object path in the private payment-proofs bucket (never a URL). Always required. */
+  payment_proof_path: string;
+  /** 12-digit UPI transaction id. Always required. */
+  utr: string;
 }
 
 /** Must match GENDER_OPTIONS in validation.ts and the registrations.gender CHECK in supabase/schema.sql. */
@@ -249,12 +251,31 @@ const optionalString = (v: unknown): string | null | undefined =>
   v === undefined || v === null ? null : typeof v === 'string' ? v : undefined;
 
 /**
+ * The one registration fee (INR) and the status every new registration starts in. There is no free or auto-confirmed
+ * tier: every registrant, whatever their email domain, pays and is reviewed by staff. Never read from the request.
+ */
+export const REGISTRATION_FEE_INR = 499;
+export const NEW_REGISTRATION_STATUS = 'pending';
+
+export const NIT_ROURKELA_COLLEGE = 'National Institute of Technology Rourkela';
+
+/**
+ * Reporting label only ('internal' = NIT Rourkela): it has no effect on the fee, status or payment requirements.
+ * Derived from the identity provider's verified email, never from the request body. Must match
+ * enforce_registration_insert() in supabase/schema.sql.
+ */
+export function classifyStudentType(email: string, emailConfirmed: boolean): 'internal' | 'external' {
+  return emailConfirmed && email.trim().toLowerCase().endsWith('@nitrkl.ac.in') ? 'internal' : 'external';
+}
+
+/**
  * Validates and normalises the body of POST /api/register. Mirrors the rules the registration form already
- * enforces client-side, so legitimate submissions are unaffected.
+ * enforces client-side, so legitimate submissions are unaffected. The same rules apply to every registrant: a
+ * payment proof and a UTR are always required.
  */
 export function validateRegistrationInput(
   body: unknown,
-  opts: { isInternal: boolean; ownerId: string }
+  opts: { ownerId: string }
 ): RegistrationValidation {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return { ok: false, error: 'Invalid request body.' };
@@ -269,7 +290,7 @@ export function validateRegistrationInput(
   const proofPath = optionalString(b.payment_proof_path);
   const rawUtr = optionalString(b.utr);
 
-  if (!name || !rawPhone || (!opts.isInternal && !college)) {
+  if (!name || !rawPhone || !college) {
     return { ok: false, error: 'Missing required fields: name, college, and phone are mandatory.' };
   }
   if (enrollment === undefined || proofPath === undefined || rawUtr === undefined) {
@@ -278,7 +299,7 @@ export function validateRegistrationInput(
   if (name.length < 2 || name.length > 100) {
     return { ok: false, error: 'Name must be between 2 and 100 characters.' };
   }
-  if (!opts.isInternal && (college.length < 3 || college.length > 200)) {
+  if (college.length < 3 || college.length > 200) {
     return { ok: false, error: 'College name must be between 3 and 200 characters.' };
   }
   if (!(REGISTRATION_GENDERS as readonly string[]).includes(gender)) {
@@ -295,23 +316,8 @@ export function validateRegistrationInput(
     return { ok: false, error: 'Enrollment number contains invalid characters.' };
   }
 
-  if (opts.isInternal) {
-    return {
-      ok: true,
-      data: {
-        name,
-        college,
-        phone,
-        enrollment_no: enrollment_no || null,
-        gender: gender as RegistrationGender,
-        payment_proof_path: null,
-        utr: null,
-      },
-    };
-  }
-
   if (!proofPath) {
-    return { ok: false, error: 'Payment screenshot is required for external students.' };
+    return { ok: false, error: 'Payment screenshot is required.' };
   }
   // The path is only accepted inside the caller's own folder (ownerId comes from the verified session), so a
   // registration can never reference another user's proof. /api/register then checks the object really exists.
@@ -387,6 +393,8 @@ export function isCrossSiteMutation(req: {
 export interface RateLimiter {
   /** Records a hit for `key`; returns false once `limit` hits have been seen inside the window. */
   hit(key: string, now?: number): boolean;
+  /** Whole seconds (at least 1) until `key`'s current window ends, for a `Retry-After` header on a refusal. */
+  retryAfterSeconds(key: string, now?: number): number;
 }
 
 export function createRateLimiter({ limit, windowMs }: { limit: number; windowMs: number }): RateLimiter {
@@ -404,20 +412,56 @@ export function createRateLimiter({ limit, windowMs }: { limit: number; windowMs
       b.count += 1;
       return b.count <= limit;
     },
+    retryAfterSeconds(key, now = Date.now()) {
+      const resetAt = buckets.get(key)?.resetAt ?? now;
+      return Math.max(1, Math.ceil((resetAt - now) / 1000));
+    },
   };
 }
 
 /**
- * Best-effort client IP for rate-limit keys. Behind Cloudflare, `CF-Connecting-IP` is set by the edge and can't be
- * spoofed by the client (as long as the origin only accepts traffic from Cloudflare); the others are fallbacks.
+ * Client IP for per-IP rate-limit keys, or null when no trustworthy address is available.
+ *
+ * Only headers the hosting platform sets are used. On Vercel the edge overwrites `x-real-ip` / `x-forwarded-for` with
+ * the connecting client's address "to prevent IP spoofing" (Vercel docs, request headers), so `trustPlatformHeaders`
+ * is true only there (`VERCEL=1`). Headers the platform passes through unchanged, such as `cf-connecting-ip`,
+ * `true-client-ip` or `forwarded`, are chosen by the client and are never read.
+ *
+ * null (off Vercel, or a missing/malformed value) means "skip per-IP limits", never one shared bucket: a shared
+ * bucket would let a single client get every visitor refused. The per-user limits in the routes still apply.
+ * IPv6 addresses are keyed by their /64, since one subscriber typically controls a whole /64.
  */
-export function clientIp(headers: { get(name: string): string | null }): string {
-  return (
-    headers.get('cf-connecting-ip')?.trim() ||
-    headers.get('x-real-ip')?.trim() ||
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
-  );
+export function clientIp(
+  headers: { get(name: string): string | null },
+  { trustPlatformHeaders }: { trustPlatformHeaders: boolean }
+): string | null {
+  if (!trustPlatformHeaders) return null;
+  return rateLimitIpKey(headers.get('x-real-ip')) ?? rateLimitIpKey(headers.get('x-forwarded-for')?.split(',')[0]);
+}
+
+function rateLimitIpKey(raw: string | null | undefined): string | null {
+  const ip = raw?.trim().toLowerCase();
+  if (!ip || ip.length > 64) return null;
+  const version = isIP(ip);
+  if (version === 4) return ip;
+  if (version !== 6) return null;
+
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(ip);
+  if (mapped && isIP(mapped[1]) === 4) return mapped[1];
+
+  // Expand to 8 hextets (an embedded IPv4 tail counts as two), then keep the first four.
+  let s = ip.split('%')[0];
+  const tail = /^(.*:)(\d{1,3}(?:\.\d{1,3}){3})$/.exec(s);
+  if (tail) {
+    const [a, b, c, d] = tail[2].split('.').map(Number);
+    s = `${tail[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const [head, rest] = s.split('::');
+  const left = head ? head.split(':') : [];
+  const right = rest === undefined ? [] : rest ? rest.split(':') : [];
+  const groups = rest === undefined ? left : [...left, ...Array(8 - left.length - right.length).fill('0'), ...right];
+  if (groups.length !== 8) return null;
+  return `${groups.slice(0, 4).map((g) => parseInt(g, 16).toString(16)).join(':')}::/64`;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------

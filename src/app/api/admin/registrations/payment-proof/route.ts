@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 
 /**
  * GET /api/admin/registrations/payment-proof?id=<registration uuid>
- * IT-Team/Admin only. Returns a short-lived signed URL for the registration's private payment screenshot.
+ * Registration-Team/Admin only. Returns a short-lived signed URL for the registration's private payment screenshot.
  * Staff have no Storage read access of their own: this route is the only way to view a proof.
  */
 export async function GET(req: NextRequest) {

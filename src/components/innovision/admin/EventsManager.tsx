@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { UserProfile, EventItem } from '@/lib/supabase';
 import { isValidGoogleDriveUrl } from '@/lib/validation';
+import { httpErrorMessage } from '@/lib/api-errors';
 
 interface EventsManagerProps {
   currentUser: UserProfile;
@@ -88,8 +89,8 @@ export default function EventsManager({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch events');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch events');
       setEvents(data.events || []);
       if (data.notice) {
         showToast(data.notice, 'info');
@@ -115,9 +116,9 @@ export default function EventsManager({
           headers,
           credentials: 'include',
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!isMounted) return;
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch events');
+        if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch events');
         setEvents(data.events || []);
         if (data.notice) {
           showToast(data.notice, 'info');
@@ -223,8 +224,8 @@ export default function EventsManager({
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload event');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to upload event');
 
       showToast(`Event "${uploadTitle}" published successfully!`, 'success');
 
@@ -306,8 +307,8 @@ export default function EventsManager({
         body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update event');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to update event');
 
       showToast(`Event "${editTitle}" updated successfully!`, 'success');
       setIsEditModalOpen(false);
@@ -343,8 +344,8 @@ export default function EventsManager({
             credentials: 'include',
           });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed to delete event');
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to delete event');
 
           showToast(`Event "${event.title}" deleted.`, 'info');
           setEvents((prev) => prev.filter((ev) => ev.id !== event.id));

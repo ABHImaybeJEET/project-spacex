@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
+import { httpErrorMessage } from './api-errors';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey =
@@ -503,7 +504,7 @@ export async function updateUserPhone(
     });
     const result = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { success: false, error: result.error || 'Failed to save phone number. Please try again.' };
+      return { success: false, error: httpErrorMessage(res) || result.error || 'Failed to save phone number. Please try again.' };
     }
     return { success: true, profile: result.profile as UserProfile };
   } catch {
@@ -599,7 +600,14 @@ export async function fetchUserRegistrationServer(userId: string, email?: string
  */
 export async function createRegistration(
   regData: Omit<Registration, 'id' | 'created_at' | 'updated_at'>
-): Promise<{ success: boolean; registration?: Registration; alreadyRegistered?: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  registration?: Registration;
+  alreadyRegistered?: boolean;
+  error?: string;
+  /** HTTP status of a failed request; undefined when no response arrived (network error). */
+  status?: number;
+}> {
   try {
     const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
@@ -614,7 +622,8 @@ export async function createRegistration(
       body: JSON.stringify(regData),
     });
 
-    const result = await res.json();
+    // A rate limit or crash at the platform edge may answer with HTML, not our JSON.
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (result.registration) {
         if (typeof window !== 'undefined') {
@@ -625,7 +634,11 @@ export async function createRegistration(
         }
         return { success: true, registration: result.registration, alreadyRegistered: true };
       }
-      return { success: false, error: result.message || result.error || 'Registration failed' };
+      return {
+        success: false,
+        status: res.status,
+        error: httpErrorMessage(res) || result.message || result.error || 'Registration failed',
+      };
     }
 
     if (result.registration && typeof window !== 'undefined') {
@@ -635,9 +648,9 @@ export async function createRegistration(
       } catch {}
     }
     return { success: true, registration: result.registration, alreadyRegistered: !!result.alreadyRegistered };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to create registration';
-    return { success: false, error: message };
+  } catch {
+    // No response (offline, connection dropped): nothing tells us whether it was saved, so no automatic retry.
+    return { success: false, error: 'Network error. Please check your connection and try again.' };
   }
 }
 

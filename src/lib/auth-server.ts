@@ -123,7 +123,7 @@ export async function verifyRegistrationStaff(req: NextRequest): Promise<StaffAu
   return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase };
 }
 
-/** Like verifyStaff, but only lets the 'admin' role through. */
+/** Like verifyEventStaff / verifyRegistrationStaff, but only lets the 'admin' role through. */
 export async function verifyAdmin(req: NextRequest): Promise<StaffAuthResult> {
   const auth = await getAuthenticatedUser(req);
   if (!auth) {

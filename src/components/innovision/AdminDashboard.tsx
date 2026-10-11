@@ -8,6 +8,7 @@ import { csvCell, GENDER_OPTIONS, safeHttpUrl } from '@/lib/validation';
 const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === value)?.label ?? value;
 import EventsManager from './admin/EventsManager';
 import GalleryManager from './admin/GalleryManager';
+import { httpErrorMessage } from '@/lib/api-errors';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -24,8 +25,11 @@ export default function AdminDashboard({
   const isItTeam = currentUser.role === 'it-team';
   const isRegTeam = currentUser.role === 'registration-team';
   const isStaff = isAdmin || isItTeam || isRegTeam;
+  // Registration review (list, payment proofs, approve/reject) is Admin + Registration-Team only, matching
+  // verifyRegistrationStaff on the server. IT-Team manages events and gallery and never requests registration data.
+  const canReviewRegistrations = isAdmin || isRegTeam;
 
-  const defaultTab = isAdmin || isRegTeam ? 'registrations' : 'events';
+  const defaultTab = canReviewRegistrations ? 'registrations' : 'events';
   const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users'>(defaultTab);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -106,7 +110,7 @@ export default function AdminDashboard({
   // Payment screenshots live in a private bucket: ask the server for a short-lived signed URL (staff only).
   const [proofBusyId, setProofBusyId] = useState<string | null>(null);
   const viewPaymentProof = async (reg: Registration) => {
-    if (!reg.id) return;
+    if (!reg.id || !canReviewRegistrations) return;
     try {
       setProofBusyId(reg.id);
       const token = await getAuthToken();
@@ -114,8 +118,8 @@ export default function AdminDashboard({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error || 'Failed to load payment screenshot');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) throw new Error(httpErrorMessage(res) || data.error || 'Failed to load payment screenshot');
       setPreviewImage({ url: data.url, title: `Payment Screenshot · ${reg.name}` });
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Failed to load payment screenshot', 'error');
@@ -126,6 +130,7 @@ export default function AdminDashboard({
 
   // Fetch registrations
   const fetchRegistrations = useCallback(async () => {
+    if (!canReviewRegistrations) return;
     try {
       setLoadingRegs(true);
       setErrorMsg('');
@@ -145,8 +150,8 @@ export default function AdminDashboard({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch registrations');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch registrations');
       setRegistrations(data.registrations || []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error loading registrations';
@@ -154,7 +159,7 @@ export default function AdminDashboard({
     } finally {
       setLoadingRegs(false);
     }
-  }, [statusFilter, typeFilter, searchReg]);
+  }, [statusFilter, typeFilter, searchReg, canReviewRegistrations]);
 
   // Fetch users (Admin only: IT-Team cannot access users)
   const fetchUsers = useCallback(async () => {
@@ -173,8 +178,8 @@ export default function AdminDashboard({
         headers,
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch users');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to fetch users');
       setUsers(data.users || []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error loading users';
@@ -187,16 +192,16 @@ export default function AdminDashboard({
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
-      fetchRegistrations();
+      if (canReviewRegistrations) fetchRegistrations();
       if (isAdmin) fetchUsers();
     }, 0);
     return () => clearTimeout(timer);
-  }, [isOpen, fetchRegistrations, fetchUsers, isAdmin]);
+  }, [isOpen, fetchRegistrations, fetchUsers, isAdmin, canReviewRegistrations]);
 
   // Active tab: 'users' is strictly admin-only; staff have their own tabs
   let activeTab = tab;
   if (tab === 'users' && !isAdmin) activeTab = defaultTab;
-  if (tab === 'registrations' && !isAdmin && !isRegTeam) activeTab = defaultTab;
+  if (tab === 'registrations' && !canReviewRegistrations) activeTab = defaultTab;
   if ((tab === 'events' || tab === 'gallery') && !isAdmin && !isItTeam) activeTab = defaultTab;
 
   if (!isOpen || !isStaff) return null;
@@ -222,6 +227,7 @@ export default function AdminDashboard({
   };
 
   const executeUpdateStatus = async (reg: Registration, newStatus: 'confirmed' | 'rejected') => {
+    if (!canReviewRegistrations) return;
     try {
       setActionBusyId(reg.id || reg.registration_id);
       const token = await getAuthToken();
@@ -243,8 +249,8 @@ export default function AdminDashboard({
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update registration status');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to update registration status');
 
       showToast(`Registration ${reg.registration_id} marked as ${newStatus.toUpperCase()}`, 'success');
       // Update local state
@@ -290,8 +296,8 @@ export default function AdminDashboard({
         body: JSON.stringify({ userId, role: newRole }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to change role');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to change role');
 
       showToast(`Updated role for ${userEmail} to ${newRole.toUpperCase()}`, 'success');
       setUsers((prev) =>
@@ -782,7 +788,7 @@ export default function AdminDashboard({
 
           {/* Navigation Tabs */}
           <nav style={{ display: 'flex', gap: '8px', marginLeft: '24px' }}>
-            {(isAdmin || isRegTeam) && (
+            {canReviewRegistrations && (
             <button
               id="tab-registrations"
               type="button"

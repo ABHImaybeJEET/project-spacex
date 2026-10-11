@@ -134,6 +134,11 @@ BEGIN
   ALTER TABLE public.registrations ADD CONSTRAINT registrations_registration_id_format_check
     CHECK (registration_id ~ '^IV26-[0-9]{4}$') NOT VALID;
 
+  -- Profiles created before the 'registration-team' role existed still carry the old role CHECK (CREATE TABLE IF NOT
+  -- EXISTS never updates it), which would refuse every assignment of the new role. Same list as the table definition.
+  ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+  ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
+    CHECK (role IN ('user', 'it-team', 'registration-team', 'admin'));
   ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_full_name_check;
   ALTER TABLE public.profiles ADD CONSTRAINT profiles_full_name_check
     CHECK (full_name IS NULL OR char_length(full_name) <= 120) NOT VALID;
@@ -373,6 +378,8 @@ UPDATE TO authenticated USING (public.is_registration_staff(auth.uid())) WITH CH
 
 -- Registrations inserted directly through the Supabase API by an end user can't choose their own status, fee,
 -- student type or email: these are derived from the verified auth account exactly like /api/register does.
+-- There is no free tier: every registration starts 'pending' at 499 whatever the email domain; student_type is only
+-- a reporting label (classifyStudentType in src/lib/security.ts).
 CREATE OR REPLACE FUNCTION public.enforce_registration_insert() RETURNS TRIGGER AS $$
 DECLARE
   v_email TEXT;
@@ -394,15 +401,9 @@ BEGIN
   NEW.registration_id := 'IV26-' || (1000 + (('x' || substr(md5(gen_random_uuid()::text), 1, 7))::bit(28)::int % 9000))::text;
   NEW.reviewed_by := NULL;
   NEW.reviewed_at := NULL;
-  IF v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN
-    NEW.student_type := 'internal';
-    NEW.status := 'confirmed';
-    NEW.amount := 0;
-  ELSE
-    NEW.student_type := 'external';
-    NEW.status := 'pending';
-    NEW.amount := 499;
-  END IF;
+  NEW.student_type := CASE WHEN v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN 'internal' ELSE 'external' END;
+  NEW.status := 'pending';
+  NEW.amount := 499;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -586,7 +587,18 @@ DELETE TO authenticated USING (public.is_event_staff(auth.uid()));
 
 -- 9. FUNCTION PRIVILEGES
 -- The role-helper functions are SECURITY DEFINER; don't let anonymous callers probe arbitrary users' roles via RPC.
--- (authenticated keeps EXECUTE because the RLS policies above call is_admin / is_staff.)
+-- (authenticated keeps EXECUTE because the RLS policies above call is_admin / is_event_staff / is_registration_staff.)
+-- is_staff() was split into is_event_staff() and is_registration_staff(). Databases created before the split still
+-- have it, and the oldest version answers for ANY uid with EXECUTE left to anon (anyone could probe who is staff).
+-- No policy above uses it any more, so remove it; if something added outside this script still depends on it, keep
+-- it but make sure nobody can call it.
+DO $$
+BEGIN
+  DROP FUNCTION IF EXISTS public.is_staff(UUID);
+EXCEPTION WHEN dependent_objects_still_exist THEN
+  RAISE NOTICE 'public.is_staff(uuid) kept (other objects depend on it); EXECUTE revoked from everyone';
+  REVOKE EXECUTE ON FUNCTION public.is_staff(UUID) FROM PUBLIC, anon, authenticated;
+END $$;
 REVOKE EXECUTE ON FUNCTION public.get_user_role(UUID) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.is_admin(UUID) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.is_event_staff(UUID) FROM PUBLIC, anon;
@@ -685,4 +697,4 @@ DROP POLICY IF EXISTS "Payment proofs: never outside the owner's folder" ON stor
 CREATE POLICY "Payment proofs: never outside the owner's folder" ON storage.objects AS RESTRICTIVE FOR
 ALL TO anon, authenticated
 USING (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text)
-WITH CHECK (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text);
+WITH CHECK (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text);

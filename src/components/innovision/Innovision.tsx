@@ -12,7 +12,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import {
   A, WORLDS, PRELOAD_CRITICAL, PRELOAD_DEFERRED, HERO_SPARKS, LOADER_SPARKS, STATUS, SCRAMBLE, GAP, GALLERY, G_MAX,
-  LINKS, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, SPONSOR_TIERS, TITLE_SPONSOR, inr, type Product, type WorldKey,
+  LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, SPONSOR_TIERS, TITLE_SPONSOR, inr, type Product, type WorldKey,
 } from './data';
 import HomeView from './HomeView';
 import WorldsView from './WorldsView';
@@ -48,7 +48,9 @@ import {
   type EventItem,
   type GalleryPhoto,
 } from '@/lib/supabase';
+import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_STORE_OPEN, MERCH_SOON_PATH } from '@/config/launch';
 import { isIterSoaCollege, isIterSoaEmail, ITER_SOA_ERROR_MESSAGE, isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
+import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
 
 gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin);
 
@@ -322,7 +324,10 @@ export default class Innovision extends Component<Props, State> {
       const isAuthRequired = search.get('required') === 'register' || search.get('auth') === 'login';
       const isOpenRegister = search.get('open') === 'register' || window.location.hash === '#register';
 
-      if (isAuthRequired) {
+      // Registrations closed (src/config/launch.ts): a register deep link lands on the "opening soon" page instead.
+      if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
+        this.showRegistrationsSoon(true);
+      } else if (isAuthRequired) {
         setTimeout(() => {
           this.openAuth('login');
           this.toast('Please log in to register.');
@@ -1283,6 +1288,8 @@ export default class Innovision extends Component<Props, State> {
     const f = WORLDS.findIndex((w) => w.slug === k || w.key === k), idx = this.state.index;
     if (v === 'worlds') return { view: 'worlds', index: f >= 0 ? f : idx };
     if (v === 'world' && f >= 0) return { view: 'detail', index: f };
+    // Store closed (src/config/launch.ts): #/merch bookmarks go to the "dropping soon" page.
+    if (v === 'merch' && !MERCH_STORE_OPEN) { location.replace(MERCH_SOON_PATH); return { view: 'home', index: idx }; }
     if (v === 'gallery' || v === 'merch' || v === 'schedule') return { view: v, index: idx };
     if (v === 'sponsors') return { view: 'home', section: 'sponsors', index: idx };
     return { view: 'home', index: idx };
@@ -1445,6 +1452,8 @@ export default class Innovision extends Component<Props, State> {
     const t = e && e.currentTarget;
     // A click before the session check finishes waits for it, so a signed-in visitor isn't sent to log in.
     if (!this._authReady.done) await this._authReady.p;
+    // Registrations closed (src/config/launch.ts): anyone without a pass goes to the "opening soon" page.
+    if (!REGISTRATIONS_OPEN && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
     if (!this.state.user) {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('inv_pending_action', 'register');
@@ -1460,6 +1469,12 @@ export default class Innovision extends Component<Props, State> {
     const disc = t && t.closest && t.closest('[data-hero]') ? this.$('[data-hero-disc]') : null;
     this.openAuth('register', disc || t, !!disc);
   };
+  /** Leaves for the "registrations opening soon" page (/register while REGISTRATIONS_OPEN is false). */
+  showRegistrationsSoon(replace?: boolean) {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem('inv_pending_action');
+    if (replace) location.replace(REGISTRATIONS_SOON_PATH); else location.assign(REGISTRATIONS_SOON_PATH);
+  }
   // @ts-ignore
   loginClick = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -1868,6 +1883,9 @@ export default class Innovision extends Component<Props, State> {
   async openAuth(mode, src, fromDisc) {
     if (!this.$ || !gsap || this.authBusy || this.authClosing) return;
 
+    // Registrations closed (src/config/launch.ts): every route into the registration form ends at the "opening soon" page.
+    if (mode === 'register' && !REGISTRATIONS_OPEN && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
+
     // Strict Auth Middleware Guard: Block access to registration if unauthenticated
     if (mode === 'register' && !this.state.user) {
       if (typeof window !== 'undefined') {
@@ -2003,6 +2021,8 @@ export default class Innovision extends Component<Props, State> {
 
     if (m === s.authMode || s.busyLbl) return;
 
+    if (m === 'register' && !REGISTRATIONS_OPEN) { this.showRegistrationsSoon(); return; }
+
     // Strict Auth Middleware: Intercept switching to register without login
     if (m === 'register' && !s.user) {
       if (typeof window !== 'undefined') {
@@ -2103,9 +2123,10 @@ export default class Innovision extends Component<Props, State> {
         body: formData,
       });
 
-      const data = await res.json();
+      // A rate limit or crash at the platform edge may answer with HTML, not our JSON.
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to upload the screenshot');
+        throw Object.assign(new Error(httpErrorMessage(res) || data.error || 'Failed to upload the screenshot'), { status: res.status });
       }
 
       this.setState((st) => ({
@@ -2124,12 +2145,19 @@ export default class Innovision extends Component<Props, State> {
         },
       }));
     } catch (err: any) {
+      if (this._up && this._up[kind]) this._up[kind].kill();
+      // Rate limited, server error or offline: keep the chosen file so the student can retry it by hand once they have
+      // waited (never automatically). Anything else (wrong type, too big, already registered) needs a different file.
+      const keep = isTransientFailure(err?.status);
       this.setState((st) => ({
-        files: { ...st.files, [kind]: null },
+        files: { ...st.files, [kind]: keep ? { name: f.name, size: f.size, url: previewUrl, pdf: !isImg, status: 'failed', file: f } : null },
       }));
-      this.fail({ [ek]: err?.message || 'Upload failed. Please try again.' });
+      if (!keep && previewUrl) URL.revokeObjectURL(previewUrl);
+      this.fail({ [ek]: err?.status ? err.message : 'Upload failed. Please check your connection and try again.' });
     }
   };
+  // @ts-ignore
+  retryUpload(kind) { const f = (this.state.files || {})[kind]; if (f && f.status === 'failed' && f.file) this.takeFile(kind, f.file); }
   // @ts-ignore
   runUpload(kind) {
     const bar = this.$('[data-up-bar="' + kind + '"]'), pct = this.$('[data-up-pct="' + kind + '"]'), o = { v: 0 };
@@ -2140,7 +2168,7 @@ export default class Innovision extends Component<Props, State> {
     paint();
   // @ts-ignore
     this._up[kind] = gsap.to(o, { v: 100, duration: this.reduce ? .3 : 1.3, ease: 'power2.inOut', onUpdate: paint, onComplete: () => {
-      this.setState((st) => (st.files[kind] ? { files: { ...st.files, [kind]: { ...st.files[kind], status: 'done' } } } : null), () => this.scan(kind));
+      this.setState((st) => (st.files[kind] && st.files[kind].status === 'up' ? { files: { ...st.files, [kind]: { ...st.files[kind], status: 'done' } } } : null), () => this.scan(kind));
     } });
   }
   // @ts-ignore
@@ -2248,63 +2276,14 @@ export default class Innovision extends Component<Props, State> {
       if (this.fail(err)) return;
       this.reg = { name, college, email, phone, enrollment_no, gender };
 
-      // INTERNAL NIT RKL STUDENTS: AUTO-CONFIRMED (NO PAYMENT OR ADMIN APPROVAL)
-      if (isInternal) {
-        this.wait('CONFIRMING', 1000).then(async () => {
-          const regId = this.newId();
-          const regPayload = {
-            registration_id: regId,
-            user_id: user.id,
-            name,
-            email: user.email,
-            college: 'National Institute of Technology, Rourkela',
-            phone,
-            enrollment_no,
-            gender,
-            student_type: 'internal' as const,
-            amount: 0,
-            status: 'confirmed' as const, // Auto-confirmed! No approval needed!
-          };
-
-          const saveRes = await createRegistration(regPayload);
-          const savedReg = saveRes.registration || (saveRes.success ? regPayload : null);
-          if (!savedReg) {
-            this.toast(saveRes.error || 'Registration failed');
-            this.setState({ busyLbl: '' });
-            return;
-          }
-
-          this.pass = {
-            name: savedReg.name || name,
-            college: 'National Institute of Technology, Rourkela',
-            id: savedReg.registration_id || regId,
-            email: user.email,
-            status: 'CONFIRMED',
-          };
-
-          playClick();
-          this.toast(saveRes.alreadyRegistered ? 'You are already registered. Here is your pass.' : 'Registration confirmed. Welcome to Innovision 2026.');
-
-          this.setState(
-            {
-              authMode: 'pass',
-              step: 4,
-              registration: savedReg as Registration,
-              busyLbl: '',
-            },
-            () => this.passReveal()
-          );
-        });
-        return;
-      }
-
-      // External students proceed to Step 1 (payment)
+      // Every student, NIT Rourkela included, continues to Step 1 (payment).
       this.toStep(1);
     } else if (s.step === 1) {
       this.toStep(2);
     } else if (s.step === 2) {
       const fp = files.pay, utr = v('utr').replace(/\s+/g, '');
       if (!fp) err.payfile = 'Upload the screenshot of your payment.';
+      else if (fp.status === 'failed') err.payfile = 'Your screenshot did not upload. Use RETRY UPLOAD to send it again.';
       else if (fp.status !== 'done' || !fp.remotePath) err.payfile = 'Hold on, your screenshot is still uploading.';
       if (!/^\d{12}$/.test(utr)) err.utr = 'UTR numbers are 12 digits. Check the payment details in your UPI app.';
       if (this.fail(err)) return;
@@ -2321,11 +2300,12 @@ export default class Innovision extends Component<Props, State> {
           phone: r.phone,
           enrollment_no: r.enrollment_no,
           gender: r.gender,
-          student_type: 'external' as const,
+          // student_type, amount and status are decided by the server (the body's values are ignored).
+          student_type: (isInternal ? 'internal' : 'external') as Registration['student_type'],
           payment_proof_path: fp.remotePath,
           utr,
-          amount: 499,
-          status: 'pending' as const, // PENDING FOR EXTERNAL
+          amount: this.fee(),
+          status: 'pending' as const,
         };
 
         if (!isInternal && (isIterSoaCollege(r.college) || isIterSoaEmail(user.email))) {
@@ -2338,6 +2318,12 @@ export default class Innovision extends Component<Props, State> {
         const savedReg = saveRes.registration || (saveRes.success ? regPayload : null);
         if (!savedReg) {
           this.toast(saveRes.error || 'Registration failed');
+          if (isTransientFailure(saveRes.status)) {
+            // Rate limited, server error or offline: stay on this step with the UTR and screenshot intact, so the
+            // student can submit again by hand once they have waited. Nothing is resubmitted automatically.
+            this.setState({ busyLbl: '', err: { form: saveRes.error || 'Registration failed' } });
+            return;
+          }
           this.setState({
             busyLbl: '',
             step: 0,
@@ -2388,7 +2374,7 @@ export default class Innovision extends Component<Props, State> {
   authVals(s) {
   // @ts-ignore
     const am = s.authMode, st = s.step, reg = am === 'register', show = (b) => (b ? 'flex' : 'none'), gold = 'oklch(0.8 0.12 85)', cream = '#ECE8DF', bad = 'oklch(0.74 0.15 35)';
-    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', payfile: '', utr: '', lemail: '', lid: '' }, s.err);
+    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
     const bc = {}, inv = {};
   // @ts-ignore
     Object.keys(E).forEach((k) => { bc[k] = E[k] ? bad : 'rgba(236,232,223,.28)'; inv[k] = String(!!E[k]); });
@@ -2407,20 +2393,17 @@ export default class Innovision extends Component<Props, State> {
     const up = (kind, ek, prompt) => {
       const f = files[kind], dz = s.drag === kind;
       return {
-        emptyD: show(!f), prevD: f ? 'block' : 'none', busyD: show(!!f && f.status === 'up'), rowD: show(!!f && f.status === 'done'), hasImg: !!(f && f.url), pdfD: show(!!f && f.pdf),
+        emptyD: show(!f), prevD: f ? 'block' : 'none', busyD: show(!!f && f.status === 'up'), rowD: show(!!f && f.status === 'done'), failD: show(!!f && f.status === 'failed'), hasImg: !!(f && f.url), pdfD: show(!!f && f.pdf),
         url: (f && f.url) || '', name: f ? f.name : '', size: f ? this.fmtSize(f.size) : '',
         bc: dz ? gold : E[ek] ? bad : 'rgba(236,232,223,.32)', bg: dz ? 'rgba(220,183,106,.1)' : 'rgba(236,232,223,.03)', prompt: dz ? 'Release to upload' : prompt,
-        pick: this.pickFile(kind), over: this.dragOver(kind), leave: this.dragLeave(kind), drop: this.dropFile(kind), remove: () => this.removeFile(kind), replace: () => this.replaceFile(kind),
+        pick: this.pickFile(kind), over: this.dragOver(kind), leave: this.dragLeave(kind), drop: this.dropFile(kind), remove: () => this.removeFile(kind), replace: () => this.replaceFile(kind), retry: () => this.retryUpload(kind),
       };
     };
     const showRail = reg || (am === 'pass' && st === 4);
     const notes = [regVals.name, 'by UPI', 'Submitted'];
 
-    // Rail steps differ for internal vs external students:
-    // Internal students do not pay or need admin approval (1 direct step)
-    const railSteps = isInternal
-      ? [['DETAILS', 'Roll no & phone number', 'DETAILS']]
-      : [['DETAILS', 'Name, gender, college, phone', 'DETAILS'], ['PAYMENT', 'by UPI', 'PAY'], ['CONFIRM', 'Screenshot and transaction ID', 'CONFIRM']];
+    // Same three steps for every student: there is no free tier.
+    const railSteps = [['DETAILS', 'Name, gender, college, phone', 'DETAILS'], ['PAYMENT', 'by UPI', 'PAY'], ['CONFIRM', 'Screenshot and transaction ID', 'CONFIRM']];
 
     return {
       noUser: !s.user, hasUser: !!s.user, showLogin: !s.narrow, loginClick: this.loginClick, noDrop: (e) => e.preventDefault(),
@@ -2429,9 +2412,9 @@ export default class Innovision extends Component<Props, State> {
       authCols: s.narrow ? 'minmax(0,1fr)' : 'minmax(0,.9fr) minmax(0,1fr)',
       authTitle: reg ? 'Claim your seat' : am === 'login' ? 'Welcome back' : "You're on board",
       authSub: reg
-        ? (isInternal ? 'NIT Rourkela student registration: Instant auto-confirmed entry (Free).' : 'Three short stops to register for Innovision 2026 at NIT Rourkela.')
+        ? 'Three short stops to register for Innovision 2026 at NIT Rourkela.'
         : am === 'login' ? 'Sign in using your Google account.' : 'Your boarding pass is ready. See you at NIT Rourkela.',
-      railD: show(showRail && !s.narrow && !isInternal), hprogD: showRail && s.narrow && !isInternal ? 'grid' : 'none',
+      railD: show(showRail && !s.narrow), hprogD: showRail && s.narrow ? 'grid' : 'none',
       prog: railSteps.map(([label, hint, short], k) => {
         const done = k < st, cur = k === st && reg, back = done && reg;
         return {
@@ -2441,7 +2424,7 @@ export default class Innovision extends Component<Props, State> {
           lock: !back || !!s.busyLbl, cursor: back ? 'pointer' : 'default', go: () => this.railGo(k), aria: label + (done ? ', done. Go back to edit' : cur ? ', current step' : ''),
         };
       }),
-      d: { s0: show(reg && st === 0 && !!s.user), s2: show(reg && st === 1 && !isInternal && !!s.user), s3: show(reg && st === 2 && !isInternal && !!s.user), login: show(am === 'login' || (reg && !s.user)), pass: show(am === 'pass'), act: show(reg && !!s.user) },
+      d: { s0: show(reg && st === 0 && !!s.user), s2: show(reg && st === 1 && !!s.user), s3: show(reg && st === 2 && !!s.user), login: show(am === 'login' || (reg && !s.user)), pass: show(am === 'pass'), act: show(reg && !!s.user) },
       err: E, bc, inv, genderOptions: GENDERS,
       upPay: up('pay', 'payfile', 'Drop the screenshot here or browse (Max 1MB)'),
       fee, upi, copyUpi: this.copyUpi, copyLbl: s.copied ? 'COPIED' : 'COPY',
@@ -2452,11 +2435,11 @@ export default class Innovision extends Component<Props, State> {
       switchQ: !s.user ? 'Authentication required' : 'Need to register?',
       switchLbl: !s.user ? 'SIGN IN' : 'REGISTER',
       switchQD: s.narrow ? 'none' : 'inline',
-      canBack: reg && st > 0 && !isInternal, stepBack: this.stepBack,
-      submitLbl: s.busyLbl || (am === 'login' ? 'LOG IN' : isInternal ? 'CONFIRM REGISTRATION (FREE)' : ['CONTINUE TO PAYMENT', "I'VE PAID", 'SUBMIT REGISTRATION'][st] || 'CONTINUE'),
+      canBack: reg && st > 0, stepBack: this.stepBack,
+      submitLbl: s.busyLbl || (am === 'login' ? 'LOG IN' : ['CONTINUE TO PAYMENT', "I'VE PAID", 'SUBMIT REGISTRATION'][st] || 'CONTINUE'),
       busy: !!s.busyLbl, busyO: s.busyLbl ? .72 : 1,
-      passName: P.name || '', passCollege: P.college || '', passCollegeD: P.college ? 'block' : 'none', passId: P.id || P.registration_id || '', passStatus: P.status ? P.status.toUpperCase() : (isInternal ? 'CONFIRMED' : 'PAYMENT UNDER REVIEW'),
-      passNote: (P.status === 'CONFIRMED' || (isInternal && !P.status)) ? 'Show this pass at the registration desk when you arrive at NIT Rourkela.' : (P.status === 'REJECTED' ? 'Your registration was declined. Please contact the helpdesk.' : 'We will email ' + (P.email || 'you') + ' once your payment is verified by the IT-Team.'),
+      passName: P.name || '', passCollege: P.college || '', passCollegeD: P.college ? 'block' : 'none', passId: P.id || P.registration_id || '', passStatus: P.status ? P.status.toUpperCase() : 'PAYMENT UNDER REVIEW',
+      passNote: P.status === 'CONFIRMED' ? 'Show this pass at the registration desk when you arrive at NIT Rourkela.' : (P.status === 'REJECTED' ? 'Your registration was declined. Please contact the helpdesk.' : 'We will email ' + (P.email || 'you') + ' once your payment is verified by the IT-Team.'),
       exploreFromPass: this.exploreFromPass,
       googleLogin: this.googleLogin, gBusy: s.gBusy, gErr: s.gErr, gLbl: s.gBusy ? 'Waiting for Google…' : 'Continue with Google',
       gNote: reg && st === 0 && s.user ? 'Signed in as ' + s.user.email + (isInternal ? ' (NIT RKL Student)' : '') + '.' : '',
@@ -2493,10 +2476,12 @@ export default class Innovision extends Component<Props, State> {
     const s = this.state, i = s.index, w = WORLDS[i], dw = WORLDS[s.dIndex], nx = WORLDS[(s.dIndex + 1) % WORLDS.length];
     const navOn = s.view === 'worlds' || s.view === 'detail';
     const act = s.view === 'merch' ? 'merch' : s.view === 'gallery' ? 'gallery' : s.view === 'schedule' ? 'schedule' : navOn ? 'events' : 'home';
+    // Store closed (src/config/launch.ts): MERCH links leave for the "dropping soon" page.
+    const merchHref = MERCH_STORE_OPEN ? '#/merch' : MERCH_SOON_PATH;
     const routed = (k: string) => k === 'events' || k === 'merch' || k === 'gallery' || k === 'schedule';
     const navLinks = LINKS.map(([label, k]) => ({
       label: label.toUpperCase(), name: label, cur: String(k === act) as 'true' | 'false', o: k === act ? 1 : .68, bar: k === act ? 1 : 0, dc: k === act ? 'oklch(0.8 0.12 85)' : '#ECE8DF',
-      href: k === 'events' ? '#/worlds/' + w.slug : k === 'merch' ? '#/merch' : k === 'gallery' ? '#/gallery' : k === 'schedule' ? '#/schedule' : '#/',
+      href: k === 'events' ? '#/worlds/' + w.slug : k === 'merch' ? merchHref : k === 'gallery' ? '#/gallery' : k === 'schedule' ? '#/schedule' : '#/',
       onClick: (e: MouseEvent<HTMLAnchorElement>) => {
         if (routed(k)) { if (this.state.about || this.state.menu) this.setState({ about: false, menu: false }); return; }
         e.preventDefault(); this.goSection(k === 'home' ? null : k);
@@ -2506,14 +2491,15 @@ export default class Innovision extends Component<Props, State> {
     const count = lines.reduce((a, l) => a + l.qty, 0), total = lines.reduce((a, l) => a + l.qty * l.p.price, 0);
     const cartOn = s.view === 'merch' && count > 0;
     return {
-      navLinks, footLinks: navLinks.slice(0, 5), wide: !s.compact,
+      // Navbar (top bar and phone menu) hides Schedule; the view, #/schedule route and footer link stay.
+      navLinks, hudLinks: navLinks.filter((_, i) => !NAVBAR_HIDDEN.includes(LINKS[i][1])), footLinks: navLinks.slice(0, 5), wide: !s.compact, merchHref,
       // Wide screens open the About drawer; compact screens open the full-screen menu.
       // The MENU button only exists on compact screens; wide screens show LOG IN in its place.
       menuButton: () => { this.openLazy('menu', { menu: true }); },
       menuExpanded: s.menu,
       menuLogin: (e: MouseEvent<HTMLAnchorElement>) => { this.setState({ menu: false }); this.loginClick(e); },
       goHome: (e: MouseEvent) => { e.preventDefault(); this.goSection(null); },
-      topNav: navLinks.map((l) => ({ label: l.label, labelCap: l.name, href: l.href, menuColor: l.dc, cur: l.cur === 'true', onClick: l.onClick })),
+      topNav: navLinks.filter((_, i) => !NAVBAR_HIDDEN.includes(LINKS[i][1])).map((l) => ({ label: l.label, labelCap: l.name, href: l.href, menuColor: l.dc, cur: l.cur === 'true', onClick: l.onClick })),
       linkGo: this.linkGo,
       menuVis: (s.menu ? 'visible' : 'hidden') as 'visible' | 'hidden', menuDelay: s.menu ? '0s' : '.9s', menuClip: s.menu ? 'circle(150% at 100% 0%)' : 'circle(0% at 100% 0%)', menuHidden: !s.menu,
       closeMenu: () => this.setState({ menu: false }),
