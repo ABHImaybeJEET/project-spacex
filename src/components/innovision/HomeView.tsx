@@ -202,13 +202,15 @@ export default function HomeView({ v }: { v: V }) {
             <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>GALLERY</p>
             <h2 style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(34px,4.4vw,68px)", lineHeight: "1" }}>Into the archive</h2>
             <p style={{ margin: "0", fontSize: "16px", lineHeight: "1.6", color: "rgba(236,232,223,.82)", textWrap: "pretty" }}>Keep scrolling to fly through moments from Innovision past.</p>
-            <a href="#/gallery" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "24px", padding: "15px 26px", textDecoration: "none", fontWeight: "700", fontSize: "14px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF", pointerEvents: "auto" }} className="hv-gold-fill">
+          </header>
+          <div style={{ position: "absolute", left: "clamp(20px,4vw,64px)", right: "clamp(20px,4vw,64px)", bottom: "calc(clamp(16px,2.6vw,44px) + 64px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "16px", pointerEvents: "none" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "10px", fontFamily: "var(--font-display)", fontWeight: "400" }}>
+              <span data-t-count="" style={{ fontSize: "clamp(36px,4vw,60px)", lineHeight: "1" }}>01</span>
+              <span style={{ fontSize: "18px", color: "rgba(236,232,223,.7)" }}>/ {v.tunnelTotal}</span>
+            </div>
+            <a href="#/gallery" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: "0", padding: "15px 26px", textDecoration: "none", fontWeight: "700", fontSize: "14px", letterSpacing: ".06em", whiteSpace: "nowrap", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF", pointerEvents: "auto" }} className="hv-gold-fill">
               <span data-scr="">VIEW FULL GALLERY</span>
             </a>
-          </header>
-          <div style={{ position: "absolute", left: "clamp(20px,4vw,64px)", bottom: "calc(clamp(16px,2.6vw,44px) + 64px)", display: "flex", alignItems: "baseline", gap: "10px", fontFamily: "var(--font-display)", fontWeight: "400", pointerEvents: "none" }}>
-            <span data-t-count="" style={{ fontSize: "clamp(36px,4vw,60px)", lineHeight: "1" }}>01</span>
-            <span style={{ fontSize: "18px", color: "rgba(236,232,223,.7)" }}>/ {v.tunnelTotal}</span>
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 # Innovision 2026 · The Celestial Odyssey
 
-The official website of **Innovision 2026**, the techno-management fest of **NIT Rourkela** (13–15 November 2026).
+The official website of **Innovision 2026**, the technical fest of **NIT Rourkela** (13–15 November 2026).
 
 The site takes visitors through four "worlds" of events, with a scroll-driven home page, an event explorer, a 3D
 photo gallery, a schedule, a merch store and Google sign-in for fest registration. Staff manage it from an admin

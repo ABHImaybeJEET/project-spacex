@@ -27,9 +27,11 @@ export interface World {
   /** Asset file names shown in the mission tickets' portholes (cycled). */
   gates: string[];
   coord: string;
-  /** Drifting decoration on the worlds slide: image, left, top, height, rotation. */
+  /** Drifting decoration on the worlds slide: image, left (or 'auto' with decoRight), top, height, rotation. */
   deco: string;
   decoL: string;
+  /** Distance from the right edge, for a decoration placed on the right (decoL: 'auto'). */
+  decoRight?: string;
   decoT: string;
   decoH: string;
   decoR: string;
@@ -57,7 +59,9 @@ export const WORLDS: World[] = [
   { key: 'takeoff', slug: 'flagship-events', name: 'Flagship Events', category: 'Technical Events', accent: 'oklch(0.56 0.13 32)', accentL: 'oklch(0.76 0.11 38)', ink: 'oklch(0.3 0.08 32)', tint: 'oklch(0.94 0.02 55)', tint2: 'oklch(0.85 0.045 40)',
     planet: A + 'planet-moon.webp', astro: '', astroSit: false, rover: true,
     gates: ['indian-astronaut.webp', 'astronaut-eva.webp', 'rocket.svg', 'capsule.svg'],
-    coord: 'RA 05h 35m · DEC −05° 23′', deco: A + 'rocket.svg', decoL: 'clamp(28px,9vw,180px)', decoT: '31%', decoH: 'min(22vh, 210px)', decoR: '-14deg',
+    coord: 'RA 05h 35m · DEC −05° 23′',
+    // The rover parks on the planet's upper-left rim, so the rocket flies in the open sky on the right, clear of its mast.
+    deco: A + 'rocket.svg', decoL: 'auto', decoRight: '8vw', decoT: '22%', decoH: 'min(22vh, 210px)', decoR: '-14deg',
     statL: 'Mission 01', statR: 'Tech Arena', tagline: 'Code. Build. Break the atmosphere.',
     intro: 'Strap in for the technical arena of Innovision. Hackathons, robotics and coding battles where ideas get their launch thrust. Bring your crew, your laptop and your wildest builds.',
     specs: [['Category', 'Technical'], ['Format', 'Solo & team'], ['Launch pad', 'NIT Rourkela'], ['Fuel', 'Code & circuits'], ['Status', 'Boarding soon']],
