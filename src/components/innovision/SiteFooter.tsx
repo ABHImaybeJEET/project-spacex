@@ -48,8 +48,8 @@ export default function SiteFooter({ v }: { v: V }) {
           <nav aria-label="Connect" style={{ flex: "1 1 140px" }}>
             <p style={{ margin: "0 0 18px", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>CONNECT</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <a href="https://www.instagram.com/" target="_blank" rel="noopener" style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">Instagram</a>
-              <a href="https://www.linkedin.com/" target="_blank" rel="noopener" style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">LinkedIn</a>
+              <a href="https://www.instagram.com/inno.nitr_official?psln=bWNqdmk1c3V4eWFl" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">Instagram</a>
+              <a href="https://www.linkedin.com/company/innovision-nitrkl/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">LinkedIn</a>
               <a href="https://www.youtube.com/" target="_blank" rel="noopener" style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">YouTube</a>
               <a href="#about" onClick={v.openAbout} style={{ textDecoration: "none", color: "#ECE8DF", fontSize: "15px", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">About the fest</a>
             </div>

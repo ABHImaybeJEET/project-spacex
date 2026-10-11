@@ -63,12 +63,12 @@ export const WORLDS: World[] = [
     categories: ['flagship events'],
     missions: [['Hackathon', 'A non-stop build sprint. Ship a working prototype before the countdown hits zero.', 'Team · 2–4', '36 hrs'], ['Robo Wars', 'Bring your bot into the arena. Last machine standing takes the crown.', 'Team · up to 5', 'Knockout'], ['Code Sprint', 'Competitive programming under pressure. Fast logic, faster fingers.', 'Solo', '3 hrs'], ['Circuit Lab', 'Design, debug and demo hardware that works on the first try.', 'Team · 2', '4 hrs']] },
   { key: 'spotlight', slug: 'standout-events', name: 'Standout Events', category: 'Signature Showcases', accent: 'oklch(0.55 0.12 250)', accentL: 'oklch(0.77 0.09 250)', ink: 'oklch(0.3 0.08 250)', tint: 'oklch(0.94 0.018 250)', tint2: 'oklch(0.85 0.04 250)',
-    // An astronaut planting the INNOVISION flag on the moon's crest, flag outward. The art is pinned by the middle of its
-    // boots (26.3% across, 98.2% down): shifted 12% right so the figure and flag sit centred, tilted 4° to the curve there,
-    // and raised from the container (3.5vh below the hero's top) to the crest (0.8% of the diameter down), boots just in the rim.
+    // An astronaut planting the INNOVISION flag on the moon's crest. The pole lands beside the right boot so its base stays visible.
+    // The art is pinned between its boots (24% across, 96% down): shifted 12% right, tilted 4° to the curve there,
+    // and lowered into the moon's crest enough for the pole tip and boots to meet its surface.
     // It keeps its own colours (the tricolour patch and the navy mark), so it is not run through the mono filter.
-    planet: A + 'planet-moon.webp', astro: A + 'astronaut-flag.webp', astroSit: false,
-    astroStyle: { height: 'calc(min(112vw, 150vh) * .3)', transformOrigin: '26.3% 98.2%', transform: 'translate(12%, calc(2.8% - 3.5vh + min(112vw, 150vh) * .008)) rotate(-4deg)', filter: 'contrast(1.05) drop-shadow(0 18px 30px rgba(0,0,0,.35))' },
+    planet: A + 'planet-moon.webp', astro: A + 'astronaut-flag-planted.png', astroSit: false,
+    astroStyle: { height: 'calc(min(112vw, 150vh) * .3)', transformOrigin: '24% 96%', transform: 'translate(12%, calc(6% - 3.5vh + min(112vw, 150vh) * .008)) rotate(-4deg)', filter: 'contrast(1.05) drop-shadow(0 18px 30px rgba(0,0,0,.35))' },
     gates: ['satellite.webp', 'astronaut-eva.webp', 'planet-ringed.webp', 'rocket.svg'],
     coord: 'RA 06h 45m · DEC −16° 43′', deco: A + 'satellite.webp', decoL: '64vw', decoT: '14vh', decoH: 'min(24vh, 230px)', decoR: '-10deg', decoWideOnly: true,
     statL: 'Mission 02', statR: 'Spotlight', tagline: 'Where the brightest stars take the stage.', sub: 'Showcases · Challenges · Spectacles',
@@ -114,7 +114,7 @@ export const PRELOAD_CRITICAL = ['planet-tide.webp', 'planet-mars.webp', 'planet
  * roughly in the order a visitor meets it: worlds slider, the flagship world, the rest. (The transition curtain is drawn in code.)
  */
 export const PRELOAD_DEFERRED = ['planet-moon.webp', 'planet-mercury.webp', 'rocket.svg', 'satellite.webp', 'receiver.webp', 'mesa.svg',
-  'lab.webp', 'lander.webp', 'astronaut-eva.webp', 'astronaut-flag.webp', 'astronaut-lunar.webp', 'astronaut-snowboard.webp', 'capsule.svg',
+  'lab.webp', 'lander.webp', 'astronaut-eva.webp', 'astronaut-flag-planted.png', 'astronaut-lunar.webp', 'astronaut-snowboard.webp', 'capsule.svg',
   'moon-full.webp', 'moon-cratered.webp', 'planet-crescent.webp'];
 
 /** loading="lazy" for an image in a secondary view, unless it is PRELOAD_CRITICAL art (cached already, shared with the first screen). */
