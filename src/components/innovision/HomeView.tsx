@@ -48,6 +48,11 @@ export default function HomeView({ v }: { v: V }) {
                 <Sparkle data-twinkle="" style={{ display: "block", width: "100%", height: "100%" }} />
               </div>
             ))}
+            <div className="hero-date" role="group" aria-label="Innovision 2026 fest dates: 13th to 15th November" style={{ pointerEvents: "none" }}>
+              <span className="hero-date-label"><span className="hero-date-dot" aria-hidden="true" /> FEST DATES / 2026</span>
+              <span className="hero-date-range">13<span className="hero-date-dash" aria-hidden="true" />15</span>
+              <span className="hero-date-foot">NOVEMBER · NIT ROURKELA</span>
+            </div>
             <div className="hero-copy" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", pointerEvents: "none" }}>
               {/* Wide screens: display contents, so copy and buttons share one centred column. Stacked screens: a box the size of the disc. */}
               <div className="hero-copy-disc">
@@ -102,7 +107,7 @@ export default function HomeView({ v }: { v: V }) {
               </div>
             </div>
             <CornerFrame color="rgba(20,19,18,.5)">
-              <span className="hero-coords" style={{ position: "absolute", left: "6px", top: "50%", transform: "translateY(-50%) rotate(180deg)", writingMode: "vertical-rl", fontSize: "11px", fontWeight: "700", letterSpacing: ".3em", color: "#141312" }}>22.2533° N · 84.9011° E · NIT ROURKELA</span>
+              <span className="hero-coords" style={{ position: "absolute", left: "6px", top: "42%", transform: "translateY(-50%) rotate(180deg)", writingMode: "vertical-rl", whiteSpace: "nowrap", fontSize: "11px", fontWeight: "700", letterSpacing: ".3em", color: "#141312" }}>22.2533° N · 84.9011° E · NIT ROURKELA</span>
             </CornerFrame>
             {/* Scroll dimming (z-index 1 like the buttons, which must stay over the planet on phones): black at opacity a matches filter: brightness(1 - a) on the whole hero, but
                 fades on the compositor instead of re-filtering the full-screen scene every frame. */}

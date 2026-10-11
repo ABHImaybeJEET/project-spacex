@@ -47,7 +47,7 @@ export default function MenuOverlay({ v }: { v: V }) {
               {!v.showLogin && v.authReady && !v.noUser && <a href="#profile" onClick={v.openProfile} aria-label={v.profileAria} className="hv-sand">PROFILE</a>}
               {!v.showLogin && v.authReady && !v.noUser && <a href="#logout" onClick={v.menuLogout} className="hv-sand">LOG OUT</a>}
               <a href="#about" onClick={v.openAbout} className="hv-sand">ABOUT</a>
-              <a href="https://www.instagram.com/" target="_blank" rel="noopener" className="hv-sand">INSTAGRAM</a>
+              <a href="https://www.instagram.com/inno.nitr_official?psln=bWNqdmk1c3V4eWFl" target="_blank" rel="noopener noreferrer" className="hv-sand">INSTAGRAM</a>
             </div>
           </div>
         </div>
