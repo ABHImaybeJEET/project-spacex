@@ -32,6 +32,8 @@ export interface World {
   decoT: string;
   decoH: string;
   decoR: string;
+  /** Hides the decoration on phones, where it has no clear space on the slide. */
+  decoWideOnly?: boolean;
   statL: string;
   statR: string;
   tagline: string;
@@ -68,7 +70,7 @@ export const WORLDS: World[] = [
     planet: A + 'planet-moon.webp', astro: A + 'astronaut-flag.webp', astroSit: false,
     astroStyle: { height: 'calc(min(112vw, 150vh) * .3)', transformOrigin: '26.3% 98.2%', transform: 'translate(12%, calc(2.8% - 3.5vh + min(112vw, 150vh) * .008)) rotate(-4deg)', filter: 'contrast(1.05) drop-shadow(0 18px 30px rgba(0,0,0,.35))' },
     gates: ['satellite.webp', 'astronaut-eva.webp', 'planet-ringed.webp', 'rocket.svg'],
-    coord: 'RA 06h 45m · DEC −16° 43′', deco: A + 'satellite.webp', decoL: '64vw', decoT: '14vh', decoH: 'min(24vh, 230px)', decoR: '-10deg',
+    coord: 'RA 06h 45m · DEC −16° 43′', deco: A + 'satellite.webp', decoL: '64vw', decoT: '14vh', decoH: 'min(24vh, 230px)', decoR: '-10deg', decoWideOnly: true,
     statL: 'Mission 02', statR: 'Spotlight', tagline: 'Where the brightest stars take the stage.', sub: 'Showcases · Challenges · Spectacles',
     intro: 'The events that steal the show. Signature challenges and showcases built to stand out, with the biggest crowds, the boldest ideas and the brightest spotlight of the fest.',
     specs: [['Category', 'Signature'], ['Format', 'Solo & team'], ['Stage', 'Centre stage'], ['Fuel', 'Ambition'], ['Status', 'Boarding soon']],
