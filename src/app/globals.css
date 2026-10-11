@@ -273,6 +273,18 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .hp-tagline{--s:max(.2px,min(calc(100vw / 900),calc((50vh - 6vw - 157px) / 400)));top:calc(37.5% + 1.5vw - 27px - var(--s) * 86.5);translate:0 -50%}
 }
 
+/* ---------- detail tagline (DetailView.tsx, every world but Highpoint) ---------- */
+/* Landscape: under the HUD. Portrait: it takes over the title's spot as the title fades out on scroll, rather than
+   crowding the HUD over an empty middle. Main Events' title sits 6vh higher (.td-title's padding), so its tagline does too. */
+.d-tagline{top:max(88px,12%)}
+@media (orientation:portrait){
+  .d-tagline{top:50%;translate:0 -50%}
+  .td-tagline{top:44%}
+}
+
+/* ---------- worlds slider decoration (WorldsView.tsx) ---------- */
+@media (max-width:719px){.wv-deco-wide{display:none}}
+
 /* ---------- touchdown field (DetailView.tsx, Main Events) ---------- */
 /* .td-at is a zero-size anchor at (--x, --y); its art centres on it with `translate`, leaving `transform` free for
    GSAP on the anchor and for the CSS idle loops on the art. Portrait swaps in --px/--py where set. */
