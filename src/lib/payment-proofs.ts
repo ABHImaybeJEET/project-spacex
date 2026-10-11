@@ -8,7 +8,7 @@ import { isPaymentProofPath, PAYMENT_PROOFS_BUCKET, PAYMENT_PROOF_URL_TTL_SECOND
  * Users have NO Storage INSERT policy on this bucket: a JWT plus the public key can't upload directly, so every proof
  * goes through /api/upload (auth, rate limit, size and magic-byte checks) and is written here with the service role.
  * Existence checks still run AS THE SIGNED-IN USER, so Storage RLS only lets them see their own folder. Staff signed
- * URLs use the service role, after the route has checked the caller is IT-Team/Admin.
+ * URLs use the service role, after the route has checked the caller is Registration-Team/Admin.
  */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -54,7 +54,7 @@ export async function paymentProofExists(accessToken: string, path: string): Pro
 }
 
 /**
- * Short-lived signed URL for a payment screenshot. Callers must have authorized the request (verifyStaff) and
+ * Short-lived signed URL for a payment screenshot. Callers must have authorized the request (verifyRegistrationStaff) and
  * checked that `path` belongs to the registration's owner. Returns null when the service role isn't configured.
  */
 export async function signPaymentProofUrl(path: string): Promise<string | null> {

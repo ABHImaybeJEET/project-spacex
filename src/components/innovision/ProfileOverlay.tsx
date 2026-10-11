@@ -404,7 +404,7 @@ export default function ProfileOverlay({
                   {registration.status === 'confirmed'
                     ? 'Your registration has been approved. Your boarding pass is verified for entry at the gate.'
                     : registration.status === 'pending'
-                    ? 'Your registration details & payment proof are under review by the IT-Team. Your pass will unlock upon confirmation.'
+                    ? 'Your registration details & payment proof are under review by the Registration Team. Your pass will unlock upon confirmation.'
                     : 'Your registration could not be verified. Please visit the helpdesk or contact the event administrators.'}
                 </p>
 
@@ -495,7 +495,7 @@ export default function ProfileOverlay({
             )}
           </div>
 
-          {/* Admin & IT-Team Staff Portal Button */}
+          {/* Staff Portal Button (Admin, IT-Team, Registration-Team) */}
           {isStaff && (
             <div
               style={{
@@ -516,7 +516,11 @@ export default function ProfileOverlay({
                 </span>
               </div>
               <p style={{ margin: '0 0 14px', fontSize: '13px', color: 'rgba(236,232,223,0.8)', lineHeight: 1.45 }}>
-                You have {user.role === 'admin' ? 'Administrator' : user.role === 'it-team' ? 'IT-Team' : 'Registration-Team'} privileges to review registrations, verify payment proofs, and export records.
+                {user.role === 'admin'
+                  ? 'You have Administrator privileges to review registrations, verify payment proofs, export records, manage events and the gallery, and manage staff roles.'
+                  : user.role === 'it-team'
+                    ? 'You have IT-Team privileges to manage events and the gallery.'
+                    : 'You have Registration-Team privileges to review registrations, verify payment proofs, and export records.'}
               </p>
               <button
                 id="open-admin-dashboard-btn"
