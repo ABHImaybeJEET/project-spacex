@@ -185,7 +185,7 @@ export default function HomeView({ v }: { v: V }) {
                 <figure key={gI} data-t-frame="" style={{ position: "absolute", left: `calc(50% + ${g.x})`, top: `calc(50% + ${g.y})`, width: "clamp(220px,30vw,460px)", margin: "0", transform: "translate(-50%,-50%) translate3d(0,0,-6000px)", willChange: "transform,opacity" }}>
                   <div style={{ position: "relative", aspectRatio: g.ar, background: "#1b1a18", border: "1px solid rgba(236,232,223,.18)", overflow: "hidden" }}>
                     {g.imageUrl ? (
-                      <img decoding="async" src={g.imageUrl} alt={g.capU} style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }} />
+                      <img decoding="async" src={g.imageUrl} alt={g.ph} style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <ImageSlot id={g.id} shape="rect" placeholder={g.ph} style={{ position: "absolute", inset: "0", width: "100%", height: "100%" }} />
                     )}
@@ -202,6 +202,9 @@ export default function HomeView({ v }: { v: V }) {
             <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>GALLERY</p>
             <h2 style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(34px,4.4vw,68px)", lineHeight: "1" }}>Into the archive</h2>
             <p style={{ margin: "0", fontSize: "16px", lineHeight: "1.6", color: "rgba(236,232,223,.82)", textWrap: "pretty" }}>Keep scrolling to fly through moments from Innovision past.</p>
+            <a href="#/gallery" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "24px", padding: "15px 26px", textDecoration: "none", fontWeight: "700", fontSize: "14px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF", pointerEvents: "auto" }} className="hv-gold-fill">
+              <span data-scr="">VIEW FULL GALLERY</span>
+            </a>
           </header>
           <div style={{ position: "absolute", left: "clamp(20px,4vw,64px)", bottom: "calc(clamp(16px,2.6vw,44px) + 64px)", display: "flex", alignItems: "baseline", gap: "10px", fontFamily: "var(--font-display)", fontWeight: "400", pointerEvents: "none" }}>
             <span data-t-count="" style={{ fontSize: "clamp(36px,4vw,60px)", lineHeight: "1" }}>01</span>
@@ -250,32 +253,34 @@ export default function HomeView({ v }: { v: V }) {
           </div>
         </div>
       </section>
-      <section data-launch-sec="" style={{ position: "relative", overflow: "hidden", padding: "clamp(110px,18vh,200px) clamp(20px,4vw,64px) clamp(260px,40vh,420px)", textAlign: "center", background: "#ECE8DF" }}>
-        <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "100%", width: "220vmax", height: "220vmax", margin: "-110vmax 0 0 -110vmax", borderRadius: "50%", background: "repeating-conic-gradient(from 0deg,rgba(20,19,18,.09) 0deg .5deg,transparent .5deg 5deg)", WebkitMaskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", maskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", pointerEvents: "none" }}></div>
-        <div aria-hidden="true" style={{ position: "absolute", left: "50%", bottom: "calc(min(130vw, 1700px) * -.8)", width: "min(130vw, 1700px)", aspectRatio: "1", marginLeft: "calc(min(130vw, 1700px) / -2)", pointerEvents: "none" }}>
-          <img decoding="async" data-spin="480" src="/assets/planet-mercury.webp" alt="" style={{ width: "100%", height: "100%", filter: "grayscale(1) contrast(1.35) brightness(1.05)" }} />
-        </div>
-        <div data-launch="" aria-hidden="true" style={{ position: "absolute", right: "clamp(20px,11vw,220px)", bottom: "16%", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none" }}>
-          <img decoding="async" src="/assets/rocket.svg" alt="" style={{ height: "min(34vh, 320px)", width: "auto", filter: "grayscale(1) contrast(1.35) brightness(1.05) drop-shadow(0 18px 24px rgba(0,0,0,.2))" }} />
-          <span style={{ width: "3.6vh", height: "8vh", marginTop: "-1.4vh", borderRadius: "45% 45% 50% 50% / 20% 20% 80% 80%", background: "radial-gradient(ellipse 50% 100% at 50% 0,#fff,rgba(255,244,230,.75) 45%,transparent 100%)", transformOrigin: "50% 0", animation: "iv-flame .16s ease-in-out infinite alternate" }}></span>
-          <span style={{ width: "2px", height: "70vh", background: "repeating-linear-gradient(180deg,rgba(20,19,18,.45) 0 8px,transparent 8px 18px)" }}></span>
-        </div>
-        <div data-reveal="" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h2 style={{ margin: "0 0 22px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(48px,8.4vw,150px)", lineHeight: ".95", letterSpacing: "-.01em" }}>The odyssey<br />awaits.</h2>
-          <p style={{ margin: "0 auto 36px", maxWidth: "520px", fontSize: "18px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>Innovision 2026 is boarding soon at NIT Rourkela. Claim your seat on the voyage.</p>
-          <div className="cta-pair" style={{ display: "flex", gap: "14px", flexWrap: "wrap", justifyContent: "center" }}>
-
-            <a href={v.noUser || !v.hasRegistered ? "#register" : "#pass"} onClick={v.register} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", color: "#ECE8DF", background: "#141312", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)" }} className="hv-bronze-fill">
-              <span data-scr="">{v.noUser || !v.hasRegistered ? "REGISTER" : "MY PASS"}</span>
-
-            </a>
-            <a href="#/worlds/flagship-events" onMouseEnter={v.hover} style={{ position: "relative", isolation: "isolate", display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", color: "#141312", background: "#141312", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)" }} className="hv-bronze">
-              <span style={{ position: "absolute", inset: "1.5px", zIndex: "-1", background: "#ECE8DF", clipPath: "polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)" }}></span>
-              <span data-scr="">EXPLORE THE WORLDS</span>
-            </a>
+      {/* The footer slides up over the closing section: the section is sticky (its top is set by Innovision#homeScroll so it
+          pins once its bottom reaches the bottom of the screen) across the 40vh spacer below it, and the wrapper's negative
+          margin lets the footer overlap that spacer. Sticky runs with the browser's own scrolling, so it stays smooth on
+          touch screens, unlike a scroll-scrubbed transform. */}
+      <div style={{ marginBottom: "-40vh" }}>
+        <section data-launch-sec="" style={{ position: "sticky", top: "0", overflow: "hidden", padding: "clamp(110px,18vh,200px) clamp(20px,4vw,64px) clamp(260px,40vh,420px)", textAlign: "center", background: "#ECE8DF" }}>
+          <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "100%", width: "220vmax", height: "220vmax", margin: "-110vmax 0 0 -110vmax", borderRadius: "50%", background: "repeating-conic-gradient(from 0deg,rgba(20,19,18,.09) 0deg .5deg,transparent .5deg 5deg)", WebkitMaskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", maskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", pointerEvents: "none" }}></div>
+          <div aria-hidden="true" style={{ position: "absolute", left: "50%", bottom: "calc(min(130vw, 1700px) * -.8)", width: "min(130vw, 1700px)", aspectRatio: "1", marginLeft: "calc(min(130vw, 1700px) / -2)", pointerEvents: "none" }}>
+            <img decoding="async" data-spin="480" src="/assets/planet-mercury.webp" alt="" style={{ width: "100%", height: "100%", filter: "grayscale(1) contrast(1.35) brightness(1.05)" }} />
           </div>
-        </div>
-      </section>
+          <div data-reveal="" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <h2 style={{ margin: "0 0 22px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(48px,8.4vw,150px)", lineHeight: ".95", letterSpacing: "-.01em" }}>The odyssey<br />awaits.</h2>
+            <p style={{ margin: "0 auto 36px", maxWidth: "520px", fontSize: "18px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>Innovision 2026 is boarding soon at NIT Rourkela. Claim your seat on the voyage.</p>
+            <div className="cta-pair" style={{ display: "flex", gap: "14px", flexWrap: "wrap", justifyContent: "center" }}>
+
+              <a href={v.noUser || !v.hasRegistered ? "#register" : "#pass"} onClick={v.register} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", color: "#ECE8DF", background: "#141312", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)" }} className="hv-bronze-fill">
+                <span data-scr="">{v.noUser || !v.hasRegistered ? "REGISTER" : "MY PASS"}</span>
+
+              </a>
+              <a href="#/worlds/flagship-events" onMouseEnter={v.hover} style={{ position: "relative", isolation: "isolate", display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", color: "#141312", background: "#141312", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)" }} className="hv-bronze">
+                <span style={{ position: "absolute", inset: "1.5px", zIndex: "-1", background: "#ECE8DF", clipPath: "polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)" }}></span>
+                <span data-scr="">EXPLORE THE WORLDS</span>
+              </a>
+            </div>
+          </div>
+        </section>
+        <div aria-hidden="true" style={{ height: "40vh" }}></div>
+      </div>
       <LiveFooter />
     </main>
   );

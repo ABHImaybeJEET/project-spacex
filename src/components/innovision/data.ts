@@ -1,4 +1,5 @@
 // Content and tuning constants for the Innovision 2026 experience.
+import ARCHIVE_JSON from './gallery.json';
 
 export const A = '/assets/';
 
@@ -143,19 +144,31 @@ export const GAP = 1100;
 
 export interface GalleryItem { id: string; no: string; title: string; titleU: string; w: string; h: string; imageUrl?: string }
 
-export const GALLERY: GalleryItem[] = ['Hackathon', 'Robo Wars', 'Code Sprint', 'Guest Lectures', 'Maker Labs', 'Startup Talks', 'Gaming Arena', 'Quiz Night', 'Treasure Hunt', 'Project Expo', 'Circuit Lab', 'Closing Night'].map((t, i) => ({
-  id: 'gallery-' + (i + 1), no: String(i + 1).padStart(2, '0'), title: t, titleU: t.toUpperCase(),
-  w: i % 3 === 1 ? 'min(22vw, 300px)' : 'min(32vw, 440px)', h: i % 3 === 1 ? 'min(29vw, 400px)' : 'min(21vw, 290px)' }));
+/**
+ * Photos from past fests, as WebP on ImageKit (/innovision/gallery/archive). A static list, so neither the home page
+ * nor the gallery queries the database for them. The first TUNNEL.length photos also fly through the home page.
+ */
+export interface ArchivePhoto { id: string; title: string; url: string; width: number; height: number }
+export const ARCHIVE: ArchivePhoto[] = ARCHIVE_JSON;
 
-export const G_MAX = (GALLERY.length - 1) * GAP + 900;
+/** An ImageKit URL resized on the CDN to `w` px wide; ImageKit also picks the best format (WebP/AVIF) per browser. */
+export const ikWidth = (url: string, w: number) => url + (url.includes('?') ? '&' : '?') + 'tr=w-' + w;
+
+/** Gallery page frame size: portrait photos get the tall frame. */
+export const gFrame = (portrait: boolean) =>
+  portrait ? { w: 'min(22vw, 300px)', h: 'min(29vw, 400px)' } : { w: 'min(32vw, 440px)', h: 'min(21vw, 290px)' };
+
+export const GALLERY: GalleryItem[] = ARCHIVE.map((p, i) => ({
+  id: p.id, no: String(i + 1).padStart(2, '0'), title: p.title, titleU: p.title.toUpperCase(),
+  imageUrl: ikWidth(p.url, 900), ...gFrame(p.height > p.width) }));
 
 /** Top navigation: [label, key]. Events/Schedule/Gallery/Merch are routes; the rest scroll the home page. */
 export const LINKS: [string, string][] = [['Home', 'home'], ['Events', 'events'], ['Schedule', 'schedule'], ['Gallery', 'gallery'], ['Sponsors', 'sponsors'], ['Merch', 'merch']];
 /** LINKS keys left out of the navbar (top bar and phone menu) for now. Their views and routes still work. */
 export const NAVBAR_HIDDEN: string[] = ['schedule'];
 
-/** Frames in the home page's gallery tunnel: [caption, x offset, y offset, aspect ratio]. */
-export const TUNNEL: [string, string, string, string][] = [['Opening night', '-15vw', '-6vh', '4 / 3'], ['Hackathon floor', '17vw', '7vh', '3 / 4'], ['Robo Wars arena', '-18vw', '9vh', '4 / 3'], ['Guest lecture', '15vw', '-10vh', '1 / 1'], ['Project expo', '-8vw', '-11vh', '3 / 4'], ['Closing ceremony', '6vw', '5vh', '16 / 10']];
+/** Frames in the home page's gallery tunnel, filled with the first ARCHIVE photos: [x offset, y offset]. */
+export const TUNNEL: [string, string][] = [['-15vw', '-6vh'], ['17vw', '7vh'], ['-18vw', '9vh'], ['15vw', '-10vh'], ['-8vw', '-11vh'], ['6vw', '5vh']];
 export const TUNNEL_C = ['oklch(0.76 0.11 38)', 'oklch(0.77 0.09 250)', 'oklch(0.77 0.09 295)', 'oklch(0.8 0.08 178)'];
 
 const INK: [string, string] = ['Ink', '#141312'], BONE: [string, string] = ['Bone', '#ECE8DF'];
