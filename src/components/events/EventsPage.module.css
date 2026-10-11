@@ -1,0 +1,72 @@
+/* /events and /events/<world>: server-rendered pages in the site's ink / bone / gold palette.
+   html/body don't scroll (globals.css), so the page is its own scroller, like the teaser pages. */
+.page{position:fixed;inset:0;overflow-x:hidden;overflow-y:auto;background:#141312;color:#ECE8DF}
+.stars{position:absolute;inset:0;width:100%;height:100vh;object-fit:cover;opacity:.45;pointer-events:none}
+.wrap{position:relative;max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,64px)}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:clamp(18px,3vh,28px) 0}
+.brand{display:inline-flex;align-items:center;gap:10px;color:#ECE8DF;text-decoration:none;font-family:var(--font-display);font-size:19px;letter-spacing:.04em}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:6px 10px;margin:0;padding:0;list-style:none;font-size:13px;letter-spacing:.08em;color:rgba(236,232,223,.7)}
+.crumbs li+li::before{content:'/';margin-right:10px;color:rgba(236,232,223,.4)}
+.crumbs a{color:#ECE8DF;text-decoration:none}
+.crumbs a:hover{color:oklch(0.8 0.12 85)}
+
+.hero{padding:clamp(48px,10vh,120px) 0 clamp(40px,7vh,80px);border-bottom:1px solid rgba(236,232,223,.16)}
+.kicker{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px;font-size:13px;font-weight:700;letter-spacing:.3em;color:oklch(0.8 0.12 85)}
+.title{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(44px,8vw,120px);line-height:.98;letter-spacing:-.01em;text-wrap:balance}
+.tagline{margin:18px 0 0;font-family:var(--font-display);font-style:italic;font-size:clamp(22px,2.6vw,34px);line-height:1.2;color:var(--accent,oklch(0.8 0.12 85))}
+.lead{max-width:62ch;margin:24px 0 0;font-size:clamp(16px,1.4vw,19px);line-height:1.65;color:rgba(236,232,223,.86);text-wrap:pretty}
+
+.actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.cta{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;min-width:168px;padding:17px 30px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.06em;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:background-color .4s cubic-bezier(.25,1,.1,1),color .4s cubic-bezier(.25,1,.1,1)}
+.ctaPrimary{color:#141312;background:#ECE8DF}
+.ctaPrimary:hover{color:#141312;background:oklch(0.8 0.12 85)}
+.ctaGhost{color:#ECE8DF;background:rgba(236,232,223,.55)}
+.ctaGhost::before{content:'';position:absolute;inset:1.5px;z-index:-1;background:#141312;clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)}
+.ctaGhost:hover{color:oklch(0.8 0.12 85);background:oklch(0.8 0.12 85)}
+
+.section{padding:clamp(48px,8vh,96px) 0;border-bottom:1px solid rgba(236,232,223,.16)}
+.sectionHead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px 32px;margin-bottom:clamp(28px,4vh,44px)}
+.h2{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(32px,4.2vw,60px);line-height:1.02}
+.h2 a{color:inherit;text-decoration:none}
+.h2 a:hover{color:var(--accent,oklch(0.8 0.12 85))}
+.count{margin:0;font-size:13px;font-weight:700;letter-spacing:.24em;color:rgba(236,232,223,.7)}
+.groupTitle{margin:clamp(28px,4vh,44px) 0 18px;font-size:14px;font-weight:700;letter-spacing:.28em;color:var(--accent,oklch(0.8 0.12 85))}
+
+/* /events: one block per world. */
+.worlds{display:grid;gap:clamp(20px,3vw,32px);grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr))}
+.world{display:flex;flex-direction:column;gap:16px;padding:clamp(24px,3vw,36px);border:1px solid rgba(236,232,223,.18);border-top:3px solid var(--accent);background:rgba(20,19,18,.6)}
+.world p{margin:0}
+.worldIntro{font-size:16px;line-height:1.6;color:rgba(236,232,223,.84);text-wrap:pretty}
+.titles{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.titles li{padding:6px 12px;border:1px solid rgba(236,232,223,.22);font-size:14px;line-height:1.3}
+.links{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:auto;padding-top:8px}
+.link{color:#ECE8DF;font-weight:700;font-size:14px;letter-spacing:.08em;text-decoration:none;border-bottom:1px solid var(--accent)}
+.link:hover{color:var(--accent)}
+
+/* /events/<world>: the event cards. */
+.grid{display:grid;gap:clamp(18px,2.4vw,28px);grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));margin:0;padding:0;list-style:none}
+.card{display:flex;flex-direction:column;height:100%;border:1px solid rgba(236,232,223,.18);background:rgba(20,19,18,.7)}
+.poster{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:#1f1d1b}
+.cardBody{display:flex;flex-direction:column;gap:12px;flex:1;padding:20px 20px 22px}
+.cardTitle{margin:0;font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.1}
+.cardText{margin:0;font-size:15px;line-height:1.6;color:rgba(236,232,223,.84);white-space:pre-line;text-wrap:pretty}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:auto 0 0;padding-top:12px;border-top:1px dashed rgba(236,232,223,.22);font-size:14px}
+.facts dt{font-size:11px;font-weight:700;letter-spacing:.24em;line-height:1.9;color:var(--accent,oklch(0.8 0.12 85))}
+.facts dd{margin:0}
+
+.notice{max-width:62ch;margin:0;padding:clamp(24px,3vw,36px);border:1px dashed rgba(236,232,223,.3);font-size:17px;line-height:1.65;color:rgba(236,232,223,.86)}
+
+.foot{display:flex;flex-wrap:wrap;gap:28px 48px;justify-content:space-between;padding:clamp(40px,7vh,72px) 0 calc(clamp(28px,5vh,48px) + env(safe-area-inset-bottom));font-size:14px;color:rgba(236,232,223,.75)}
+.foot nav p{margin:0 0 14px;font-size:12px;font-weight:700;letter-spacing:.3em;color:oklch(0.8 0.12 85)}
+.foot ul{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.foot a{color:#ECE8DF;text-decoration:none;opacity:.85}
+.foot a:hover{opacity:1;color:oklch(0.8 0.12 85)}
+
+@media (max-width:640px){
+  .actions{flex-direction:column;width:min(100%,320px)}
+  .crumbs{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .cta{transition:none}
+}

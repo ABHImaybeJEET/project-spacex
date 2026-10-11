@@ -1,0 +1,150 @@
+import type { CSSProperties } from 'react';
+import { Logo } from './icons';
+import type { V } from './types';
+
+/** Top-bar label size: 13px up to ~1370px wide, growing with the screen to 16px beside the 24px wordmark. */
+const LABEL = "clamp(13px,.95vw,16px)";
+const INK = "#141312", PAPER = "#ECE8DF";
+/** Frosted paper behind the HUD once the page scrolls under it. */
+const FROST = "rgba(236,232,223,.86)";
+const EASE = "cubic-bezier(.25,1,.1,1)";
+
+/**
+ * Fixed top bar: back, logo, nav, register / my pass, log in or profile, menu.
+ * At the top of a page the bars float over the scene and invert against it (mix-blend difference).
+ * Once the page scrolls under them (v.hudSolid) that would invert the content too, so the top bar
+ * settles onto a frosted paper strip with ink text. The blend mode can't be animated, so the button
+ * colours swap instantly with it: easing them would flash raw white / black fills for a moment.
+ */
+export default function Hud({ v }: { v: V }) {
+  const solid = v.hudSolid, fg = solid ? INK : "#fff";
+  const blend = solid ? "normal" : "difference";
+  const ghost: CSSProperties = { position: "relative", isolation: "isolate", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "clamp(12px,.8vw,14px) clamp(20px,1.3vw,24px)", textDecoration: "none", fontWeight: "700", fontSize: LABEL, letterSpacing: ".08em", color: "inherit", background: "currentColor", clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" };
+  const ghostFill: CSSProperties = { position: "absolute", inset: "1.5px", zIndex: "-1", background: solid ? PAPER : "#000", clipPath: "polygon(7.4px 0,100% 0,100% calc(100% - 7.4px),calc(100% - 7.4px) 100%,0 100%,0 7.4px)" };
+  return (
+    <>
+      <header data-hud="" data-hud-solid={solid ? "" : undefined} className="hud-bar" style={{ position: "fixed", left: "0", right: "0", top: "0", zIndex: "50", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px", padding: solid ? "clamp(10px,1.05vw,16px) clamp(16px,2.6vw,44px)" : "clamp(14px,1.8vw,26px) clamp(16px,2.6vw,44px)", pointerEvents: "none", color: fg, mixBlendMode: blend, transition: `padding .5s ${EASE}` }}>
+        <div aria-hidden="true" style={{ position: "absolute", inset: "0", zIndex: "-1", background: FROST, backdropFilter: "blur(14px) saturate(1.2)", WebkitBackdropFilter: "blur(14px) saturate(1.2)", borderBottom: "1px solid rgba(20,19,18,.12)", boxShadow: "0 10px 30px -18px rgba(20,19,18,.35)", opacity: solid ? 1 : 0, visibility: solid ? "visible" : "hidden", transition: solid ? "opacity .4s" : "opacity .25s, visibility 0s .25s", pointerEvents: "none" }}></div>
+        <div className="hud-group" style={{ display: "flex", alignItems: "center", gap: "18px", pointerEvents: "auto" }}>
+          {v.isDetail && (
+            <>
+              <a href={v.backHref} onMouseEnter={v.hover} aria-label="Back" className="hud-link" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 0", textDecoration: "none", fontWeight: "500", fontSize: LABEL, letterSpacing: ".04em", color: "inherit" }}>
+                <svg width="16" height="10" viewBox="0 0 16 10" aria-hidden="true">
+                  <path d="M5 1 1 5l4 4M1 5h15" fill="none" stroke="currentColor" strokeWidth="1.5"></path>
+                </svg>
+                <span data-scr="" className="hud-back-label">BACK</span>
+              </a>
+              <span style={{ width: "1px", height: "22px", background: "currentColor", opacity: ".4" }}></span>
+            </>
+          )}
+          <a href="#/" onClick={v.goHome} aria-label="Innovision home" className="hud-link" style={{ display: "inline-flex", alignItems: "center", gap: "10px", color: "inherit", textDecoration: "none" }}>
+            <Logo style={{ width: "clamp(24px,2vw,32px)" }} />
+            <span className={v.isDetail ? "hud-wordmark hud-wordmark-detail" : "hud-wordmark"} style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(17px,1.6vw,24px)", letterSpacing: ".04em" }}>INNOVISION</span>
+          </a>
+        </div>
+        {v.wide && (
+          <nav aria-label="Primary" style={{ display: "flex", alignItems: "center", gap: "clamp(14px,2.2vw,36px)", pointerEvents: "auto" }}>
+            {v.hudLinks.map((l, lI) => (
+              <a key={lI} href={l.href} onClick={l.onClick} onMouseEnter={v.hover} aria-current={l.cur === 'true' ? 'page' : undefined} className="hud-link" style={{ position: "relative", display: "inline-block", padding: "8px 0", textDecoration: "none", fontWeight: "500", fontSize: LABEL, letterSpacing: ".14em", color: "inherit", opacity: l.o, transition: "opacity .4s" }}>
+                <span data-scr="">{l.label}</span>
+                <span style={{ position: "absolute", left: "0", right: "0", bottom: "2px", height: "1.5px", background: "currentColor", transform: `scaleX(${l.bar})`, transformOrigin: "left", transition: `transform .5s ${EASE}` }}></span>
+              </a>
+            ))}
+          </nav>
+        )}
+        <div className="hud-group" style={{ display: "flex", alignItems: "center", gap: "14px", pointerEvents: "auto" }}>
+          {/* Staff Portal Shortcut (Admin / IT-Team) */}
+          {!v.noUser && v.isStaff && (
+            <button
+              id="hud-staff-portal-btn"
+              type="button"
+              onClick={v.openAdmin}
+              onMouseEnter={v.hover}
+              className="hud-register"
+              title="Open Staff Control Portal"
+              style={{
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "clamp(10px,.7vw,12px) clamp(14px,1vw,18px)",
+                border: "1px solid oklch(0.8 0.12 85)",
+                background: "rgba(220,183,106,0.15)",
+                color: fg,
+                fontWeight: "700",
+                fontSize: LABEL,
+                letterSpacing: ".08em",
+                cursor: "pointer",
+                clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span data-scr="">PORTAL</span>
+            </button>
+          )}
+
+          {/* Primary Action Button: REGISTER if not registered, MY PASS if registered */}
+          <a
+            id="hud-reg-pass-btn"
+           
+            href={v.noUser || !v.hasRegistered ? "#register" : "#pass"}
+            onClick={v.register}
+            onMouseEnter={v.hover}
+            className="hud-register hud-cta"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "clamp(12px,.8vw,14px) clamp(20px,1.3vw,24px)",
+              textDecoration: "none",
+              fontWeight: "700",
+              fontSize: LABEL,
+              letterSpacing: ".08em",
+              color: solid ? PAPER : "#000",
+              background: solid ? INK : "#fff",
+              clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)",
+            }}
+          >
+            <span key={v.noUser || !v.hasRegistered ? "register" : "pass"} data-scr="">{v.noUser || !v.hasRegistered ? "REGISTER" : "MY PASS"}</span>
+          </a>
+
+          {/* Account slot. Signed out: LOG IN. Signed in: the visitor's profile (initials badge + first name; the badge
+              alone on phones, where LOG IN lives in the menu). Until the first session check finishes, the frame holds
+              its place empty, so a signed-in visitor never sees LOG IN flash first. The badge uses initials rather than
+              the account photo: the bar blends with difference over the scene, which would show a photo as a negative. */}
+          {v.showLogin && !v.authReady && (
+            <span aria-hidden="true" className="hud-register hud-ghost hud-auth-pending" style={ghost}>
+              <span aria-hidden="true" style={ghostFill}></span>
+              <span style={{ visibility: "hidden" }}>LOG IN</span>
+            </span>
+          )}
+          {v.showLogin && v.authReady && v.noUser && (
+            <a id="hud-auth-profile-btn" href="#login" onClick={v.loginClick} onMouseEnter={v.hover} onPointerEnter={v.prefetchAuth} onFocus={v.prefetchAuth} className="hud-register hud-ghost" style={ghost}>
+              <span aria-hidden="true" style={ghostFill}></span>
+              <span key="login" data-scr="" style={{ color: fg }}>LOG IN</span>
+            </a>
+          )}
+          {v.showLogin && v.authReady && !v.noUser && (
+            <a id="hud-auth-profile-btn" href="#profile" onClick={v.openProfile} onMouseEnter={v.hover} aria-label={v.profileAria} title={v.profileAria} className="hud-register hud-ghost hud-profile" style={ghost}>
+              <span aria-hidden="true" style={ghostFill}></span>
+              <span className="hud-avatar" aria-hidden="true" style={{ background: fg, color: solid ? PAPER : "#000" }}>{v.profileInitials}</span>
+              <span key={"p-" + v.profileName} data-scr="" className="hud-profile-name" style={{ color: fg }}>{v.profileName}</span>
+            </a>
+          )}
+          {!v.showLogin && v.authReady && !v.noUser && (
+            <a href="#profile" onClick={v.openProfile} aria-label={v.profileAria} title={v.profileAria} className="hud-avatar-btn">
+              <span className="hud-avatar" aria-hidden="true" style={{ background: fg, color: solid ? PAPER : "#000" }}>{v.profileInitials}</span>
+            </a>
+          )}
+          {!v.wide && (
+            <button type="button" onClick={v.menuButton} onMouseEnter={v.hover} aria-expanded={v.menuExpanded} className="hud-link" style={{ display: "inline-flex", alignItems: "center", padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "500", fontSize: LABEL, letterSpacing: ".14em", color: "inherit" }}>
+              <span data-scr="">MENU</span>
+            </button>
+          )}
+        </div>
+      </header>
+    </>
+  );
+}

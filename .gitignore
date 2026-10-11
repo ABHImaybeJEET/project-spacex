@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files: never commit secrets (.env.local, .env.production, ...); only the template is tracked
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Antigravity Skills
+.agents/skills/taste-skill/
+
+# playwright
+/test-results/
+/playwright-report/
+
+# tests (kept locally only; run with `npm test` / `npx playwright test`)
+/tests/
+
+# local tooling (check:assets, payment-proof migration; used by the local-only tests)
+/scripts/
