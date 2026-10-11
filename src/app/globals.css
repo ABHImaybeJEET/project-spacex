@@ -297,6 +297,22 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .td-tagline{top:44%}
 }
 
+/* ---------- Flagship Events (takeoff) scene (DetailView.tsx) ---------- */
+/* Wide: the ringed planet centred behind the title, the rocket off to its right. */
+.to-planet{--s:max(47vw,60vh);position:absolute;left:calc(50% - var(--s) / 2);top:calc(77% - var(--s) * 1.329);width:var(--s);pointer-events:none}
+.to-rocket{position:absolute;right:max(9%,40px);top:17%;height:min(30vh,290px);pointer-events:none}
+/* Portrait phones and tablets (the compact layout, with the tagline over the scene): one column has no room for the
+   wide layout, where the planet overflows the screen and the rocket sits on its rings over the title. The planet
+   shrinks to the upper left, the rocket gets the open sky on the right, and the tagline takes the open floor under the
+   lander instead of the middle of the screen, where the lander ends its climb (see Innovision#setupDetailScroll). */
+@media (orientation:portrait) and (max-width:1099px){
+  /* --s: the planet's size. Its art (110% wide, 4% down) ends 1.14 --s below its top: just above the title at 43%. */
+  .to-planet,.to-rocket{--s:min(70vw,40vh)}
+  .to-planet{left:-8vw;top:calc(43% - var(--s) * 1.14)}
+  .to-rocket{right:5vw;top:calc(43% - var(--s) * .6 - min(9.5vh,85px));height:min(19vh,170px)}
+  .to-tagline{top:74%}
+}
+
 /* ---------- worlds slider decoration (WorldsView.tsx) ---------- */
 @media (max-width:719px){.wv-deco-wide{display:none}}
 

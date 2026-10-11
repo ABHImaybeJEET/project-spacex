@@ -229,12 +229,12 @@ export default function DetailView({ v }: { v: V }) {
                 <div data-speed="-0.012" style={{ position: "absolute", inset: "0", pointerEvents: "none" }}>
                   <OrbitBackdrop top="30%" />
                 </div>
-                <div data-speed="-0.14" style={{ position: "absolute", left: "calc(50% - max(47vw, 60vh) / 2)", top: "calc(77% - max(47vw, 60vh) * 1.329)", width: "max(47vw, 60vh)", pointerEvents: "none" }}>
+                <div data-speed="-0.14" className="to-planet">
                   <div data-depth=".25" style={{ position: "relative", width: "110%", margin: "4% 0 0 -5%", aspectRatio: "1" }}>
                     <img decoding="async" src="/assets/planet-ringed.webp" alt="" style={{ width: "100%", height: "100%", transform: "rotate(6deg)", filter: MONO, animation: "iv-drift 9s ease-in-out infinite" }} />
                   </div>
                 </div>
-                <div data-speed="-0.22" aria-hidden="true" style={{ position: "absolute", right: "max(9%, 40px)", top: "17%", height: "min(30vh, 290px)", pointerEvents: "none" }}>
+                <div data-speed="-0.22" aria-hidden="true" className="to-rocket">
                   <div data-depth=".45" style={{ height: "100%" }}>
                     <div style={{ height: "100%", transform: "rotate(16deg)" }}>
                       <img decoding="async" src="/assets/rocket.svg" alt="" style={{ height: "100%", width: "auto", filter: MONO + " drop-shadow(0 18px 24px rgba(0,0,0,.2))", animation: "iv-drift 6s ease-in-out infinite" }} />
@@ -326,7 +326,7 @@ export default function DetailView({ v }: { v: V }) {
 
             {/* ---- copy ---- */}
             {v.compact && (
-              <h2 className={v.isHighpoint ? "hp-tagline" : v.isTouchdown ? "d-tagline td-tagline" : "d-tagline"} style={{ position: "absolute", left: "0", right: "0", width: v.taglineW, margin: "0 auto", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(26px,3.1vw,56px)", lineHeight: "1.04", textAlign: "center", color: "#fff", mixBlendMode: "difference", pointerEvents: "none" }}>
+              <h2 className={v.isHighpoint ? "hp-tagline" : v.isTouchdown ? "d-tagline td-tagline" : v.isTakeoff ? "d-tagline to-tagline" : "d-tagline"} style={{ position: "absolute", left: "0", right: "0", width: v.taglineW, margin: "0 auto", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(26px,3.1vw,56px)", lineHeight: "1.04", textAlign: "center", color: "#fff", mixBlendMode: "difference", pointerEvents: "none" }}>
                 {cw.words.map((wd, wdI) => (
                   <span key={wdI} data-d-word="" style={{ display: "inline-block", margin: "0 .14em" }}>{wd.t}</span>
                 ))}

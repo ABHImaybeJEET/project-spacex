@@ -1117,8 +1117,11 @@ export class Innovision extends Component<Props, State> {
       const n = (k: string) => parseFloat(el.dataset[k] || '') || 0, sp = n('speed'), sx = n('sx'), rot = n('rot'), zoom = n('zoom');
       tl.to(el, { y: () => H() * sp * 2, ...(sx && { x: () => innerWidth * sx * 2 }), ...(rot && { rotation: rot }), ...(zoom && { scale: zoom }), duration: 1 }, 0);
     });
-    q('[data-thrust]').forEach((el) => tl.fromTo(el, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.15 }, 0));
-    q('[data-lander]').forEach((el) => tl.to(el, { y: () => -H() * 0.25, duration: 0.35, ease: 'power1.out' }, 0));
+    // Portrait phones and tablets stack the title and the lander in one column, so the lander lifts off once the title has
+    // mostly faded instead of climbing through it.
+    const liftAt = matchMedia('(orientation: portrait) and (max-width: 1099px)').matches ? .2 : 0;
+    q('[data-thrust]').forEach((el) => tl.fromTo(el, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.15 }, liftAt));
+    q('[data-lander]').forEach((el) => tl.to(el, { y: () => -H() * 0.25, duration: 0.35, ease: 'power1.out' }, liftAt));
     tl.to(root.querySelector('[data-d-titleblock]'), { scale: 1.25, autoAlpha: 0, y: () => -H() * .08, duration: .3 }, 0);
     // One tween per word (equivalent to stagger: .03): with GSAP 3.13+, a staggered fromTo inside a
     // scrubbed timeline that is invalidated on refresh reverts not-yet-started targets to visible.
