@@ -12,7 +12,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import {
-  A, WORLDS, PRELOAD_CRITICAL, PRELOAD_DEFERRED, HERO_SPARKS, LOADER_SPARKS, STATUS, SCRAMBLE, GAP, GALLERY, G_MAX,
+  A, WORLDS, PRELOAD_CRITICAL, PRELOAD_DEFERRED, HERO_SPARKS, LOADER_SPARKS, STATUS, SCRAMBLE, GAP, GALLERY, ARCHIVE, ikWidth, gFrame,
   LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, SPONSOR_TIERS, TITLE_SPONSOR, inr, type Product, type WorldKey,
 } from './data';
 import HomeView from './HomeView';
@@ -458,7 +458,8 @@ export class Innovision extends Component<Props, State> {
     if (this.ctx) this.waveLoop();
     if (pp.roverPauses !== this.props.roverPauses) this._rvReseq = true;
     if (ps.dbGallery !== this.state.dbGallery) {
-      this.gEls = this.$$('[data-g-item]');
+      // Frames were added: redraw them all, even if the camera is at rest.
+      this.gEls = this.$$('[data-g-item]'); this.gDrawn = '';
     }
   }
 
@@ -845,9 +846,8 @@ export class Innovision extends Component<Props, State> {
     return true;
   }
   enterView(to: Route): gsap.core.Timeline {
-    if (to.view === 'gallery' || to.view === 'detail' || to.view === 'worlds') {
-      this.fetchPublicData();
-    }
+    if (to.view === 'detail' || to.view === 'worlds') this.fetchPublicData();
+    if (to.view === 'gallery') this.fetchDbGallery();
     if (to.view === 'home') return this.homeEnter();
     if (to.view === 'gallery') return this.galleryEnter();
     if (to.view === 'schedule') return this.schedEnter();
@@ -894,7 +894,7 @@ export class Innovision extends Component<Props, State> {
       el.style.transform = 'translate3d(' + (d.x * W).toFixed(1) + 'px,' + (d.y * H).toFixed(1) + 'px,' + z.toFixed(1) + 'px)';
       el.style.opacity = z > 500 ? '0' : Math.min(.9, Math.max(0, (z + 5200) / 2000)).toFixed(3);
     });
-    const gLen = this.gEls.length || (this.state.dbGallery && this.state.dbGallery.length > 0 ? this.state.dbGallery.length : GALLERY.length);
+    const gLen = this.gEls.length || (GALLERY.length + this.state.dbGallery.length);
     const maxZ = Math.max(1200, (gLen - 1) * GAP + 900);
     const p = Math.max(0, Math.min(1, this.gZ / maxZ));
     this.gBar!.style.transform = 'scaleY(' + p.toFixed(4) + ')';
@@ -915,11 +915,11 @@ export class Innovision extends Component<Props, State> {
       .to(this.$$('[data-hud]'), { autoAlpha: 1, duration: .8 }, .2);
   }
   getGMax() {
-    const gLen = this.gEls?.length || (this.state.dbGallery && this.state.dbGallery.length > 0 ? this.state.dbGallery.length : GALLERY.length);
+    const gLen = this.gEls?.length || (GALLERY.length + this.state.dbGallery.length);
     return Math.max(1200, (gLen - 1) * GAP + 900);
   }
   gStep(d: number) {
-    const gLen = this.gEls?.length || (this.state.dbGallery && this.state.dbGallery.length > 0 ? this.state.dbGallery.length : GALLERY.length);
+    const gLen = this.gEls?.length || (GALLERY.length + this.state.dbGallery.length);
     const i = Math.max(0, Math.min(gLen - 1, Math.round((this.gTarget - 200) / GAP) + d));
     this.gTarget = i * GAP + 200;
   }
@@ -1007,10 +1007,14 @@ export class Innovision extends Component<Props, State> {
     // Briefing headline fills in word by word as it scrolls through.
     const fw = this.$$('[data-fill]');
     if (fw.length) gsap.fromTo(fw, { opacity: .14 }, { opacity: 1, stagger: .1, ease: 'none', scrollTrigger: { trigger: fw[0].parentElement, scroller: sc, start: 'top 82%', end: 'bottom 48%', scrub: true } });
+    // The closing section pins (sticky) once its bottom reaches the bottom of the screen, while the footer slides
+    // over it. Its height and the screen's change with fonts, resizes and the phone address bar, so keep `top` in step.
     const ls = this.$('[data-launch-sec]');
-    if (ls) {
-      gsap.fromTo(this.$('[data-launch]'), { y: innerHeight * .3 }, { y: -innerHeight * 1.15, ease: 'power2.in', scrollTrigger: { trigger: ls, scroller: sc, start: 'top bottom', end: 'bottom top', scrub: true } });
-      gsap.fromTo(ls, { y: 0 }, { y: innerHeight * 0.4, ease: 'none', scrollTrigger: { trigger: ls, scroller: sc, start: 'bottom bottom', end: '+=40%', scrub: true } });
+    if (ls && sc) {
+      const pin = () => { ls.style.top = (sc.clientHeight - ls.offsetHeight) + 'px'; };
+      const ro = new ResizeObserver(pin);
+      ro.observe(ls); ro.observe(sc);
+      this.cleanups.push(() => ro.disconnect());
     }
     this.openMap(0);
   }
@@ -1113,8 +1117,11 @@ export class Innovision extends Component<Props, State> {
       const n = (k: string) => parseFloat(el.dataset[k] || '') || 0, sp = n('speed'), sx = n('sx'), rot = n('rot'), zoom = n('zoom');
       tl.to(el, { y: () => H() * sp * 2, ...(sx && { x: () => innerWidth * sx * 2 }), ...(rot && { rotation: rot }), ...(zoom && { scale: zoom }), duration: 1 }, 0);
     });
-    q('[data-thrust]').forEach((el) => tl.fromTo(el, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.15 }, 0));
-    q('[data-lander]').forEach((el) => tl.to(el, { y: () => -H() * 0.25, duration: 0.35, ease: 'power1.out' }, 0));
+    // Portrait phones and tablets stack the title and the lander in one column, so the lander lifts off once the title has
+    // mostly faded instead of climbing through it.
+    const liftAt = matchMedia('(orientation: portrait) and (max-width: 1099px)').matches ? .2 : 0;
+    q('[data-thrust]').forEach((el) => tl.fromTo(el, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.15 }, liftAt));
+    q('[data-lander]').forEach((el) => tl.to(el, { y: () => -H() * 0.25, duration: 0.35, ease: 'power1.out' }, liftAt));
     tl.to(root.querySelector('[data-d-titleblock]'), { scale: 1.25, autoAlpha: 0, y: () => -H() * .08, duration: .3 }, 0);
     // One tween per word (equivalent to stagger: .03): with GSAP 3.13+, a staggered fromTo inside a
     // scrubbed timeline that is invalidated on refresh reverts not-yet-started targets to visible.
@@ -1555,13 +1562,7 @@ export class Innovision extends Component<Props, State> {
   /* ---------- Public Events & Gallery Data Fetching ---------- */
   fetchPublicData = async () => {
     try {
-      const [gRes, eRes] = await Promise.all([
-        fetch('/api/gallery').then((r) => r.json()).catch(() => null),
-        fetch('/api/events').then((r) => r.json()).catch(() => null),
-      ]);
-      if (gRes?.success && Array.isArray(gRes.gallery) && gRes.gallery.length > 0) {
-        this.setState({ dbGallery: gRes.gallery });
-      }
+      const eRes = await fetch('/api/events').then((r) => r.json()).catch(() => null);
       if (eRes?.success && Array.isArray(eRes.events) && eRes.events.length > 0) {
         this.setState({ dbEvents: eRes.events });
       }
@@ -1570,22 +1571,19 @@ export class Innovision extends Component<Props, State> {
     }
   };
 
-  /* ---------- Public Events & Gallery Data Fetching ---------- */
-  fetchPublicData = async () => {
-    try {
-      const [gRes, eRes] = await Promise.all([
-        fetch('/api/gallery').then((r) => r.json()).catch(() => null),
-        fetch('/api/events').then((r) => r.json()).catch(() => null),
-      ]);
-      if (gRes?.success && Array.isArray(gRes.gallery) && gRes.gallery.length > 0) {
-        this.setState({ dbGallery: gRes.gallery });
-      }
-      if (eRes?.success && Array.isArray(eRes.events) && eRes.events.length > 0) {
-        this.setState({ dbEvents: eRes.events });
-      }
-    } catch (e) {
-      console.warn('Error fetching public fest data:', e);
-    }
+  /**
+   * Photos staff upload from the admin dashboard, shown after the static ARCHIVE. Fetched once, and only when the
+   * gallery page opens: the home page shows ARCHIVE photos alone, so it never queries the gallery table.
+   */
+  dbGalleryFetched = false;
+  fetchDbGallery = async () => {
+    if (this.dbGalleryFetched) return;
+    this.dbGalleryFetched = true;
+    const gRes = await fetch('/api/gallery').then((r) => r.json()).catch(() => null);
+    if (!gRes?.success || !Array.isArray(gRes.gallery)) { this.dbGalleryFetched = false; return; } // retry next visit
+    const known = new Set(ARCHIVE.map((p) => p.url));
+    const extra = (gRes.gallery as GalleryPhoto[]).filter((p) => p.image_url && !known.has(p.image_url));
+    if (extra.length && this.alive) this.setState({ dbGallery: extra });
   };
 
   /* ---------- Supabase Auth & Google OAuth (Cookie-Backed Sessions) ---------- */
@@ -2548,24 +2546,20 @@ export class Innovision extends Component<Props, State> {
       linkGo: this.linkGo,
       menuVis: (s.menu ? 'visible' : 'hidden') as 'visible' | 'hidden', menuDelay: s.menu ? '0s' : '.9s', menuClip: s.menu ? 'circle(150% at 100% 0%)' : 'circle(0% at 100% 0%)', menuHidden: !s.menu,
       closeMenu: () => this.setState({ menu: false }),
-      tunnel: (() => {
-        const dbPhotos = s.dbGallery && s.dbGallery.length > 0 ? s.dbGallery : null;
-        return TUNNEL.map(([cap, x, y, ar], k) => {
-          const photo = dbPhotos ? dbPhotos[k % dbPhotos.length] : null;
-          const caption = photo?.title || cap;
-          return {
-            id: 'gallery-' + (k + 1),
-            ph: caption + ' photo',
-            capU: caption.toUpperCase(),
-            no: String(k + 1).padStart(2, '0'),
-            x,
-            y,
-            ar,
-            c: TUNNEL_C[k % TUNNEL_C.length],
-            imageUrl: photo ? photo.image_url : undefined,
-          };
-        });
-      })(),
+      tunnel: TUNNEL.map(([x, y], k) => {
+        const photo = ARCHIVE[k % ARCHIVE.length];
+        return {
+          id: 'gallery-' + (k + 1),
+          ph: photo.title + ' photo',
+          capU: photo.title.toUpperCase(),
+          no: String(k + 1).padStart(2, '0'),
+          x,
+          y,
+          ar: photo.width + ' / ' + photo.height,
+          c: TUNNEL_C[k % TUNNEL_C.length],
+          imageUrl: ikWidth(photo.url, 960),
+        };
+      }),
       tunnelTotal: String(TUNNEL.length).padStart(2, '0'),
       titleSponsor: TITLE_SPONSOR,
       sponsorTiers: SPONSOR_TIERS.map((t) => ({
@@ -2732,21 +2726,14 @@ export class Innovision extends Component<Props, State> {
       // gallery page
 
       ...(() => {
-        const galleryList =
-          s.dbGallery && s.dbGallery.length > 0
-            ? s.dbGallery.map((item, i) => {
-                const t = item.title || `Memory ${i + 1}`;
-                return {
-                  id: `gallery-db-${item.id || i}`,
-                  no: String(i + 1).padStart(2, '0'),
-                  title: t,
-                  titleU: t.toUpperCase(),
-                  imageUrl: item.image_url,
-                  w: i % 3 === 1 ? 'min(22vw, 300px)' : 'min(32vw, 440px)',
-                  h: i % 3 === 1 ? 'min(29vw, 400px)' : 'min(21vw, 290px)',
-                };
-              })
-            : GALLERY;
+        // The static archive, then any photos uploaded from the admin dashboard.
+        const galleryList = [
+          ...GALLERY,
+          ...s.dbGallery.map((item, k) => {
+            const i = GALLERY.length + k, t = item.title || `Memory ${i + 1}`;
+            return { id: `gallery-db-${item.id || k}`, no: String(i + 1).padStart(2, '0'), title: t, titleU: t.toUpperCase(), imageUrl: item.image_url, ...gFrame(i % 3 === 1) };
+          }),
+        ];
         return {
           gallery: galleryList.map((g, k) => ({
             ...g,
@@ -2774,7 +2761,7 @@ export class Innovision extends Component<Props, State> {
     return (
       <div ref={this.rootRef} data-booting="" style={{ position: 'fixed', inset: '0', overflow: 'hidden', background: '#ECE8DF', color: '#141312', fontFamily: "var(--font-sans)" }}>
         <LiveV value={v}>
-        <HomeV v={v} deps={[s.dbGallery]} />
+        <HomeV v={v} deps={[]} />
         <WorldsV v={v} deps={[s.narrow, s.compact, s.dbEvents]} />
         {s.lazy.detail && <DetailV v={v} deps={[s.dIndex, s.compact, s.dbEvents]} />}
         {s.lazy.gallery && <GalleryV v={v} deps={[s.gIdx, s.dbGallery]} />}
