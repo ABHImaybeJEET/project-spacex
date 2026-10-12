@@ -10,7 +10,7 @@
  *   registration: src/app/register/redirectToRegistrationFlow.ts → the auth / registration overlay in Innovision.tsx
  *   merch:        the #/merch store view, src/components/innovision/MerchView.tsx
  */
-export const REGISTRATIONS_OPEN = false;
+export const REGISTRATIONS_OPEN = true;
 export const MERCH_STORE_OPEN = false;
 
 /** Where the REGISTER buttons point while registrations are closed. */
