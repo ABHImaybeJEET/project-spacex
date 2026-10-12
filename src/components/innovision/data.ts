@@ -147,7 +147,7 @@ export const SCRAMBLE = 'XYZXYZABCDEFGHIJKLMNOPQRSTUVWXYZ';
 /** Z-distance between consecutive gallery frames. */
 export const GAP = 1100;
 
-export interface GalleryItem { id: string; no: string; title: string; titleU: string; w: string; h: string; imageUrl?: string }
+export interface GalleryItem { id: string; no: string; title: string; titleU: string; w: string; h: string; fr: string; imageUrl?: string }
 
 /**
  * Photos from past fests, as WebP on ImageKit (/innovision/gallery/archive). A static list, so neither the home page
@@ -159,9 +159,9 @@ export const ARCHIVE: ArchivePhoto[] = ARCHIVE_JSON;
 /** An ImageKit URL resized on the CDN to `w` px wide; ImageKit also picks the best format (WebP/AVIF) per browser. */
 export const ikWidth = (url: string, w: number) => url + (url.includes('?') ? '&' : '?') + 'tr=w-' + w;
 
-/** Gallery page frame size: portrait photos get the tall frame. */
+/** Gallery page frame size: portrait photos get the tall frame. fr is its class, which phones resize (globals.css). */
 export const gFrame = (portrait: boolean) =>
-  portrait ? { w: 'min(22vw, 300px)', h: 'min(29vw, 400px)' } : { w: 'min(32vw, 440px)', h: 'min(21vw, 290px)' };
+  portrait ? { w: 'min(22vw, 300px)', h: 'min(29vw, 400px)', fr: 'g-fr-p' } : { w: 'min(32vw, 440px)', h: 'min(21vw, 290px)', fr: 'g-fr-l' };
 
 export const GALLERY: GalleryItem[] = ARCHIVE.map((p, i) => ({
   id: p.id, no: String(i + 1).padStart(2, '0'), title: p.title, titleU: p.title.toUpperCase(),

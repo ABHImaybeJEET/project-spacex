@@ -14,7 +14,7 @@ export default function GalleryView({ v }: { v: V }) {
             <span key={dI} data-g-dust="" style={{ position: "absolute", left: "50%", top: "50%", width: d.s, height: d.s, borderRadius: "50%", background: "#ECE8DF", pointerEvents: "none" }}></span>
           ))}
           {v.gallery.map((g, gI) => (
-            <figure key={gI} data-g-item={gI} onClick={g.onFocus} style={{ position: "absolute", left: "50%", top: "50%", width: g.w, height: g.h, margin: "0", cursor: "pointer", opacity: "0" }}>
+            <figure key={gI} data-g-item={gI} onClick={g.onFocus} className={g.fr} style={{ position: "absolute", left: "50%", top: "50%", width: g.w, height: g.h, margin: "0", cursor: "pointer", opacity: "0" }}>
               <div style={{ position: "absolute", inset: "0", padding: "10px", background: "#1b1a18", border: "1px solid rgba(236,232,223,.4)", boxShadow: "0 30px 60px rgba(0,0,0,.5)" }}>
                 {g.imageUrl ? (
                   <img src={g.imageUrl} alt={g.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />

@@ -52,10 +52,12 @@ import {
 import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_STORE_OPEN, MERCH_SOON_PATH } from '@/config/launch';
 import { REGISTRATION_FEE, UPI_ID, UPI_PAY_LINK, UPI_QR_SRC } from '@/config/payment';
 import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
-import { isIterSoaCollege, isIterSoaEmail, ITER_SOA_ERROR_MESSAGE, isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
+import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
 import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
 
 gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin);
+// A phone's address bar sliding in or out resizes the window; re-measuring every trigger then makes scrolling hitch.
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 // Views and overlays the first screen never shows: each is its own chunk and mounts the first time it is
 // needed (Innovision#mount), hidden, under the curtain, loader or a closed overlay. Once mounted it stays.
@@ -879,13 +881,17 @@ export class Innovision extends Component<Props, State> {
     if (this.state.view !== 'gallery' || !this.gEls.length) return;
     const dz = this.gTarget - this.gZ;
     this.gZ = Math.abs(dz) < .05 ? this.gTarget : this.gZ + dz * .07;
-    const W = innerWidth, H = innerHeight, RX = Math.min(W * .3, 520), RY = Math.min(H * .25, 250);
+    const W = innerWidth, H = innerHeight, narrow = this.state.narrow, short = H < 500 && W > H;
+    // Phones (narrow, or short in landscape) swing the spiral far less, so the photo in focus stays on screen at their
+    // larger frame size (globals.css); portrait ones also lift it clear of the title and counter at the bottom.
+    const tight = narrow || short;
+    const RX = tight ? W * .05 : Math.min(W * .3, 520), RY = tight ? H * .04 : Math.min(H * .25, 250), lift = narrow ? -H * .07 : short ? -H * .03 : 0;
     // Once the camera has settled the frame is identical to the last one, so skip the 58 style writes.
     const key = this.gZ + '|' + W + '|' + H;
     if (key === this.gDrawn) return;
     this.gDrawn = key;
     this.gEls.forEach((el, i) => {
-      const a = i * 2.4 + .7, x = Math.cos(a) * RX, y = Math.sin(a) * RY, z = -i * GAP + this.gZ;
+      const a = i * 2.4 + .7, x = Math.cos(a) * RX, y = Math.sin(a) * RY + lift, z = -i * GAP + this.gZ;
       const o = z < -6200 ? 0 : z < -4000 ? (z + 6200) / 2200 : z < 300 ? 1 : Math.max(0, 1 - (z - 300) / 500);
       el.style.transform = 'translate(-50%,-50%) translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,' + z.toFixed(1) + 'px) rotateY(' + (-x / RX * 12).toFixed(2) + 'deg)';
       el.style.opacity = o.toFixed(3);
@@ -907,7 +913,8 @@ export class Innovision extends Component<Props, State> {
     this.gGlow!.style.transform = 'scale(' + (1 + Math.pow(p, 3) * 14).toFixed(3) + ')';
     this.gGlow!.style.opacity = p.toFixed(3);
     this.gStars!.style.transform = 'scale(' + (1 + p * .25).toFixed(4) + ')';
-    const end = p > .94;
+    // The end card shows once the camera has passed the last photo, so it never lands on top of it.
+    const end = this.gZ > (gLen - 1) * GAP + 450;
     this.gEnd!.style.opacity = end ? '1' : '0';
     this.gEnd!.style.pointerEvents = end ? 'auto' : 'none';
     const idx = Math.max(0, Math.min(gLen - 1, Math.round((this.gZ - 200) / GAP)));
@@ -926,8 +933,9 @@ export class Innovision extends Component<Props, State> {
   }
   gStep(d: number) {
     const gLen = this.gEls?.length || (GALLERY.length + this.state.dbGallery.length);
-    const i = Math.max(0, Math.min(gLen - 1, Math.round((this.gTarget - 200) / GAP) + d));
-    this.gTarget = i * GAP + 200;
+    // One step past the last photo flies by it to the end card.
+    const i = Math.max(0, Math.min(gLen, Math.round((this.gTarget - 200) / GAP) + d));
+    this.gTarget = Math.min(this.getGMax(), i * GAP + 200);
   }
   gWheel = (e: WheelEvent) => {
     this.gTarget = Math.max(0, Math.min(this.getGMax(), this.gTarget + (e.deltaY + e.deltaX) * 1.6));
@@ -996,9 +1004,11 @@ export class Innovision extends Component<Props, State> {
       // Only write what changed: replacing the counter's text every scroll update invalidates layout.
       const upd = (p: number) => {
         const travel = p * (N * TGAP - 200);
+        // Phones fade a photo out sooner as it passes the camera, before it grows past the room between the heading and the counter.
+        const near = innerWidth < 720 || (innerHeight < 500 && innerWidth > innerHeight) ? 120 : 250;
         fr.forEach((f, i) => {
           const z = -(i + 1) * TGAP + travel + 300;
-          const o = String(z > 250 ? Math.max(0, 1 - (z - 250) / 450) : z < -TGAP * 3 ? Math.max(0, 1 - (-TGAP * 3 - z) / TGAP) : 1), pe = +o > .6 ? 'auto' : 'none';
+          const o = String(z > near ? Math.max(0, 1 - (z - near) / 450) : z < -TGAP * 3 ? Math.max(0, 1 - (-TGAP * 3 - z) / TGAP) : 1), pe = +o > .6 ? 'auto' : 'none';
           f.style.transform = 'translate(-50%,-50%) translate3d(0,0,' + z + 'px)';
           if (f.style.opacity !== o) f.style.opacity = o;
           if (f.style.pointerEvents !== pe) f.style.pointerEvents = pe;
@@ -1131,7 +1141,9 @@ export class Innovision extends Component<Props, State> {
     tl.to(root.querySelector('[data-d-titleblock]'), { scale: 1.25, autoAlpha: 0, y: () => -H() * .08, duration: .3 }, 0);
     // One tween per word (equivalent to stagger: .03): with GSAP 3.13+, a staggered fromTo inside a
     // scrubbed timeline that is invalidated on refresh reverts not-yet-started targets to visible.
-    q('[data-d-word]').forEach((el, k) => tl.fromTo(el, { autoAlpha: 0, y: 40, filter: 'blur(10px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: .12 }, .24 + k * .03));
+    // Touch screens skip the blur: a filter redrawn on every scroll frame is costly on a phone.
+    const blur = !matchMedia('(pointer: coarse)').matches;
+    q('[data-d-word]').forEach((el, k) => tl.fromTo(el, { autoAlpha: 0, y: 40, ...(blur && { filter: 'blur(10px)' }) }, { autoAlpha: 1, y: 0, ...(blur && { filter: 'blur(0px)' }), duration: .12 }, .24 + k * .03));
     const intro = root.querySelector('[data-d-intro]'), spec = root.querySelector('[data-d-spec]');
     if (intro) tl.fromTo(intro, { autoAlpha: 0, x: -60 }, { autoAlpha: 1, x: 0, duration: .18 }, .5);
     if (spec) tl.fromTo(spec, { autoAlpha: 0, x: 60 }, { autoAlpha: 1, x: 0, duration: .18 }, .56);
@@ -2298,12 +2310,6 @@ export class Innovision extends Component<Props, State> {
       return;
     }
 
-    if (!isInternal && isIterSoaEmail(user.email)) {
-      this.toast(ITER_SOA_ERROR_MESSAGE);
-      this.fail({ college: ITER_SOA_ERROR_MESSAGE });
-      return;
-    }
-
     if (s.step === 0) {
       const name = v('name').replace(/\s+/g, ' ');
       const college = isInternal ? 'National Institute of Technology, Rourkela' : v('college').replace(/\s+/g, ' ');
@@ -2319,8 +2325,6 @@ export class Innovision extends Component<Props, State> {
         err.college = 'Which college are you from?';
       } else if (!isInternal && college.length > 200) {
         err.college = 'Keep the college name under 200 characters.';
-      } else if (!isInternal && (isIterSoaCollege(college) || isIterSoaEmail(email))) {
-        err.college = ITER_SOA_ERROR_MESSAGE;
       }
       if (!/^[6-9]\d{9}$/.test(phone)) err.phone = 'Use a 10-digit Indian mobile number.';
       if (isInternal && !enrollment_no) err.enrollment_no = 'Enter your NIT Rourkela Roll / Enrollment number.';
@@ -2362,12 +2366,6 @@ export class Innovision extends Component<Props, State> {
           amount: this.fee(),
           status: 'pending' as const,
         };
-
-        if (!isInternal && (isIterSoaCollege(r.college) || isIterSoaEmail(user.email))) {
-          this.toast(ITER_SOA_ERROR_MESSAGE);
-          this.setState({ err: { college: ITER_SOA_ERROR_MESSAGE }, step: 0, busyLbl: '' });
-          return;
-        }
 
         const saveRes = await createRegistration(regPayload);
         const savedReg = saveRes.registration || (saveRes.success ? regPayload : null);
@@ -2543,6 +2541,9 @@ export class Innovision extends Component<Props, State> {
     // Handlers below read this.state when they run: memoised views may hold an older v.
     const s = this.state, i = s.index, w = WORLDS[i], dw = WORLDS[s.dIndex], nx = WORLDS[(s.dIndex + 1) % WORLDS.length];
     const navOn = s.view === 'worlds' || s.view === 'detail';
+    // On a world's page the world switcher shows only at the top, where you land after Enter; once the page scrolls
+    // (hudSolid) it gives the scene and the mission list the whole screen.
+    const navShown = navOn && !(s.view === 'detail' && s.hudSolid);
     const act = s.view === 'merch' ? 'merch' : s.view === 'gallery' ? 'gallery' : s.view === 'schedule' ? 'schedule' : navOn ? 'events' : 'home';
     // Store closed (src/config/launch.ts): MERCH links leave for the "dropping soon" page.
     const merchHref = MERCH_STORE_OPEN ? '#/merch' : MERCH_SOON_PATH;
@@ -2581,6 +2582,7 @@ export class Innovision extends Component<Props, State> {
           x,
           y,
           ar: photo.width + ' / ' + photo.height,
+          arN: (photo.width / photo.height).toFixed(3),
           c: TUNNEL_C[k % TUNNEL_C.length],
           imageUrl: ikWidth(photo.url, 960),
         };
@@ -2588,7 +2590,6 @@ export class Innovision extends Component<Props, State> {
       tunnelTotal: String(TUNNEL.length).padStart(2, '0'),
       // Logos are sized by the square root of their aspect ratio, so wide wordmarks and square marks carry similar weight.
       pastSponsors: PAST_SPONSORS.map((s) => ({ ...s, src: ikWidth(s.logo, 400), w: Math.min(78, 36 * Math.sqrt(s.width / s.height)).toFixed(1) + '%' })),
-      merchTeaser: PRODUCTS.slice(0, 3).map((p) => ({ slot: 'merch-' + p.id, ph: p.name, name: p.name, priceL: '₹' + p.price })),
       products: PRODUCTS.map((p) => {
         const sl = s.sel[p.id] || {}, size = sl.size || (p.sizes ? 'M' : null), color = sl.color || 0;
         return {
@@ -2706,7 +2707,7 @@ export class Innovision extends Component<Props, State> {
       navX: (i * 100) + '%',
       navW: (100 / WORLDS.length) + '%',
       navGlow: '#141312',
-      navO: navOn ? 1 : 0, navY: navOn ? '0px' : '30px', navPE: (navOn ? 'auto' : 'none') as 'auto' | 'none',
+      navO: navShown ? 1 : 0, navY: navShown ? '0px' : '30px', navPE: (navShown ? 'auto' : 'none') as 'auto' | 'none',
       navBottom: s.narrow ? 'calc(clamp(16px,2.6vw,44px) + 40px)' : 'clamp(16px,2.6vw,44px)',
       hudSolid: s.hudSolid,
       hintOn: s.hint && s.view === 'worlds' && !s.auth && !s.menu,

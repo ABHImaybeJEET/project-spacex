@@ -314,6 +314,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .to-planet{left:-8vw;top:calc(43% - var(--s) * 1.14)}
   .to-rocket{right:5vw;top:calc(43% - var(--s) * .6 - min(9.5vh,85px));height:min(19vh,170px)}
   .to-tagline{top:74%}
+  /* The closing fade into the mission list stays under the tagline, so the ink text never lands on the dark. */
+  .to-fade{height:17% !important}
 }
 
 /* ---------- worlds slider decoration (WorldsView.tsx) ---------- */
@@ -388,6 +390,53 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 [data-lowpower] .fx{filter:var(--fx)}
 /* Every other spark and gallery dust mote, and two of the five curtain cloud layers, sit out. */
 [data-lowpower] [data-lp-skip]{display:none}
+
+/* ---------- home gallery tunnel (HomeView.tsx) ---------- */
+.t-scrim{display:none}
+/* Phones: photos are capped by height too (--ar is the photo's width/height; --tx/--ty its offset from the centre), so a tall one can't outgrow the room
+   between the heading and the counter; the tunnel's centre and vanishing point drop into that room; and dark fades sit
+   behind the heading and the counter, so a photo passing beneath never covers the text. */
+@media (max-width:719px){
+  .t-space{perspective-origin:50% 56% !important}
+  .t-frame{width:min(54vw,calc(28vh * var(--ar))) !important;top:calc(56% + var(--ty) * .5) !important}
+  .t-scrim{display:block;position:absolute;left:0;right:0;pointer-events:none}
+  .t-scrim-top{top:0;height:calc(4vh + 290px);background:linear-gradient(180deg,#141312 0,rgba(20,19,18,.94) 62%,rgba(20,19,18,0))}
+  .t-scrim-bot{bottom:0;height:200px;background:linear-gradient(0deg,#141312 0,rgba(20,19,18,.9) 45%,rgba(20,19,18,0))}
+}
+/* Landscape phones: too short to stack the photos between the heading and the counter, so they fly through the open
+   right-hand side instead, sized off the height. */
+@media (max-height:499px) and (orientation:landscape){
+  .t-space{perspective-origin:76% 42% !important}
+  .t-frame{width:calc(38vh * var(--ar)) !important;left:calc(76% + var(--tx) * .3) !important;top:calc(42% + var(--ty) * .3) !important}
+}
+
+/* ---------- gallery (GalleryView.tsx) ---------- */
+/* Phones: a frame sized off the width alone came out about 90-125px wide in portrait, and ran off the bottom of a
+   landscape screen. These fill most of the screen once the photo in focus is scaled up by the perspective (1.25x),
+   with Innovision#galleryTick keeping the spiral tight. Landscape phones size off the height instead. */
+@media (max-width:719px){
+  .g-fr-l{width:min(64vw,340px) !important;height:min(42.2vw,224px) !important}
+  .g-fr-p{width:min(48vw,240px) !important;height:min(64vw,320px) !important}
+}
+@media (max-height:499px) and (orientation:landscape){
+  .g-fr-l{width:70vh !important;height:46vh !important}
+  .g-fr-p{width:42vh !important;height:56vh !important}
+}
+
+/* ---------- touch devices ---------- */
+/* Phones and tablets: drop the effects that cost the most per frame while a page scrolls. Scene art's drop shadows go
+   (each is an extra blur pass over a big layer, every frame it moves): inline filters write theirs as
+   var(--no-ds, drop-shadow(...)), and opacity(1) is a no-op in its place. Low-power mode drops them everywhere. The film
+   grain, a full-screen layer blended over the whole page, goes too. The HUD bar and the world switcher, always on screen,
+   trade the frosted glass (a blur of whatever scrolls beneath, redone every frame) for a near-solid fill. */
+[data-lowpower]{--no-ds:opacity(1)}
+@media (pointer:coarse){
+  :root{--no-ds:opacity(1)}
+  body::after{display:none}
+  .hud-frost,.wn-pill{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  .hud-frost{background:rgba(236,232,223,.97) !important}
+  .wn-pill{background:rgba(236,232,223,.96) !important}
+}
 
 /* ---------- schedule ---------- */
 /* --gut lines the rows up with the 1240px column while letting each carousel run to the screen edge. */
