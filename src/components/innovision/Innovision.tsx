@@ -2514,7 +2514,13 @@ export class Innovision extends Component<Props, State> {
       submitLbl: s.busyLbl || (am === 'login' ? 'LOG IN' : ['CONTINUE TO PAYMENT', "I'VE PAID", 'SUBMIT REGISTRATION'][st] || 'CONTINUE'),
       busy: !!s.busyLbl, busyO: s.busyLbl ? .72 : 1,
       passName: P.name || '', passCollege: P.college || '', passCollegeD: P.college ? 'block' : 'none', passId: P.id || P.registration_id || '', passStatus: P.status ? P.status.toUpperCase() : 'PAYMENT UNDER REVIEW',
-      passNote: P.status === 'CONFIRMED' ? 'Show this pass at the registration desk when you arrive at NIT Rourkela.' : (P.status === 'REJECTED' ? 'Your registration was declined. Please contact the helpdesk.' : 'We will email ' + (P.email || 'you') + ' once your payment is verified by the IT-Team.'),
+      // Mounted only while the pass is open, so the QR is fetched then and not on every page load.
+      passQr: !!s.auth && am === 'pass' && !!s.user,
+      passNote: P.status === 'CONFIRMED'
+        ? 'You are confirmed. Download your entry pass now and show the QR with your college ID at the registration desk, so entry at NIT Rourkela is quick.'
+        : P.status === 'REJECTED'
+        ? 'Your registration could not be approved. Please contact the helpdesk.'
+        : 'Your payment is being verified and your registration will be approved soon. Keep checking MY PASS: once approved, your entry QR appears here, ready to download.',
       exploreFromPass: this.exploreFromPass,
       googleLogin: this.googleLogin, gBusy: s.gBusy, gErr: s.gErr, gLbl: s.gBusy ? 'Waiting for Google…' : 'Continue with Google',
       gNote: reg && st === 0 && s.user ? 'Signed in as ' + s.user.email + (isInternal ? ' (NIT RKL Student)' : '') + '.' : '',

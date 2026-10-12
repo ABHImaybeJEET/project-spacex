@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import type { V } from './types';
 import { Logo } from './icons';
+import EntryPassCard from './EntryPassCard';
 
 export default function AuthOverlay({ v }: { v: V }) {
   const [userCollege, setUserCollege] = useState<string | null>(null);
@@ -278,6 +279,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                           <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="pass" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
                         </div>
                       </div>
+                      {v.passQr ? <EntryPassCard key={`${v.passId}-${v.passStatus}`} /> : null}
                       <p data-s-in="" style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "rgba(236,232,223,.78)", textWrap: "pretty", overflowWrap: "anywhere" }}>{v.passNote}</p>
                       <div data-s-in="" style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                         <a href="#/worlds/takeoff" onClick={v.exploreFromPass} onMouseEnter={v.hover} style={{ flex: "1", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 28px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".08em", whiteSpace: "nowrap", color: "#141312", background: "#ECE8DF", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s" }} style-hover="background:oklch(0.8 0.12 85)"><span data-scr="">EXPLORE THE WORLDS</span></a>

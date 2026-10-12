@@ -753,20 +753,36 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* Top Bar */}
+      {/* Top Bar. The dialog clips overflow, so tabs that don't fit must wrap or scroll, never run off-screen (that hid
+          OPEN SCANNER on phones). Wide screens wrap the tabs; below 860px they get their own row that scrolls sideways,
+          with the scanner link first. */}
+      <style>{`
+        .adm-nav > * { flex-shrink: 0; white-space: nowrap; }
+        @media (max-width: 860px) {
+          .adm-head { flex-wrap: wrap; padding-top: 12px !important; padding-bottom: 0 !important; }
+          .adm-left { display: contents !important; }
+          .adm-brand { flex: 1 1 0 !important; }
+          .adm-title { font-size: 15px !important; }
+          .adm-nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: thin; margin: 0 calc(-1 * clamp(16px, 3vw, 40px)) !important; padding: 0 clamp(16px, 3vw, 40px) 2px; scroll-padding-inline: clamp(16px, 3vw, 40px); }
+          .adm-nav > * { min-height: 44px; }
+          .adm-scan { order: -1; }
+        }
+      `}</style>
       <header
+        className="adm-head"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: '12px 16px',
           padding: '18px clamp(16px, 3vw, 40px)',
           borderBottom: '1px solid rgba(236,232,223,0.12)',
           background: 'rgba(16,15,14,0.95)',
           backdropFilter: 'blur(10px)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="adm-left" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1 1 auto', minWidth: 0 }}>
+          <div className="adm-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 0 }}>
             <span
               style={{
                 width: '10px',
@@ -777,11 +793,15 @@ export default function AdminDashboard({
               }}
             />
             <span
+              className="adm-title"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontWeight: 400,
                 fontSize: 'clamp(18px, 1.8vw, 22px)',
                 letterSpacing: '.06em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               COMMAND CENTER · {currentUser.role.toUpperCase()}
@@ -789,7 +809,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Navigation Tabs */}
-          <nav style={{ display: 'flex', gap: '8px', marginLeft: '24px' }}>
+          <nav className="adm-nav" aria-label="Dashboard sections" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginLeft: '24px', minWidth: 0 }}>
             {canReviewRegistrations && (
             <button
               id="tab-registrations"
@@ -899,6 +919,7 @@ export default function AdminDashboard({
             {canReviewRegistrations && (
               <a
                 id="open-scanner-link"
+                className="adm-scan"
                 href="/admin/scan"
                 target="_blank"
                 rel="noopener"
@@ -928,6 +949,8 @@ export default function AdminDashboard({
             alignItems: 'center',
             gap: '8px',
             padding: '8px 16px',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
             border: '1px solid rgba(236,232,223,0.24)',
             background: 'transparent',
             color: '#ECE8DF',
