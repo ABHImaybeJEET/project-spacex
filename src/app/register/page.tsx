@@ -3,11 +3,19 @@ import RegistrationsOpeningSoon from '@/components/coming-soon/RegistrationsOpen
 import { pageMetadata } from '@/lib/seo';
 import { redirectToRegistrationFlow } from './redirectToRegistrationFlow';
 
-export const metadata = pageMetadata({
-  title: 'Registrations Opening Soon',
-  description: 'Registrations for Innovision 2026: The Celestial Odyssey, the techno-management fest of NIT Rourkela, Odisha, open soon.',
-  path: '/register',
-});
+export const metadata = pageMetadata(
+  REGISTRATIONS_OPEN
+    ? {
+        title: 'Register',
+        description: 'Register for Innovision 2026: The Celestial Odyssey, the techno-management fest of NIT Rourkela, Odisha.',
+        path: '/register',
+      }
+    : {
+        title: 'Registrations Opening Soon',
+        description: 'Registrations for Innovision 2026: The Celestial Odyssey, the techno-management fest of NIT Rourkela, Odisha, open soon.',
+        path: '/register',
+      }
+);
 
 /**
  * /register page route.

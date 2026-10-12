@@ -608,6 +608,8 @@ export async function createRegistration(
   error?: string;
   /** HTTP status of a failed request; undefined when no response arrived (network error). */
   status?: number;
+  /** Form field the server blamed for a failed request (name, college, phone, gender, enrollment_no, payfile, utr). */
+  field?: string;
 }> {
   try {
     const supabase = getSupabase();
@@ -639,6 +641,7 @@ export async function createRegistration(
         success: false,
         status: res.status,
         error: httpErrorMessage(res) || result.message || result.error || 'Registration failed',
+        ...(typeof result.field === 'string' ? { field: result.field } : {}),
       };
     }
 
