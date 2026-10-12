@@ -250,6 +250,23 @@ export function getSupabaseAdmin(token?: string): SupabaseClient {
 }
 
 /**
+ * Server client that runs AS the signed-in caller (publishable key + their access token), never as service_role,
+ * even when the service key is configured. Use it for database functions that authorize the caller themselves
+ * through auth.uid() (the entry pass / check-in functions): with the service role, auth.uid() would be NULL.
+ */
+export function getSupabaseAsUser(token: string): SupabaseClient {
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  });
+}
+
+/**
  * Initiates Google OAuth with Supabase.
  * If internalOnly is true:
  * - passes `hd: nitrkl.ac.in` to hint Google to select @nitrkl.ac.in account

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { UserProfile, Registration } from '@/lib/supabase';
+import EntryPassCard from './EntryPassCard';
 
 interface ProfileOverlayProps {
   isOpen: boolean;
@@ -423,6 +424,8 @@ export default function ProfileOverlay({
                     {registration.registration_id}
                   </span>
                 </div>
+
+                <EntryPassCard key={`${registration.registration_id}-${registration.status}`} />
 
                 <button
                   id="view-pass-btn"

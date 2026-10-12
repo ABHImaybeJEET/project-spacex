@@ -12,6 +12,16 @@ const MAX_API_BODY_BYTES = 3 * 1024 * 1024;
 const mutationLimiter = createRateLimiter({ limit: 300, windowMs: 60 * 1000 });
 const authLimiter = createRateLimiter({ limit: 300, windowMs: 60 * 1000 });
 
+/**
+ * Venue routes left out of the per-IP write limit: the check-in scanners (/api/admin/entry/*) and participants opening
+ * their pass (/api/pass). At the gate they all share one campus Wi-Fi or carrier-NAT address, and a busy minute of
+ * participants could otherwise exhaust that address's allowance and lock the scanners out. Both require a signed-in
+ * user and are rate limited per user in the route instead. CSRF and body-size checks still apply.
+ */
+function isPerUserLimitedVenueRoute(pathname: string): boolean {
+  return pathname === '/api/pass' || pathname.startsWith('/api/admin/entry/');
+}
+
 const tooMany = () =>
   NextResponse.json(
     { error: 'Too Many Requests', message: 'Too many requests. Please slow down and try again shortly.' },
@@ -48,7 +58,13 @@ export function proxy(request: NextRequest) {
     const ip = clientIp(request.headers, { trustPlatformHeaders: process.env.VERCEL === '1' });
     if (ip) {
       if (pathname.startsWith('/api/auth/') && !authLimiter.hit(ip)) return tooMany();
-      if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && !mutationLimiter.hit(ip)) return tooMany();
+      if (
+        !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
+        !isPerUserLimitedVenueRoute(pathname) &&
+        !mutationLimiter.hit(ip)
+      ) {
+        return tooMany();
+      }
     }
   }
 
@@ -102,9 +118,10 @@ export function proxy(request: NextRequest) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/';
       redirectUrl.searchParams.set('auth', 'login');
+      // 'scan': the home page sends the volunteer back to the check-in scanner once signed in.
       redirectUrl.searchParams.set(
         'required',
-        isAdminPage ? 'admin' : 'register'
+        pathname === '/admin/scan' ? 'scan' : isAdminPage ? 'admin' : 'register'
       );
       return NextResponse.redirect(redirectUrl);
     }

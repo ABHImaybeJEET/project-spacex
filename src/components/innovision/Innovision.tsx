@@ -366,11 +366,13 @@ export class Innovision extends Component<Props, State> {
       if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
         this.showRegistrationsSoon(true);
       } else if (isAuthRequired) {
-        // Remembered across the Google sign-in round trip, so the student lands on the form once signed in.
-        if (search.get('required') === 'register') sessionStorage.setItem('inv_pending_action', 'register');
+        // Remembered across the Google sign-in round trip, so the student lands on the form once signed in, and a
+        // volunteer sent here by the check-in scanner ("Log in again") goes straight back to /admin/scan.
+        const required = search.get('required');
+        if (required === 'register' || required === 'scan') sessionStorage.setItem('inv_pending_action', required);
         setTimeout(() => {
           this.openAuth('login');
-          this.toast('Please log in to register.');
+          this.toast(required === 'scan' ? 'Please log in again to continue scanning.' : 'Please log in to register.');
         }, 1200);
       } else if (isOpenRegister) {
         // Waits for the session check, so a signed-in student isn't sent to log in first.
@@ -1754,6 +1756,13 @@ export class Innovision extends Component<Props, State> {
     });
 
     const pendingAction = typeof window !== 'undefined' ? sessionStorage.getItem('inv_pending_action') : null;
+    if (pendingAction === 'scan') {
+      // Back to the check-in scanner (a fixed path, never one taken from the URL). Removed first, so a signed-in user
+      // who isn't staff (bounced from /admin/scan to /) can't loop.
+      sessionStorage.removeItem('inv_pending_action');
+      this.leaveTo('/admin/scan', true);
+      return;
+    }
     if (pendingAction === 'register') {
       if (typeof window !== 'undefined') sessionStorage.removeItem('inv_pending_action');
       if (registration) {
