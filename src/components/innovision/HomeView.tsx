@@ -10,7 +10,7 @@ import ImageSlot from './ImageSlot';
 import { LiveFooter } from './SiteFooter';
 import type { V } from './types';
 
-/** Landing page: sticky hero, briefing, odyssey map, gallery tunnel, sponsors, merch teaser and closing call to action. */
+/** Landing page: sticky hero, briefing, odyssey map, gallery tunnel, sponsors and closing call to action. */
 export default function HomeView({ v }: { v: V }) {
   return (
     <main data-view="home" data-noscroll="" data-screen-label="Home" style={{ position: "absolute", inset: "0", overflowX: "hidden", overflowY: "auto", scrollbarWidth: "none", visibility: "hidden" }}>
@@ -104,7 +104,7 @@ export default function HomeView({ v }: { v: V }) {
               <div data-h-astro="" style={{ width: "100%", height: "100%" }}>
                 {/* Same box and tilt as the image, so the bob moves it exactly as before while the filter stays static. */}
                 <div data-bob="" style={{ width: "fit-content", height: "100%", marginLeft: "auto", transform: "rotate(-8deg)" }}>
-                  <img decoding="async" src="/assets/indian-astronaut.webp" alt="Astronaut drifting beside the celestial disc" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.12) drop-shadow(0 24px 30px rgba(0,0,0,.35))" }} />
+                  <img decoding="async" src="/assets/indian-astronaut.webp" alt="Astronaut drifting beside the celestial disc" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.12) var(--no-ds, drop-shadow(0 24px 30px rgba(0,0,0,.35)))" }} />
                 </div>
               </div>
             </div>
@@ -179,10 +179,10 @@ export default function HomeView({ v }: { v: V }) {
       <section data-sec="gallery" data-tunnel="" aria-label="Gallery" style={{ position: "relative", height: "600vh", background: "#141312", color: "#ECE8DF" }}>
         <div style={{ position: "sticky", top: "0", height: "100vh", overflow: "hidden" }}>
           <img decoding="async" src="/assets/starfield.svg" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", opacity: ".75", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", inset: "0", perspective: "900px", perspectiveOrigin: "50% 50%" }}>
+          <div className="t-space" style={{ position: "absolute", inset: "0", perspective: "900px", perspectiveOrigin: "50% 50%" }}>
             <div style={{ position: "absolute", inset: "0", transformStyle: "preserve-3d" }}>
               {v.tunnel.map((g, gI) => (
-                <figure key={gI} data-t-frame="" style={{ position: "absolute", left: `calc(50% + ${g.x})`, top: `calc(50% + ${g.y})`, width: "clamp(220px,30vw,460px)", margin: "0", transform: "translate(-50%,-50%) translate3d(0,0,-6000px)", willChange: "transform,opacity" }}>
+                <figure key={gI} data-t-frame="" className="t-frame" style={{ ["--ar" as string]: g.arN, ["--tx" as string]: g.x, ["--ty" as string]: g.y, position: "absolute", left: "calc(50% + var(--tx))", top: "calc(50% + var(--ty))", width: "clamp(220px,30vw,460px)", margin: "0", transform: "translate(-50%,-50%) translate3d(0,0,-6000px)", willChange: "transform,opacity" }}>
                   <div style={{ position: "relative", aspectRatio: g.ar, background: "#1b1a18", border: "1px solid rgba(236,232,223,.18)", overflow: "hidden" }}>
                     {g.imageUrl ? (
                       <img decoding="async" src={g.imageUrl} alt={g.ph} style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }} />
@@ -198,6 +198,9 @@ export default function HomeView({ v }: { v: V }) {
               ))}
             </div>
           </div>
+          {/* Phones only (globals.css): dark fades behind the heading and the counter, so a photo flying past never covers the text. */}
+          <div aria-hidden="true" className="t-scrim t-scrim-top"></div>
+          <div aria-hidden="true" className="t-scrim t-scrim-bot"></div>
           <header style={{ position: "absolute", left: "clamp(20px,4vw,64px)", top: "calc(72px + 4vh)", maxWidth: "440px", pointerEvents: "none" }}>
             <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>GALLERY</p>
             <h2 style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(34px,4.4vw,68px)", lineHeight: "1" }}>Into the archive</h2>
@@ -214,44 +217,20 @@ export default function HomeView({ v }: { v: V }) {
           </div>
         </div>
       </section>
-      <section data-sec="sponsors" aria-label="Sponsors" style={{ position: "relative", padding: "clamp(96px,16vh,180px) clamp(20px,4vw,64px)", background: "#ECE8DF" }}>
+      <section data-sec="sponsors" aria-label="Past sponsors" style={{ position: "relative", padding: "clamp(96px,16vh,180px) clamp(20px,4vw,64px)", background: "#ECE8DF" }}>
         <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
           <header data-reveal="" style={{ display: "flex", flexWrap: "wrap", alignItems: "end", justifyContent: "space-between", gap: "24px", marginBottom: "56px" }}>
             <div>
-              <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Sponsors &amp; partners</h2>
+              <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Past sponsors</h2>
             </div>
-            <p style={{ maxWidth: "380px", margin: "0", fontSize: "16px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>The brands fuelling Innovision 2026. Full line-up announced closer to launch.</p>
+            <p style={{ maxWidth: "380px", margin: "0", fontSize: "16px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>{v.pastSponsors.length} brands have backed Innovision over the years. The 2026 line-up is announced closer to launch.</p>
           </header>
           <Sponsors v={v} />
           <div data-reveal="" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "20px", marginTop: "clamp(48px,7vh,72px)", paddingTop: "28px", borderTop: "1px solid rgba(20,19,18,.14)" }}>
             <p style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(22px,2.2vw,32px)" }}>Want your brand in orbit?</p>
-            <a href="#sponsor" onClick={v.sponsorCta} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#ECE8DF", background: "#141312" }} className="hv-bronze-fill">
+            <a href="https://drive.google.com/drive/folders/1u86nzk0l6DEJTGGM2gXgaQfUobdByp4S?usp=drive_link" target="_blank" rel="noopener noreferrer" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#ECE8DF", background: "#141312" }} className="hv-bronze-fill">
               <span data-scr="">BECOME A SPONSOR</span>
             </a>
-          </div>
-        </div>
-      </section>
-      <section data-sec="merch" aria-label="Merch" style={{ position: "relative", padding: "clamp(96px,14vh,160px) clamp(20px,4vw,64px)", background: "#141312", color: "#ECE8DF", overflow: "hidden" }}>
-        <img decoding="async" src="/assets/starfield.svg" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", opacity: ".6", pointerEvents: "none" }} />
-        <div style={{ position: "relative", maxWidth: "1240px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,380px),1fr))", gap: "clamp(40px,6vw,96px)", alignItems: "center" }}>
-          <div data-reveal="">
-            <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>OFFICIAL MERCH</p>
-            <h2 style={{ margin: "0 0 18px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(40px,5.4vw,88px)", lineHeight: "1" }}>Wear the odyssey.</h2>
-            <p style={{ margin: "0 0 32px", maxWidth: "420px", fontSize: "17px", lineHeight: "1.6", color: "rgba(236,232,223,.82)", textWrap: "pretty" }}>Limited-run tees, hoodies and keepsakes. Pre-order online, collect on campus during the fest.</p>
-            <a href={v.merchHref} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF" }} className="hv-gold-fill">
-              <span data-scr="">VISIT THE STORE</span>
-            </a>
-          </div>
-          <div data-reveal="" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "14px" }}>
-            {v.merchTeaser.map((t, tI) => (
-              <a key={tI} href={v.merchHref} style={{ display: "flex", flexDirection: "column", gap: "10px", textDecoration: "none", color: "#ECE8DF" }}>
-                <div style={{ position: "relative", aspectRatio: "4 / 5", background: "#26241f", pointerEvents: "none" }}>
-                  <ImageSlot id={t.slot} shape="rect" placeholder={t.ph} style={{ position: "absolute", inset: "0", width: "100%", height: "100%" }} />
-                </div>
-                <span style={{ fontSize: "14px", fontWeight: "700" }}>{t.name}</span>
-                <span style={{ fontSize: "14px", color: "rgba(236,232,223,.75)" }}>{t.priceL}</span>
-              </a>
-            ))}
           </div>
         </div>
       </section>

@@ -4,13 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { paymentProofExists } from '@/lib/payment-proofs';
 import { registrationsClosedResponse, registrationsOpen } from '@/lib/registration-gate';
-import {
-  isDuplicatePhoneError,
-  isIterSoaCollege,
-  isIterSoaEmail,
-  ITER_SOA_ERROR_MESSAGE,
-  PHONE_IN_USE_ERROR_MESSAGE,
-} from '@/lib/validation';
+import { isDuplicatePhoneError, PHONE_IN_USE_ERROR_MESSAGE } from '@/lib/validation';
 import {
   classifyStudentType,
   createRateLimiter,
@@ -152,14 +146,6 @@ export async function POST(req: NextRequest) {
     }
     const input = parsed.data;
     const college = studentType === 'internal' ? NIT_ROURKELA_COLLEGE : input.college;
-
-    // Exclusion rule: Students from ITER - SOA are not allowed to register
-    if (isIterSoaCollege(college) || isIterSoaEmail(verifiedEmail)) {
-      return NextResponse.json(
-        { error: ITER_SOA_ERROR_MESSAGE, field: 'college' },
-        { status: 403 }
-      );
-    }
 
     const adminClient = getSupabaseAdmin(token);
 

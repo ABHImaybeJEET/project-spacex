@@ -24,7 +24,7 @@ export default function Hud({ v }: { v: V }) {
   return (
     <>
       <header data-hud="" data-hud-solid={solid ? "" : undefined} className="hud-bar" style={{ position: "fixed", left: "0", right: "0", top: "0", zIndex: "50", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px", padding: solid ? "clamp(10px,1.05vw,16px) clamp(16px,2.6vw,44px)" : "clamp(14px,1.8vw,26px) clamp(16px,2.6vw,44px)", pointerEvents: "none", color: fg, mixBlendMode: blend, transition: `padding .5s ${EASE}` }}>
-        <div aria-hidden="true" style={{ position: "absolute", inset: "0", zIndex: "-1", background: FROST, backdropFilter: "blur(14px) saturate(1.2)", WebkitBackdropFilter: "blur(14px) saturate(1.2)", borderBottom: "1px solid rgba(20,19,18,.12)", boxShadow: "0 10px 30px -18px rgba(20,19,18,.35)", opacity: solid ? 1 : 0, visibility: solid ? "visible" : "hidden", transition: solid ? "opacity .4s" : "opacity .25s, visibility 0s .25s", pointerEvents: "none" }}></div>
+        <div aria-hidden="true" className="hud-frost" style={{ position: "absolute", inset: "0", zIndex: "-1", background: FROST, backdropFilter: "blur(14px) saturate(1.2)", WebkitBackdropFilter: "blur(14px) saturate(1.2)", borderBottom: "1px solid rgba(20,19,18,.12)", boxShadow: "0 10px 30px -18px rgba(20,19,18,.35)", opacity: solid ? 1 : 0, visibility: solid ? "visible" : "hidden", transition: solid ? "opacity .4s" : "opacity .25s, visibility 0s .25s", pointerEvents: "none" }}></div>
         <div className="hud-group" style={{ display: "flex", alignItems: "center", gap: "18px", pointerEvents: "auto" }}>
           {v.isDetail && (
             <>

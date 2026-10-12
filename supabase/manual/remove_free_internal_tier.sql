@@ -25,11 +25,6 @@ BEGIN
 
   SELECT lower(email), email_confirmed_at INTO v_email, v_confirmed FROM auth.users WHERE id = auth.uid();
 
-  -- Same ITER - SOA email rule as /api/register (isIterSoaEmail); the college CHECK only covers the typed name.
-  IF v_email LIKE '%@soa.%' OR v_email LIKE '%@iter.%' THEN
-    RAISE EXCEPTION 'Registration is not allowed for students from ITER - SOA.' USING ERRCODE = '42501';
-  END IF;
-
   NEW.user_id := auth.uid();
   NEW.email := COALESCE(v_email, '');
   NEW.registration_id := 'IV26-' || (1000 + (('x' || substr(md5(gen_random_uuid()::text), 1, 7))::bit(28)::int % 9000))::text;

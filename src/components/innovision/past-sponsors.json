@@ -1,0 +1,221 @@
+[
+  {
+    "id": "red-bull",
+    "name": "Red Bull",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/red-bull.webp",
+    "width": 900,
+    "height": 218,
+    "bg": "#ffffff",
+    "url": "https://www.redbull.com"
+  },
+  {
+    "id": "triggr",
+    "name": "Triggr",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/triggr.webp",
+    "width": 676,
+    "height": 140,
+    "bg": "#000000"
+  },
+  {
+    "id": "haier",
+    "name": "Haier",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/haier.webp",
+    "width": 900,
+    "height": 280,
+    "bg": "#ffffff",
+    "url": "https://www.haier.com"
+  },
+  {
+    "id": "rapido",
+    "name": "Rapido",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/rapido.webp",
+    "width": 771,
+    "height": 451,
+    "bg": "#fefefe",
+    "url": "https://www.rapido.bike"
+  },
+  {
+    "id": "sambad",
+    "name": "Sambad",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/sambad.webp",
+    "width": 877,
+    "height": 396,
+    "bg": "#ffffff",
+    "url": "https://sambad.in"
+  },
+  {
+    "id": "nalco",
+    "name": "NALCO",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/nalco.webp",
+    "width": 534,
+    "height": 900,
+    "bg": "#ffffff",
+    "url": "https://nalcoindia.com"
+  },
+  {
+    "id": "vedanta",
+    "name": "Vedanta",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/vedanta.webp",
+    "width": 701,
+    "height": 200,
+    "bg": "#ffffff",
+    "url": "https://www.vedantalimited.com"
+  },
+  {
+    "id": "adobe",
+    "name": "Adobe",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/adobe.webp",
+    "width": 900,
+    "height": 238,
+    "bg": "#ffffff",
+    "url": "https://www.adobe.com"
+  },
+  {
+    "id": "mcl",
+    "name": "Mahanadi Coalfields",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/mcl.webp",
+    "width": 346,
+    "height": 107,
+    "bg": "#ffffff",
+    "url": "https://www.mahanadicoal.in"
+  },
+  {
+    "id": "royal-enfield",
+    "name": "Royal Enfield",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/royal-enfield.webp",
+    "width": 900,
+    "height": 468,
+    "bg": "#f3f5f4",
+    "url": "https://www.royalenfield.com"
+  },
+  {
+    "id": "mayfair",
+    "name": "Mayfair Hotels & Resorts",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/mayfair.webp",
+    "width": 900,
+    "height": 633,
+    "bg": "#fefefe",
+    "url": "https://www.mayfairhotels.com"
+  },
+  {
+    "id": "niladri-new-town",
+    "name": "Niladri New Town",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/niladri-new-town.webp",
+    "width": 900,
+    "height": 340,
+    "bg": "#ffffff"
+  },
+  {
+    "id": "coca-cola",
+    "name": "Coca-Cola",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/coca-cola.webp",
+    "width": 900,
+    "height": 283,
+    "bg": "#ffffff",
+    "url": "https://www.coca-cola.com"
+  },
+  {
+    "id": "sail",
+    "name": "SAIL",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/sail.webp",
+    "width": 858,
+    "height": 900,
+    "bg": "#ffffff",
+    "url": "https://sail.co.in"
+  },
+  {
+    "id": "sbi",
+    "name": "State Bank of India",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/sbi.webp",
+    "width": 900,
+    "height": 343,
+    "bg": "#fefefe",
+    "url": "https://sbi.co.in"
+  },
+  {
+    "id": "trends",
+    "name": "Trends",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/trends.webp",
+    "width": 900,
+    "height": 226,
+    "bg": "#fefefe"
+  },
+  {
+    "id": "ktm",
+    "name": "KTM",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/ktm.webp",
+    "width": 900,
+    "height": 353,
+    "bg": "#ffffff",
+    "url": "https://www.ktm.com"
+  },
+  {
+    "id": "fnp",
+    "name": "Ferns N Petals",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/fnp.webp",
+    "width": 900,
+    "height": 447,
+    "bg": "#ffffff",
+    "url": "https://www.fnp.com"
+  },
+  {
+    "id": "kanak-news",
+    "name": "Kanak News",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/kanak-news.webp",
+    "width": 900,
+    "height": 513,
+    "bg": "#fefefe",
+    "url": "https://kanaknews.com"
+  },
+  {
+    "id": "lic",
+    "name": "LIC",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/lic.webp",
+    "width": 571,
+    "height": 301,
+    "bg": "#ffffff",
+    "url": "https://licindia.in"
+  },
+  {
+    "id": "indianoil",
+    "name": "IndianOil",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/indianoil.webp",
+    "width": 753,
+    "height": 900,
+    "bg": "#ffffff",
+    "url": "https://iocl.com"
+  },
+  {
+    "id": "radhika-group",
+    "name": "Radhika Group",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/radhika-group.webp",
+    "width": 357,
+    "height": 230,
+    "bg": "#ffffff"
+  },
+  {
+    "id": "unacademy",
+    "name": "Unacademy",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/unacademy.webp",
+    "width": 900,
+    "height": 206,
+    "bg": "#ffffff",
+    "url": "https://unacademy.com"
+  },
+  {
+    "id": "raurkela-shines",
+    "name": "Raurkela Shines",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/raurkela-shines.webp",
+    "width": 900,
+    "height": 743,
+    "bg": "#fffffd"
+  },
+  {
+    "id": "regency-inn",
+    "name": "The Regency Inn",
+    "logo": "https://ik.imagekit.io/b4kmkfgaod/innovision/sponsors/past/regency-inn.webp",
+    "width": 900,
+    "height": 299,
+    "bg": "#fdfdfa"
+  }
+]

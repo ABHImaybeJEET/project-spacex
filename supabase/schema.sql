@@ -80,21 +80,8 @@ CREATE INDEX IF NOT EXISTS idx_registrations_user_id ON public.registrations(use
 CREATE INDEX IF NOT EXISTS idx_registrations_status ON public.registrations(status);
 CREATE INDEX IF NOT EXISTS idx_registrations_reg_id ON public.registrations(registration_id);
 
--- Ensure registrations do not allow students from ITER - SOA
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'registrations' AND table_schema = 'public') THEN
-    ALTER TABLE public.registrations DROP CONSTRAINT IF EXISTS registrations_no_iter_soa;
-    ALTER TABLE public.registrations ADD CONSTRAINT registrations_no_iter_soa
-    CHECK (
-      college IS NULL OR (
-        college !~* '\m(iter|soa)\M'
-        AND college !~* 'institute of technical education'
-        AND college !~* 'siksha.*anusandhan'
-      )
-    ) NOT VALID;
-  END IF;
-END $$;
+-- ITER - SOA students may register: drops the college CHECK that used to refuse them, on databases that still have it.
+ALTER TABLE IF EXISTS public.registrations DROP CONSTRAINT IF EXISTS registrations_no_iter_soa;
 
 
 -- Field validation in the database itself, so it also applies to direct Supabase API writes that skip /api/register.
@@ -369,7 +356,7 @@ CREATE POLICY "Users can view own registrations or staff can view all" ON public
 SELECT TO authenticated USING (user_id = auth.uid() OR public.is_registration_staff(auth.uid()));
 
 -- No direct INSERT for end users: every registration is created by /api/register (service role), which applies the
--- rules the database can't (ITER - SOA email domain, proof object really uploaded by the same user, rate limits). The INSERT privilege itself is revoked in section 11; the insert trigger below stays as defense in depth.
+-- rules the database can't (proof object really uploaded by the same user, rate limits). The INSERT privilege itself is revoked in section 11; the insert trigger below stays as defense in depth.
 DROP POLICY IF EXISTS "Users can create their registration" ON public.registrations;
 
 DROP POLICY IF EXISTS "Staff can review pending registrations" ON public.registrations;
@@ -390,11 +377,6 @@ BEGIN
   END IF;
 
   SELECT lower(email), email_confirmed_at INTO v_email, v_confirmed FROM auth.users WHERE id = auth.uid();
-
-  -- Same ITER - SOA email rule as /api/register (isIterSoaEmail); the college CHECK only covers the typed name.
-  IF v_email LIKE '%@soa.%' OR v_email LIKE '%@iter.%' THEN
-    RAISE EXCEPTION 'Registration is not allowed for students from ITER - SOA.' USING ERRCODE = '42501';
-  END IF;
 
   NEW.user_id := auth.uid();
   NEW.email := COALESCE(v_email, '');
