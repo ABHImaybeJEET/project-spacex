@@ -243,9 +243,12 @@ export interface RegistrationInput {
 export const REGISTRATION_GENDERS = ['male', 'female', 'others'] as const;
 export type RegistrationGender = (typeof REGISTRATION_GENDERS)[number];
 
+/** Form field a validation error belongs to, so the registration form can show it on the right step. */
+export type RegistrationField = 'name' | 'college' | 'phone' | 'gender' | 'enrollment_no' | 'payfile' | 'utr' | 'form';
+
 export type RegistrationValidation =
   | { ok: true; data: RegistrationInput }
-  | { ok: false; error: string };
+  | { ok: false; error: string; field: RegistrationField };
 
 const optionalString = (v: unknown): string | null | undefined =>
   v === undefined || v === null ? null : typeof v === 'string' ? v : undefined;
@@ -278,7 +281,7 @@ export function validateRegistrationInput(
   opts: { ownerId: string }
 ): RegistrationValidation {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return { ok: false, error: 'Invalid request body.' };
+    return { ok: false, error: 'Invalid request body.', field: 'form' };
   }
   const b = body as Record<string, unknown>;
 
@@ -291,42 +294,46 @@ export function validateRegistrationInput(
   const rawUtr = optionalString(b.utr);
 
   if (!name || !rawPhone || !college) {
-    return { ok: false, error: 'Missing required fields: name, college, and phone are mandatory.' };
+    return {
+      ok: false,
+      error: 'Missing required fields: name, college, and phone are mandatory.',
+      field: !name ? 'name' : !college ? 'college' : 'phone',
+    };
   }
   if (enrollment === undefined || proofPath === undefined || rawUtr === undefined) {
-    return { ok: false, error: 'Invalid field types in registration payload.' };
+    return { ok: false, error: 'Invalid field types in registration payload.', field: 'form' };
   }
   if (name.length < 2 || name.length > 100) {
-    return { ok: false, error: 'Name must be between 2 and 100 characters.' };
+    return { ok: false, error: 'Name must be between 2 and 100 characters.', field: 'name' };
   }
   if (college.length < 3 || college.length > 200) {
-    return { ok: false, error: 'College name must be between 3 and 200 characters.' };
+    return { ok: false, error: 'College name must be between 3 and 200 characters.', field: 'college' };
   }
   if (!(REGISTRATION_GENDERS as readonly string[]).includes(gender)) {
-    return { ok: false, error: 'Select a gender: male, female or others.' };
+    return { ok: false, error: 'Select a gender: male, female or others.', field: 'gender' };
   }
 
   const phone = rawPhone.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    return { ok: false, error: 'Use a valid 10-digit Indian mobile number.' };
+    return { ok: false, error: 'Use a valid 10-digit Indian mobile number.', field: 'phone' };
   }
 
   const enrollment_no = enrollment ? enrollment.trim() : '';
   if (enrollment_no.length > 50 || (enrollment_no && !/^[A-Za-z0-9/_ -]+$/.test(enrollment_no))) {
-    return { ok: false, error: 'Enrollment number contains invalid characters.' };
+    return { ok: false, error: 'Enrollment number contains invalid characters.', field: 'enrollment_no' };
   }
 
   if (!proofPath) {
-    return { ok: false, error: 'Payment screenshot is required.' };
+    return { ok: false, error: 'Payment screenshot is required.', field: 'payfile' };
   }
   // The path is only accepted inside the caller's own folder (ownerId comes from the verified session), so a
   // registration can never reference another user's proof. /api/register then checks the object really exists.
   if (!isPaymentProofPath(proofPath, opts.ownerId)) {
-    return { ok: false, error: 'Invalid payment screenshot upload. Please re-upload your screenshot.' };
+    return { ok: false, error: 'Invalid payment screenshot upload. Please re-upload your screenshot.', field: 'payfile' };
   }
   const utr = (rawUtr || '').replace(/\s+/g, '');
   if (!/^\d{12}$/.test(utr)) {
-    return { ok: false, error: 'A valid 12-digit UPI transaction ID (UTR) is required.' };
+    return { ok: false, error: 'A valid 12-digit UPI transaction ID (UTR) is required.', field: 'utr' };
   }
 
   return {

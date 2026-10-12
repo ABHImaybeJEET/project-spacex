@@ -145,6 +145,7 @@ src/
 │   └── events/                 # Chrome for the /events pages
 ├── config/
 │   ├── launch.ts               # Launch switches (registrations, merch store)
+│   ├── payment.ts              # Registration fee, UPI ID and UPI payment link
 │   └── site.ts                 # Canonical URL and site name
 ├── lib/                        # Server and shared helpers: supabase, imagekit, auth, validation, security, seo
 └── proxy.ts                    # Request proxy (Next 16's middleware): CSRF, rate limits, auth gate
@@ -188,6 +189,13 @@ export const MERCH_STORE_OPEN = true;
 ```
 
 While a switch is `false`, its buttons and links lead to a "coming soon" page, and the real flow stays untouched.
+The registration APIs (`/api/register`, `/api/upload`) check the same switch on the server.
+
+### Change the registration fee or UPI ID
+
+Edit [`src/config/payment.ts`](src/config/payment.ts). The fee must match `REGISTRATION_FEE_INR` in
+[`src/lib/security.ts`](src/lib/security.ts), which is what the server records. Then regenerate
+`public/assets/upi-qr.svg` from the new `UPI_PAY_LINK` with any QR encoder, and scan it to check before deploying.
 
 ### Add gallery photos
 

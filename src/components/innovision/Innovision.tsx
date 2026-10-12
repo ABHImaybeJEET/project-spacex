@@ -50,6 +50,7 @@ import {
   type GalleryPhoto,
 } from '@/lib/supabase';
 import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_STORE_OPEN, MERCH_SOON_PATH } from '@/config/launch';
+import { REGISTRATION_FEE, UPI_ID, UPI_PAY_LINK, UPI_QR_SRC } from '@/config/payment';
 import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
 import { isIterSoaCollege, isIterSoaEmail, ITER_SOA_ERROR_MESSAGE, isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
 import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
@@ -363,12 +364,17 @@ export class Innovision extends Component<Props, State> {
       if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
         this.showRegistrationsSoon(true);
       } else if (isAuthRequired) {
+        // Remembered across the Google sign-in round trip, so the student lands on the form once signed in.
+        if (search.get('required') === 'register') sessionStorage.setItem('inv_pending_action', 'register');
         setTimeout(() => {
           this.openAuth('login');
           this.toast('Please log in to register.');
         }, 1200);
       } else if (isOpenRegister) {
-        setTimeout(() => {
+        // Waits for the session check, so a signed-in student isn't sent to log in first.
+        setTimeout(async () => {
+          if (!this._authReady.done) await this._authReady.p;
+          if (!this.alive) return;
           if (!this.state.user) {
             sessionStorage.setItem('inv_pending_action', 'register');
             this.openAuth('login');
@@ -1843,9 +1849,9 @@ export class Innovision extends Component<Props, State> {
   // @ts-ignore
   newId() { return 'IV26-' + (Math.floor(Math.random() * 9000) + 1000); }
   drop(err, k) { const e = { ...err }; delete e[k]; return e; }
-  fee() { const n = Math.round(Number(this.props.regFee ?? 499)); return n > 0 ? n : 499; }
+  fee() { return REGISTRATION_FEE; }
   // @ts-ignore
-  upi() { return String(this.props.upiId || 'innovision@sbi').trim(); }
+  upi() { return UPI_ID; }
   speed() { const n = Number(this.props.riftSpeed ?? 1); return n > 0 ? n : 1; }
   // @ts-ignore
   fmtSize(n) { return n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; }
@@ -2131,7 +2137,7 @@ export class Innovision extends Component<Props, State> {
     const isImg = /^image\//.test(f.type);
 
     if (!isImg) {
-      this.fail({ [ek]: 'Upload the screenshot as an image (JPG or PNG).' });
+      this.fail({ [ek]: 'Upload the screenshot as an image (JPG, PNG or WebP).' });
       return;
     }
 
@@ -2307,14 +2313,20 @@ export class Innovision extends Component<Props, State> {
       const gender = v('gender');
 
       if (name.length < 2) err.name = 'Tell us your full name.';
+      else if (name.length > 100) err.name = 'Keep your name under 100 characters.';
       if (!GENDERS.some((g) => g.value === gender)) err.gender = 'Select your gender.';
       if (!isInternal && college.length < 3) {
         err.college = 'Which college are you from?';
+      } else if (!isInternal && college.length > 200) {
+        err.college = 'Keep the college name under 200 characters.';
       } else if (!isInternal && (isIterSoaCollege(college) || isIterSoaEmail(email))) {
         err.college = ITER_SOA_ERROR_MESSAGE;
       }
       if (!/^[6-9]\d{9}$/.test(phone)) err.phone = 'Use a 10-digit Indian mobile number.';
       if (isInternal && !enrollment_no) err.enrollment_no = 'Enter your NIT Rourkela Roll / Enrollment number.';
+      else if (enrollment_no.length > 50 || (enrollment_no && !/^[A-Za-z0-9/_ -]+$/.test(enrollment_no))) {
+        err.enrollment_no = 'Use only letters, numbers, spaces and / _ - (up to 50 characters).';
+      }
 
       if (this.fail(err)) return;
       this.reg = { name, college, email, phone, enrollment_no, gender };
@@ -2360,18 +2372,31 @@ export class Innovision extends Component<Props, State> {
         const saveRes = await createRegistration(regPayload);
         const savedReg = saveRes.registration || (saveRes.success ? regPayload : null);
         if (!savedReg) {
-          this.toast(saveRes.error || 'Registration failed');
-          if (isTransientFailure(saveRes.status)) {
-            // Rate limited, server error or offline: stay on this step with the UTR and screenshot intact, so the
-            // student can submit again by hand once they have waited. Nothing is resubmitted automatically.
-            this.setState({ busyLbl: '', err: { form: saveRes.error || 'Registration failed' } });
+          const msg = saveRes.error || 'Registration failed';
+          this.toast(msg);
+          const field = saveRes.field || '';
+          const detailsField = ['name', 'college', 'phone', 'gender', 'enrollment_no'].includes(field);
+          if (isTransientFailure(saveRes.status) || !(detailsField || field === 'payfile' || field === 'utr')) {
+            // Rate limited, server error, offline, closed or signed out: stay on this step with the UTR and screenshot
+            // intact, so the student can submit again by hand. Nothing is resubmitted automatically.
+            this.setState({ busyLbl: '', err: { form: msg } });
             return;
           }
-          this.setState({
-            busyLbl: '',
-            step: 0,
-            err: { college: saveRes.error || 'Registration failed' },
-          });
+          if (field === 'payfile') {
+            // The stored screenshot can't be used: pick it again (a fresh upload gets a fresh storage path).
+            this.removeFile('pay');
+            this.setState({ busyLbl: '', err: { payfile: msg } });
+            return;
+          }
+          if (field === 'utr') {
+            this.setState({ busyLbl: '' });
+            this.fail({ utr: msg });
+            return;
+          }
+          // Details from the first step (name, college, phone, gender, enrollment number): go back to fix them.
+          this.setState({ busyLbl: '' });
+          this.toStep(0);
+          this.setState({ err: { [field]: msg } });
           return;
         }
 
@@ -2471,7 +2496,7 @@ export class Innovision extends Component<Props, State> {
       err: E, bc, inv, genderOptions: GENDERS,
       upPay: up('pay', 'payfile', 'Drop the screenshot here or browse (Max 1MB)'),
       fee, upi, copyUpi: this.copyUpi, copyLbl: s.copied ? 'COPIED' : 'COPY',
-      upiLink: 'upi://pay?pa=' + encodeURIComponent(upi) + '&pn=' + encodeURIComponent('Innovision NIT Rourkela') + '&am=' + fee + '&cu=INR&tn=' + encodeURIComponent('Innovision 2026 registration'),
+      upiLink: UPI_PAY_LINK, upiQr: UPI_QR_SRC,
       upiAppD: s.narrow ? 'inline-flex' : 'none',
       authSubmit: this.authSubmit, clearErr: this.clearErr, switchMode: this.switchMode, closeAuthH: () => this.closeAuth(),
       showSwitch: am !== 'pass' && !reg && !!s.user,
