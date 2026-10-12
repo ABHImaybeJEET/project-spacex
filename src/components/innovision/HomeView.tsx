@@ -237,9 +237,10 @@ export default function HomeView({ v }: { v: V }) {
       {/* The footer slides up over the closing section: the section is sticky (its top is set by Innovision#homeScroll so it
           pins once its bottom reaches the bottom of the screen) across the 40vh spacer below it, and the wrapper's negative
           margin lets the footer overlap that spacer. Sticky runs with the browser's own scrolling, so it stays smooth on
-          touch screens, unlike a scroll-scrubbed transform. */}
-      <div style={{ marginBottom: "-40vh" }}>
-        <section data-launch-sec="" style={{ position: "sticky", top: "0", overflow: "hidden", padding: "clamp(110px,18vh,200px) clamp(20px,4vw,64px) clamp(260px,40vh,420px)", textAlign: "center", background: "#ECE8DF" }}>
+          touch screens, unlike a scroll-scrubbed transform. Bottom padding includes the overlap plus a visible gap,
+          so the footer never settles directly against the buttons when the sticky section releases. */}
+      <div style={{ "--footer-overlap": "40vh", marginBottom: "calc(-1 * var(--footer-overlap))" } as CSSProperties}>
+        <section data-launch-sec="" style={{ position: "sticky", top: "0", overflow: "hidden", padding: "clamp(110px,18vh,200px) clamp(20px,4vw,64px) calc(var(--footer-overlap) + clamp(64px,7vw,112px))", textAlign: "center", background: "#ECE8DF" }}>
           <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "100%", width: "220vmax", height: "220vmax", margin: "-110vmax 0 0 -110vmax", borderRadius: "50%", background: "repeating-conic-gradient(from 0deg,rgba(20,19,18,.09) 0deg .5deg,transparent .5deg 5deg)", WebkitMaskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", maskImage: "radial-gradient(circle,transparent 22%,#000 28%,transparent 52%)", pointerEvents: "none" }}></div>
           <div aria-hidden="true" style={{ position: "absolute", left: "50%", bottom: "calc(min(130vw, 1700px) * -.8)", width: "min(130vw, 1700px)", aspectRatio: "1", marginLeft: "calc(min(130vw, 1700px) / -2)", pointerEvents: "none" }}>
             <img decoding="async" data-spin="480" src="/assets/planet-mercury.webp" alt="" style={{ width: "100%", height: "100%", filter: "grayscale(1) contrast(1.35) brightness(1.05)" }} />
@@ -260,7 +261,7 @@ export default function HomeView({ v }: { v: V }) {
             </div>
           </div>
         </section>
-        <div aria-hidden="true" style={{ height: "40vh" }}></div>
+        <div aria-hidden="true" style={{ height: "var(--footer-overlap)" }}></div>
       </div>
       <LiveFooter />
     </main>
