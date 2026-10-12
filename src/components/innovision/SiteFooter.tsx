@@ -69,7 +69,7 @@ export default function SiteFooter({ v }: { v: V }) {
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 32px", justifyContent: "space-between", alignItems: "center", paddingTop: "28px", fontSize: "14px", color: "rgba(236,232,223,.78)" }}>
           <span>© 2026 Innovision · NIT Rourkela, Odisha</span>
-          <span style={{ fontSize: "18px", fontWeight: "700", color: "#ECE8DF", textShadow: "0 0 10px rgba(236, 232, 223, 0.4)" }}>Crafted with <span style={{ color: "oklch(0.72 0.13 25)" }}>♥</span> by <b style={{ color: "#fff", textShadow: "0 0 15px rgba(255,255,255,0.7)" }}>OpenCode NIT Rourkela</b></span>
+          <span style={{ fontSize: "18px", fontWeight: "700", color: "#ECE8DF", textShadow: "0 0 10px rgba(236, 232, 223, 0.4)" }}>Crafted with <span style={{ color: "oklch(0.72 0.13 25)" }}>♥</span> by <a href="https://opencodenitr.in/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", textShadow: "0 0 15px rgba(255,255,255,0.7)" }}>OpenCode NIT Rourkela</a></span>
           <a href="#top" onClick={v.toTop} onMouseEnter={v.hover} style={{ display: "inline-block", color: "#ECE8DF", textDecoration: "none", fontWeight: "500", letterSpacing: ".06em" }}>
             <span data-scr="">BACK TO ORBIT ↑</span>
           </a>

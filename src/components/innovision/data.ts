@@ -1,5 +1,6 @@
 // Content and tuning constants for the Innovision 2026 experience.
 import ARCHIVE_JSON from './gallery.json';
+import PAST_SPONSORS_JSON from './past-sponsors.json';
 
 export const A = '/assets/';
 
@@ -194,32 +195,20 @@ export const PRODUCTS: Product[] = [
   { id: 'stickers', name: 'Sticker Pack', price: 99, desc: 'Eight die-cut stickers: planets, astronauts and mission badges.' },
 ];
 
-/** One sponsor: logo is a path under /public (e.g. A + 'sponsors/acme.svg'); url opens in a new tab. */
-export interface Sponsor { name?: string; logo?: string; url?: string }
-export type SponsorTier = { key: string; title: string; /** Card size on the rail: main sponsors get the larger cards. */ size: 'lg' | 'md'; items: Sponsor[] };
-
-/** Shown alone in the featured card at the top of the sponsors section. */
-export const TITLE_SPONSOR: Sponsor = {};
+/**
+ * Brands that have sponsored past fests, in the order of the 2026 sponsorship brochure. Logos are WebP on ImageKit
+ * (/innovision/sponsors/past), trimmed to the mark; width and height are the file's pixels and bg is the logo's own
+ * background colour, which fills its card. url is the brand's official site, left out where none was confirmed.
+ */
+export interface PastSponsor { id: string; name: string; logo: string; width: number; height: number; bg: string; url?: string }
+export const PAST_SPONSORS: PastSponsor[] = PAST_SPONSORS_JSON;
 
 /**
- * Each tier is a horizontally scrolling rail, so any number of sponsors fits. Replace the empty
- * placeholders ({}) with real entries, e.g. { name: 'Acme', logo: A + 'sponsors/acme.svg', url: 'https://acme.com' }.
+ * Images placed into image slots, keyed by slot id (e.g. 'gallery-3', 'merch-tee', 'merch-feature').
+ * Slots without an entry show the placeholder, as in the design.
+ * Example: 'merch-tee': { src: A + 'merch/tee.webp', fit: 'cover' }
  */
-export const SPONSOR_TIERS: SponsorTier[] = [
-  { key: 'main', title: 'Our sponsors', size: 'lg', items: Array.from({ length: 10 }, () => ({})) },
-  { key: 'media', title: 'Media sponsors', size: 'md', items: Array.from({ length: 8 }, () => ({})) },
-  { key: 'food', title: 'Food sponsors', size: 'md', items: Array.from({ length: 8 }, () => ({})) },
-];
-
-/**
- * Images placed into image slots, keyed by slot id (e.g. 'sponsor-1-1', 'gallery-3', 'merch-tee',
- * 'merch-feature'). Slots without an entry show the placeholder, as in the design.
- * Example: 'sponsor-1': { src: A + 'sponsors/acme.webp', fit: 'contain' }
- */
-export const SLOT_IMAGES: Record<string, { src: string; fit?: 'contain' | 'cover' }> = {
-  // Art from the design's title-sponsor slot (.image-slots.state.json); it now decorates the title card beside the logo.
-  'sponsor-title': { src: A + 'sponsor-title.webp' },
-};
+export const SLOT_IMAGES: Record<string, { src: string; fit?: 'contain' | 'cover' }> = {};
 
 /** Schedule day tabs: [theme, planet image]. */
 export const SCHED_DAYS: [string, string][] = [['Launch', 'moon-cratered.webp'], ['Orbit', 'planet-ringed.webp'], ['Re-entry', 'planet-storm.webp']];

@@ -13,7 +13,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import {
   A, WORLDS, PRELOAD_CRITICAL, PRELOAD_DEFERRED, HERO_SPARKS, LOADER_SPARKS, STATUS, SCRAMBLE, GAP, GALLERY, ARCHIVE, ikWidth, gFrame,
-  LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, SPONSOR_TIERS, TITLE_SPONSOR, inr, type Product, type WorldKey,
+  LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, PAST_SPONSORS, inr, type Product, type WorldKey,
 } from './data';
 import HomeView from './HomeView';
 import WorldsView from './WorldsView';
@@ -2586,16 +2586,8 @@ export class Innovision extends Component<Props, State> {
         };
       }),
       tunnelTotal: String(TUNNEL.length).padStart(2, '0'),
-      titleSponsor: TITLE_SPONSOR,
-      sponsorTiers: SPONSOR_TIERS.map((t) => ({
-        key: t.key, title: t.title, lg: t.size === 'lg', countL: t.items.length + (t.items.length === 1 ? ' partner' : ' partners'),
-        cards: t.items.map((it, k) => ({ ...it, slot: 'sponsor-' + t.key + '-' + (k + 1), ph: t.key === 'main' ? 'Sponsor logo' : t.key === 'media' ? 'Media partner logo' : 'Food partner logo' })),
-      })).map((t) => {
-        // The ticker repeats a short tier until one pass is wider than any screen, so the loop never shows a gap;
-        // its duration grows with the pass so every row drifts at the same gentle speed.
-        const loop = t.cards.length ? Array.from({ length: Math.max(8, t.cards.length) }, (_, k) => t.cards[k % t.cards.length]) : [];
-        return { ...t, loop, dur: (loop.length * (t.lg ? 3.6 : 3)).toFixed(1) + 's' };
-      }),
+      // Logos are sized by the square root of their aspect ratio, so wide wordmarks and square marks carry similar weight.
+      pastSponsors: PAST_SPONSORS.map((s) => ({ ...s, src: ikWidth(s.logo, 400), w: Math.min(78, 36 * Math.sqrt(s.width / s.height)).toFixed(1) + '%' })),
       merchTeaser: PRODUCTS.slice(0, 3).map((p) => ({ slot: 'merch-' + p.id, ph: p.name, name: p.name, priceL: '₹' + p.price })),
       products: PRODUCTS.map((p) => {
         const sl = s.sel[p.id] || {}, size = sl.size || (p.sizes ? 'M' : null), color = sl.color || 0;
@@ -2622,7 +2614,6 @@ export class Innovision extends Component<Props, State> {
         if (!email || !email.value) return;
         f.reset(); this.toast("You're on the mission list.");
       },
-      sponsorCta: (e: MouseEvent) => { e.preventDefault(); this.toast('Partnership deck drops soon. Reach us on Instagram.'); },
       toastMsg: s.toastMsg,
       heroChars: 'INNOVISION'.split('').map((ch) => ({ ch })),
       briefWords: BRIEF.split(' '),

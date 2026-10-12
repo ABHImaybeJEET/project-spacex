@@ -214,18 +214,18 @@ export default function HomeView({ v }: { v: V }) {
           </div>
         </div>
       </section>
-      <section data-sec="sponsors" aria-label="Sponsors" style={{ position: "relative", padding: "clamp(96px,16vh,180px) clamp(20px,4vw,64px)", background: "#ECE8DF" }}>
+      <section data-sec="sponsors" aria-label="Past sponsors" style={{ position: "relative", padding: "clamp(96px,16vh,180px) clamp(20px,4vw,64px)", background: "#ECE8DF" }}>
         <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
           <header data-reveal="" style={{ display: "flex", flexWrap: "wrap", alignItems: "end", justifyContent: "space-between", gap: "24px", marginBottom: "56px" }}>
             <div>
-              <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Sponsors &amp; partners</h2>
+              <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Past sponsors</h2>
             </div>
-            <p style={{ maxWidth: "380px", margin: "0", fontSize: "16px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>The brands fuelling Innovision 2026. Full line-up announced closer to launch.</p>
+            <p style={{ maxWidth: "380px", margin: "0", fontSize: "16px", lineHeight: "1.6", color: "#3a3733", textWrap: "pretty" }}>{v.pastSponsors.length} brands have backed Innovision over the years. The 2026 line-up is announced closer to launch.</p>
           </header>
           <Sponsors v={v} />
           <div data-reveal="" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "20px", marginTop: "clamp(48px,7vh,72px)", paddingTop: "28px", borderTop: "1px solid rgba(20,19,18,.14)" }}>
             <p style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(22px,2.2vw,32px)" }}>Want your brand in orbit?</p>
-            <a href="#sponsor" onClick={v.sponsorCta} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#ECE8DF", background: "#141312" }} className="hv-bronze-fill">
+            <a href="https://drive.google.com/drive/folders/1u86nzk0l6DEJTGGM2gXgaQfUobdByp4S?usp=drive_link" target="_blank" rel="noopener noreferrer" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: "168px", padding: "17px 30px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".06em", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#ECE8DF", background: "#141312" }} className="hv-bronze-fill">
               <span data-scr="">BECOME A SPONSOR</span>
             </a>
           </div>
