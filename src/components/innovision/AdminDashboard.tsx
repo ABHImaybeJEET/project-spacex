@@ -8,6 +8,7 @@ import { csvCell, GENDER_OPTIONS, safeHttpUrl } from '@/lib/validation';
 const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === value)?.label ?? value;
 import EventsManager from './admin/EventsManager';
 import GalleryManager from './admin/GalleryManager';
+import EntryManager from './admin/EntryManager';
 import { httpErrorMessage } from '@/lib/api-errors';
 
 interface AdminDashboardProps {
@@ -30,7 +31,7 @@ export default function AdminDashboard({
   const canReviewRegistrations = isAdmin || isRegTeam;
 
   const defaultTab = canReviewRegistrations ? 'registrations' : 'events';
-  const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users'>(defaultTab);
+  const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users' | 'entry'>(defaultTab);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingRegs, setLoadingRegs] = useState(false);
@@ -201,6 +202,7 @@ export default function AdminDashboard({
   // Active tab: 'users' is strictly admin-only; staff have their own tabs
   let activeTab = tab;
   if (tab === 'users' && !isAdmin) activeTab = defaultTab;
+  if (tab === 'entry' && !isAdmin) activeTab = defaultTab;
   if (tab === 'registrations' && !canReviewRegistrations) activeTab = defaultTab;
   if ((tab === 'events' || tab === 'gallery') && !isAdmin && !isItTeam) activeTab = defaultTab;
 
@@ -871,6 +873,49 @@ export default function AdminDashboard({
                 USERS & ROLES ({users.length})
               </button>
             )}
+
+            {isAdmin && (
+              <button
+                id="tab-entry"
+                type="button"
+                onClick={() => setTab('entry')}
+                style={{
+                  padding: '8px 18px',
+                  border: 0,
+                  borderBottom: activeTab === 'entry' ? '2px solid oklch(0.8 0.12 85)' : '2px solid transparent',
+                  background: activeTab === 'entry' ? 'rgba(236,232,223,0.06)' : 'transparent',
+                  color: activeTab === 'entry' ? '#ECE8DF' : 'rgba(236,232,223,0.5)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  letterSpacing: '.14em',
+                  cursor: 'pointer',
+                }}
+              >
+                ENTRY
+              </button>
+            )}
+
+            {/* Venue check-in scanner (registration team and admins; the page and its API check the role again). */}
+            {canReviewRegistrations && (
+              <a
+                id="open-scanner-link"
+                href="/admin/scan"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  padding: '8px 18px',
+                  borderBottom: '2px solid transparent',
+                  color: 'oklch(0.8 0.12 85)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  letterSpacing: '.14em',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                OPEN SCANNER ↗
+              </a>
+            )}
           </nav>
         </div>
 
@@ -1373,6 +1418,11 @@ export default function AdminDashboard({
             setConfirmModal={setConfirmModal}
             setPreviewImage={setPreviewImage}
           />
+        )}
+
+        {/* TAB 5: VENUE ENTRY / CHECK-IN (Admin Only) */}
+        {activeTab === 'entry' && isAdmin && (
+          <EntryManager getAuthToken={getAuthToken} showToast={showToast} setConfirmModal={setConfirmModal} />
         )}
 
         {/* TAB 4: USERS DIRECTORY & ROLE MANAGEMENT (Admin Only) */}

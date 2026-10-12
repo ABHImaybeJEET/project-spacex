@@ -680,3 +680,623 @@ CREATE POLICY "Payment proofs: never outside the owner's folder" ON storage.obje
 ALL TO anon, authenticated
 USING (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text)
 WITH CHECK (bucket_id <> 'payment-proofs' OR (storage.foldername(name))[1] = auth.uid()::text);
+
+
+-- 13. ENTRY PASSES AND CHECK-IN AT THE VENUE
+-- Every confirmed registration has one QR entry pass. At the venue the registration team scans it, compares the
+-- details with the person's college ID and checks them in: once per registration, ever.
+-- Naming: "check-in" everywhere in the database and the code. The scanner's button reads "Approve", but approval
+-- of a REGISTRATION (payment review) is a different thing and is untouched here.
+--
+-- The QR holds only an opaque random token (16 CSPRNG bytes, base64url, minted by POST /api/pass). The database
+-- stores its SHA-256 (token_hash) and an AES-256-GCM ciphertext (token_ciphertext) that only the server can decrypt
+-- (ENTRY_PASS_ENCRYPTION_KEY), so the owner sees the same QR again on any device.
+-- Clients never write these tables: every change goes through the SECURITY DEFINER functions below, which check
+-- the caller's role themselves and log to entry_audit_log.
+
+CREATE TABLE IF NOT EXISTS public.entry_passes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  registration_id UUID NOT NULL REFERENCES public.registrations(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE, -- hex SHA-256 of the QR token; NULL until the owner first opens the pass
+  token_ciphertext TEXT,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
+  issued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  revoked_at TIMESTAMPTZ,
+  revoke_reason TEXT,
+  CONSTRAINT entry_passes_token_hash_check CHECK (token_hash IS NULL OR token_hash ~ '^[0-9a-f]{64}$'),
+  CONSTRAINT entry_passes_token_pair_check CHECK ((token_hash IS NULL) = (token_ciphertext IS NULL)),
+  CONSTRAINT entry_passes_token_ciphertext_check CHECK (token_ciphertext IS NULL OR char_length(token_ciphertext) <= 512),
+  CONSTRAINT entry_passes_revoked_check CHECK ((status = 'revoked') = (revoked_at IS NOT NULL))
+);
+
+-- Never more than one active pass per registration (approving twice or re-running the backfill can't add one).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_entry_passes_active_registration
+  ON public.entry_passes(registration_id) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_entry_passes_registration ON public.entry_passes(registration_id);
+
+CREATE TABLE IF NOT EXISTS public.entry_checkins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  registration_id UUID NOT NULL REFERENCES public.registrations(id) ON DELETE CASCADE,
+  pass_id UUID REFERENCES public.entry_passes(id) ON DELETE SET NULL,
+  desk TEXT NOT NULL CHECK (char_length(desk) BETWEEN 1 AND 40),
+  checked_in_by UUID NOT NULL REFERENCES public.profiles(id),
+  scan_id UUID NOT NULL, -- chosen by the scanner per scan; a retry with the same scan_id is answered CHECKED_IN
+  method TEXT NOT NULL CHECK (method IN ('qr', 'manual')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  voided_at TIMESTAMPTZ,
+  voided_by UUID REFERENCES public.profiles(id),
+  void_reason TEXT CHECK (void_reason IS NULL OR char_length(void_reason) BETWEEN 1 AND 200),
+  CONSTRAINT entry_checkins_void_check
+    CHECK ((voided_at IS NULL) = (voided_by IS NULL) AND (voided_at IS NULL) = (void_reason IS NULL))
+);
+
+-- One check-in per registration, whichever QR (old or reissued) was shown. This index, not application code, is what
+-- makes two simultaneous Approves produce exactly one row. A voided check-in no longer counts.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_entry_checkins_registration
+  ON public.entry_checkins(registration_id) WHERE voided_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_entry_checkins_created_at ON public.entry_checkins(created_at DESC);
+
+-- Append-only trail of every scan, manual lookup, check-in, rejected attempt, void and reissue. No foreign keys:
+-- the log must outlive deleted accounts and registrations.
+CREATE TABLE IF NOT EXISTS public.entry_audit_log (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  action TEXT NOT NULL CHECK (action IN ('lookup', 'manual_lookup', 'check_in', 'reject', 'void', 'reissue')),
+  actor UUID NOT NULL,
+  registration_id UUID,
+  pass_id UUID,
+  checkin_id UUID,
+  detail JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_entry_audit_log_created_at ON public.entry_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_entry_audit_log_action ON public.entry_audit_log(action, created_at DESC);
+
+ALTER TABLE public.entry_passes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.entry_checkins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.entry_audit_log ENABLE ROW LEVEL SECURITY;
+
+-- Owners see their own pass; admins see all. No INSERT/UPDATE/DELETE policies on any of the three tables.
+DROP POLICY IF EXISTS "Owners can view their entry pass, admins all" ON public.entry_passes;
+CREATE POLICY "Owners can view their entry pass, admins all" ON public.entry_passes FOR
+SELECT TO authenticated USING (
+  public.is_admin(auth.uid())
+  -- Qualified: registrations has its own registration_id (the text IV26-NNNN code).
+  OR EXISTS (SELECT 1 FROM public.registrations r WHERE r.id = entry_passes.registration_id AND r.user_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS "Admins can view check-ins" ON public.entry_checkins;
+CREATE POLICY "Admins can view check-ins" ON public.entry_checkins FOR
+SELECT TO authenticated USING (public.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can view the entry audit log" ON public.entry_audit_log;
+CREATE POLICY "Admins can view the entry audit log" ON public.entry_audit_log FOR
+SELECT TO authenticated USING (public.is_admin(auth.uid()));
+
+REVOKE ALL ON public.entry_passes, public.entry_checkins, public.entry_audit_log FROM anon;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON public.entry_passes, public.entry_checkins, public.entry_audit_log FROM authenticated;
+GRANT SELECT ON public.entry_passes, public.entry_checkins, public.entry_audit_log TO authenticated;
+
+
+-- Pass lifecycle: a registration becoming 'confirmed' issues its pass; leaving 'confirmed' revokes it. A trigger, so it
+-- runs in the same transaction as the status change whoever makes it (/api/admin/registrations, the API, SQL).
+CREATE OR REPLACE FUNCTION public.issue_entry_pass(p_registration UUID) RETURNS UUID AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  INSERT INTO public.entry_passes (registration_id)
+  SELECT r.id FROM public.registrations r WHERE r.id = p_registration AND r.status = 'confirmed'
+  ON CONFLICT (registration_id) WHERE status = 'active' DO NOTHING
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.sync_entry_pass() RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'confirmed' THEN
+    PERFORM public.issue_entry_pass(NEW.id);
+  ELSE
+    UPDATE public.entry_passes
+    SET status = 'revoked', revoked_at = now(), revoke_reason = 'registration ' || COALESCE(NEW.status, 'unknown')
+    WHERE registration_id = NEW.id AND status = 'active';
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_entry_pass_lifecycle ON public.registrations;
+CREATE TRIGGER trg_entry_pass_lifecycle
+  AFTER INSERT OR UPDATE OF status ON public.registrations
+  FOR EACH ROW EXECUTE FUNCTION public.sync_entry_pass();
+
+-- Issues passes for registrations confirmed before this section existed. Idempotent: returns how many it issued,
+-- 0 on a second run. Run from the SQL editor (supabase/manual/backfill_entry_passes.sql); no API role may call it.
+CREATE OR REPLACE FUNCTION public.backfill_entry_passes() RETURNS INTEGER AS $$
+DECLARE
+  v_count INTEGER;
+BEGIN
+  INSERT INTO public.entry_passes (registration_id)
+  SELECT r.id FROM public.registrations r WHERE r.status = 'confirmed'
+  ON CONFLICT (registration_id) WHERE status = 'active' DO NOTHING;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- What the scanner shows for a registration: VALID (with the details staff compare against the college ID),
+-- ALREADY_CHECKED_IN (when, by whom, at which desk), or INVALID (a reason code, never personal data).
+CREATE OR REPLACE FUNCTION public.entry_state(p_registration UUID, p_pass UUID, p_invalid_reason TEXT)
+RETURNS JSONB AS $$
+DECLARE
+  r public.registrations%ROWTYPE;
+  c RECORD;
+BEGIN
+  IF p_invalid_reason IS NOT NULL THEN
+    RETURN jsonb_build_object('state', 'INVALID', 'reason', p_invalid_reason);
+  END IF;
+
+  SELECT * INTO r FROM public.registrations WHERE id = p_registration;
+  IF NOT FOUND OR r.status <> 'confirmed' THEN
+    RETURN jsonb_build_object('state', 'INVALID', 'reason', 'not_confirmed');
+  END IF;
+
+  SELECT ch.id, ch.created_at, ch.desk, ch.method, pr.full_name AS staff_name INTO c
+  FROM public.entry_checkins ch LEFT JOIN public.profiles pr ON pr.id = ch.checked_in_by
+  WHERE ch.registration_id = r.id AND ch.voided_at IS NULL;
+  IF FOUND THEN
+    RETURN jsonb_build_object(
+      'state', 'ALREADY_CHECKED_IN',
+      'registration', r.id, 'registration_id', r.registration_id, 'name', r.name,
+      'checkin_id', c.id, 'checked_in_at', c.created_at, 'checked_in_by', COALESCE(c.staff_name, 'Staff'),
+      'desk', c.desk, 'method', c.method
+    );
+  END IF;
+
+  RETURN jsonb_build_object(
+    'state', 'VALID',
+    'registration', r.id, 'registration_id', r.registration_id, 'name', r.name,
+    'enrollment_no', r.enrollment_no, 'college', r.college, 'phone', r.phone, 'utr', r.utr
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+-- Resolves a scanned token to its pass and registration, or an invalid reason. Malformed and unknown tokens are
+-- both 'unknown'.
+CREATE OR REPLACE FUNCTION public.entry_resolve_token(
+  p_token TEXT, OUT pass_id UUID, OUT registration_id UUID, OUT invalid_reason TEXT
+) AS $$
+DECLARE
+  p public.entry_passes%ROWTYPE;
+BEGIN
+  IF p_token IS NULL OR p_token !~ '^[A-Za-z0-9_-]{22}$' THEN
+    invalid_reason := 'unknown';
+    RETURN;
+  END IF;
+  SELECT * INTO p FROM public.entry_passes WHERE token_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex');
+  IF NOT FOUND THEN
+    invalid_reason := 'unknown';
+    RETURN;
+  END IF;
+  pass_id := p.id;
+  registration_id := p.registration_id;
+  IF p.status <> 'active' THEN
+    invalid_reason := 'revoked';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.entry_require_registration_staff() RETURNS VOID AS $$
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_registration_staff(auth.uid()) THEN
+    RAISE EXCEPTION 'Registration team or admin access required' USING ERRCODE = '42501';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.entry_require_admin() RETURNS VOID AS $$
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_admin(auth.uid()) THEN
+    RAISE EXCEPTION 'Admin access required' USING ERRCODE = '42501';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+-- The one place a check-in row is written (QR and manual paths alike).
+CREATE OR REPLACE FUNCTION public.entry_check_in(p_pass UUID, p_scan_id UUID, p_desk TEXT, p_method TEXT)
+RETURNS JSONB AS $$
+DECLARE
+  v_actor UUID := auth.uid();
+  v_desk TEXT := btrim(COALESCE(p_desk, ''));
+  v_reg public.registrations%ROWTYPE;
+  v_id UUID;
+  v_at TIMESTAMPTZ;
+  v_existing RECORD;
+  v_result JSONB;
+BEGIN
+  IF p_scan_id IS NULL THEN
+    RAISE EXCEPTION 'scan_id is required' USING ERRCODE = '22023';
+  END IF;
+  IF v_desk !~ '^[A-Za-z0-9][A-Za-z0-9 ._#/()-]{0,39}$' THEN
+    RAISE EXCEPTION 'Invalid desk name' USING ERRCODE = '22023';
+  END IF;
+
+  -- Re-validate everything; never trust an earlier lookup. FOR SHARE: a concurrent reissue waits for this check-in.
+  SELECT r.* INTO v_reg
+  FROM public.entry_passes p JOIN public.registrations r ON r.id = p.registration_id
+  WHERE p.id = p_pass AND p.status = 'active' AND r.status = 'confirmed'
+  FOR SHARE OF p;
+  IF NOT FOUND THEN
+    INSERT INTO public.entry_audit_log (action, actor, pass_id, detail)
+    VALUES ('check_in', v_actor, p_pass, jsonb_build_object('result', 'INVALID', 'method', p_method, 'desk', v_desk));
+    RETURN jsonb_build_object('state', 'INVALID', 'reason', 'revoked');
+  END IF;
+
+  IF v_reg.user_id = v_actor THEN
+    RAISE EXCEPTION 'You cannot check in your own registration' USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO public.entry_checkins (registration_id, pass_id, desk, checked_in_by, scan_id, method)
+  VALUES (v_reg.id, p_pass, v_desk, v_actor, p_scan_id, p_method)
+  ON CONFLICT (registration_id) WHERE voided_at IS NULL DO NOTHING
+  RETURNING id, created_at INTO v_id, v_at;
+
+  IF v_id IS NOT NULL THEN
+    INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, checkin_id, detail)
+    VALUES ('check_in', v_actor, v_reg.id, p_pass, v_id,
+            jsonb_build_object('result', 'CHECKED_IN', 'method', p_method, 'desk', v_desk, 'scan_id', p_scan_id));
+    RETURN jsonb_build_object(
+      'state', 'CHECKED_IN', 'registration', v_reg.id, 'registration_id', v_reg.registration_id, 'name', v_reg.name,
+      'checkin_id', v_id, 'checked_in_at', v_at, 'desk', v_desk
+    );
+  END IF;
+
+  -- Already checked in, or lost the race. The conflicting row is committed by now (ON CONFLICT waited for it).
+  SELECT ch.id, ch.created_at, ch.desk, ch.scan_id, ch.checked_in_by INTO v_existing
+  FROM public.entry_checkins ch WHERE ch.registration_id = v_reg.id AND ch.voided_at IS NULL;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Check-in changed concurrently, please retry' USING ERRCODE = '40001';
+  END IF;
+
+  IF v_existing.scan_id = p_scan_id AND v_existing.checked_in_by = v_actor THEN
+    -- The same Approve retried after a lost response: the earlier attempt did succeed.
+    RETURN jsonb_build_object(
+      'state', 'CHECKED_IN', 'registration', v_reg.id, 'registration_id', v_reg.registration_id, 'name', v_reg.name,
+      'checkin_id', v_existing.id, 'checked_in_at', v_existing.created_at, 'desk', v_existing.desk
+    );
+  END IF;
+
+  v_result := public.entry_state(v_reg.id, p_pass, NULL);
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, checkin_id, detail)
+  VALUES ('check_in', v_actor, v_reg.id, p_pass, v_existing.id,
+          jsonb_build_object('result', 'ALREADY_CHECKED_IN', 'method', p_method, 'desk', v_desk));
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- ---- Called by the app (POST /api/admin/entry/*) with the caller's own JWT ----
+
+-- Scan: what the registration team sees before deciding. Changes nothing except the audit log.
+CREATE OR REPLACE FUNCTION public.lookup_entry_pass(p_token TEXT) RETURNS JSONB AS $$
+DECLARE
+  t RECORD;
+  v_result JSONB;
+BEGIN
+  PERFORM public.entry_require_registration_staff();
+  SELECT * INTO t FROM public.entry_resolve_token(p_token);
+  v_result := public.entry_state(t.registration_id, t.pass_id, t.invalid_reason);
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, detail)
+  VALUES ('lookup', auth.uid(), t.registration_id, t.pass_id, jsonb_build_object('result', v_result->>'state'));
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Damaged or missing QR: exact registration ID (IV26-NNNN) or roll number (enrollment_no).
+CREATE OR REPLACE FUNCTION public.lookup_entry_manual(p_query TEXT) RETURNS JSONB AS $$
+DECLARE
+  v_query TEXT := btrim(COALESCE(p_query, ''));
+  v_ids UUID[];
+  v_pass UUID;
+  v_result JSONB;
+BEGIN
+  PERFORM public.entry_require_registration_staff();
+  IF char_length(v_query) NOT BETWEEN 1 AND 50 THEN
+    RAISE EXCEPTION 'Enter a registration ID or roll number' USING ERRCODE = '22023';
+  END IF;
+
+  IF upper(v_query) ~ '^IV26-[0-9]{4}$' THEN
+    SELECT array_agg(id) INTO v_ids FROM public.registrations WHERE registration_id = upper(v_query);
+  ELSE
+    SELECT array_agg(id) INTO v_ids FROM public.registrations
+    WHERE lower(btrim(enrollment_no)) = lower(v_query) AND status = 'confirmed';
+  END IF;
+
+  IF COALESCE(cardinality(v_ids), 0) = 0 THEN
+    v_result := jsonb_build_object('state', 'INVALID', 'reason', 'not_found');
+  ELSIF cardinality(v_ids) > 1 THEN
+    v_result := jsonb_build_object('state', 'AMBIGUOUS', 'count', cardinality(v_ids));
+  ELSE
+    SELECT id INTO v_pass FROM public.entry_passes WHERE registration_id = v_ids[1] AND status = 'active';
+    v_result := public.entry_state(v_ids[1], v_pass, CASE WHEN v_pass IS NULL THEN 'not_confirmed' END);
+  END IF;
+
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, detail)
+  VALUES ('manual_lookup', auth.uid(), CASE WHEN cardinality(v_ids) = 1 THEN v_ids[1] END, v_pass,
+          jsonb_build_object('query', v_query, 'result', v_result->>'state'));
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- "Approve" on a scanned QR.
+CREATE OR REPLACE FUNCTION public.check_in_entry_pass(p_token TEXT, p_scan_id UUID, p_desk TEXT) RETURNS JSONB AS $$
+DECLARE
+  t RECORD;
+BEGIN
+  PERFORM public.entry_require_registration_staff();
+  SELECT * INTO t FROM public.entry_resolve_token(p_token);
+  IF t.invalid_reason IS NOT NULL THEN
+    INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, detail)
+    VALUES ('check_in', auth.uid(), t.registration_id, t.pass_id, jsonb_build_object('result', 'INVALID', 'method', 'qr'));
+    RETURN jsonb_build_object('state', 'INVALID', 'reason', t.invalid_reason);
+  END IF;
+  RETURN public.entry_check_in(t.pass_id, p_scan_id, p_desk, 'qr');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- "Approve" after a manual lookup: the registration's current active pass, through the same entry_check_in.
+CREATE OR REPLACE FUNCTION public.check_in_entry_registration(p_registration UUID, p_scan_id UUID, p_desk TEXT)
+RETURNS JSONB AS $$
+DECLARE
+  v_pass UUID;
+BEGIN
+  PERFORM public.entry_require_registration_staff();
+  SELECT id INTO v_pass FROM public.entry_passes WHERE registration_id = p_registration AND status = 'active';
+  IF v_pass IS NULL THEN
+    INSERT INTO public.entry_audit_log (action, actor, registration_id, detail)
+    VALUES ('check_in', auth.uid(), p_registration, jsonb_build_object('result', 'INVALID', 'method', 'manual'));
+    RETURN jsonb_build_object('state', 'INVALID', 'reason', 'not_confirmed');
+  END IF;
+  RETURN public.entry_check_in(v_pass, p_scan_id, p_desk, 'manual');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- "Reject": the details didn't match the college ID, or there was none. Changes nothing on the pass, which stays
+-- usable so the case can be resolved later; only the attempt is logged.
+CREATE OR REPLACE FUNCTION public.reject_entry_attempt(p_token TEXT, p_registration UUID, p_reason TEXT, p_note TEXT)
+RETURNS JSONB AS $$
+DECLARE
+  v_note TEXT := NULLIF(btrim(COALESCE(p_note, '')), '');
+  v_reg UUID;
+  v_pass UUID;
+  v_invalid TEXT;
+  v_state JSONB;
+  t RECORD;
+BEGIN
+  PERFORM public.entry_require_registration_staff();
+  IF p_reason IS NULL OR p_reason NOT IN ('id_mismatch', 'no_id', 'other') THEN
+    RAISE EXCEPTION 'Invalid reason' USING ERRCODE = '22023';
+  END IF;
+  IF p_reason = 'other' AND v_note IS NULL THEN
+    RAISE EXCEPTION 'Describe the reason' USING ERRCODE = '22023';
+  END IF;
+  IF char_length(COALESCE(v_note, '')) > 200 THEN
+    RAISE EXCEPTION 'Note is too long' USING ERRCODE = '22023';
+  END IF;
+  IF (p_token IS NULL) = (p_registration IS NULL) THEN
+    RAISE EXCEPTION 'Give either a token or a registration' USING ERRCODE = '22023';
+  END IF;
+
+  IF p_token IS NOT NULL THEN
+    SELECT * INTO t FROM public.entry_resolve_token(p_token);
+    v_reg := t.registration_id;
+    v_pass := t.pass_id;
+    v_invalid := t.invalid_reason;
+  ELSE
+    v_reg := p_registration;
+    SELECT id INTO v_pass FROM public.entry_passes WHERE registration_id = p_registration AND status = 'active';
+    IF v_pass IS NULL THEN v_invalid := 'not_confirmed'; END IF;
+  END IF;
+
+  v_state := public.entry_state(v_reg, v_pass, v_invalid);
+  IF v_state->>'state' <> 'VALID' THEN
+    RETURN v_state; -- nothing to reject: the scanner shows this state instead
+  END IF;
+
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, detail)
+  VALUES ('reject', auth.uid(), v_reg, v_pass, jsonb_build_object(
+    'reason', p_reason, 'note', v_note, 'method', CASE WHEN p_token IS NULL THEN 'manual' ELSE 'qr' END));
+  RETURN jsonb_build_object('state', 'REJECTED', 'registration_id', v_state->>'registration_id', 'reason', p_reason);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Admin: undo a wrong check-in. Never deletes; the registration can then be checked in again.
+CREATE OR REPLACE FUNCTION public.void_entry_checkin(p_checkin_id UUID, p_reason TEXT) RETURNS JSONB AS $$
+DECLARE
+  v_reason TEXT := btrim(COALESCE(p_reason, ''));
+  v_reg UUID;
+  v_pass UUID;
+BEGIN
+  PERFORM public.entry_require_admin();
+  IF char_length(v_reason) NOT BETWEEN 1 AND 200 THEN
+    RAISE EXCEPTION 'A reason (up to 200 characters) is required' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.entry_checkins
+  SET voided_at = now(), voided_by = auth.uid(), void_reason = v_reason
+  WHERE id = p_checkin_id AND voided_at IS NULL
+  RETURNING registration_id, pass_id INTO v_reg, v_pass;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Check-in not found or already voided' USING ERRCODE = 'P0002';
+  END IF;
+
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, checkin_id, detail)
+  VALUES ('void', auth.uid(), v_reg, v_pass, p_checkin_id, jsonb_build_object('reason', v_reason));
+  RETURN jsonb_build_object('state', 'VOIDED', 'checkin_id', p_checkin_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Admin: new QR for a registration (lost or leaked pass); the old QR stops working at once. Blocked after check-in.
+CREATE OR REPLACE FUNCTION public.reissue_entry_pass(p_registration UUID) RETURNS JSONB AS $$
+DECLARE
+  v_old UUID;
+  v_new UUID;
+BEGIN
+  PERFORM public.entry_require_admin();
+  IF NOT EXISTS (SELECT 1 FROM public.registrations WHERE id = p_registration AND status = 'confirmed') THEN
+    RAISE EXCEPTION 'Only a confirmed registration has a pass' USING ERRCODE = 'P0002';
+  END IF;
+
+  -- FOR UPDATE waits for a check-in in progress on this pass, which the next statement then sees.
+  SELECT id INTO v_old FROM public.entry_passes WHERE registration_id = p_registration AND status = 'active' FOR UPDATE;
+  IF EXISTS (SELECT 1 FROM public.entry_checkins WHERE registration_id = p_registration AND voided_at IS NULL) THEN
+    RAISE EXCEPTION 'Already checked in: the pass can no longer be reissued' USING ERRCODE = '55000';
+  END IF;
+
+  UPDATE public.entry_passes SET status = 'revoked', revoked_at = now(), revoke_reason = 'reissued' WHERE id = v_old;
+  v_new := public.issue_entry_pass(p_registration);
+
+  INSERT INTO public.entry_audit_log (action, actor, registration_id, pass_id, detail)
+  VALUES ('reissue', auth.uid(), p_registration, v_new, jsonb_build_object('old_pass', v_old));
+  RETURN jsonb_build_object('state', 'REISSUED', 'pass', v_new);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ---- Called by POST /api/pass for the signed-in participant ----
+
+-- The caller's own registration and pass. token_ciphertext is useless without the server's key.
+CREATE OR REPLACE FUNCTION public.my_entry_pass() RETURNS JSONB AS $$
+DECLARE
+  r public.registrations%ROWTYPE;
+  p public.entry_passes%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Sign in required' USING ERRCODE = '42501';
+  END IF;
+  SELECT * INTO r FROM public.registrations WHERE user_id = auth.uid() ORDER BY created_at DESC LIMIT 1;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('registration_status', 'none', 'pass_status', 'none');
+  END IF;
+  SELECT * INTO p FROM public.entry_passes WHERE registration_id = r.id
+  ORDER BY (status = 'active') DESC, issued_at DESC LIMIT 1;
+  RETURN jsonb_build_object(
+    'registration_status', r.status, 'registration_id', r.registration_id, 'name', r.name,
+    'pass', p.id, 'pass_status', COALESCE(p.status, 'none'), 'token_ciphertext', p.token_ciphertext,
+    'checked_in', EXISTS (SELECT 1 FROM public.entry_checkins WHERE registration_id = r.id AND voided_at IS NULL)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+-- Stores the token the server minted for the caller's own active pass, unless one is already stored (two tabs opening
+-- the pass at once: the first wins and both get its ciphertext back).
+CREATE OR REPLACE FUNCTION public.claim_entry_pass_token(p_pass UUID, p_hash TEXT, p_ciphertext TEXT) RETURNS TEXT AS $$
+DECLARE
+  v_cipher TEXT;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Sign in required' USING ERRCODE = '42501';
+  END IF;
+  IF p_hash IS NULL OR p_hash !~ '^[0-9a-f]{64}$' OR p_ciphertext IS NULL OR char_length(p_ciphertext) > 512 THEN
+    RAISE EXCEPTION 'Invalid token data' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.entry_passes p SET token_hash = p_hash, token_ciphertext = p_ciphertext
+  FROM public.registrations r
+  WHERE p.id = p_pass AND p.status = 'active' AND p.token_hash IS NULL
+    AND r.id = p.registration_id AND r.user_id = auth.uid() AND r.status = 'confirmed';
+
+  SELECT p.token_ciphertext INTO v_cipher
+  FROM public.entry_passes p JOIN public.registrations r ON r.id = p.registration_id
+  WHERE p.id = p_pass AND p.status = 'active' AND r.user_id = auth.uid() AND r.status = 'confirmed';
+  IF v_cipher IS NULL THEN
+    RAISE EXCEPTION 'No active pass' USING ERRCODE = 'P0002';
+  END IF;
+  RETURN v_cipher;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- Admin dashboard views. security_invoker: they run with the caller's rights, so the admin-only RLS on the entry
+-- tables applies. Counts are per registration, over active passes and non-voided check-ins only.
+DROP VIEW IF EXISTS public.entry_overview;
+CREATE VIEW public.entry_overview WITH (security_invoker = true) AS
+SELECT
+  r.id AS registration, r.registration_id, r.name, r.enrollment_no, r.college,
+  p.id AS pass_id, p.issued_at AS pass_issued_at, (p.token_hash IS NOT NULL) AS pass_opened,
+  c.id AS checkin_id, c.created_at AS checked_in_at, c.desk, c.method, pr.full_name AS checked_in_by
+FROM public.registrations r
+LEFT JOIN public.entry_passes p ON p.registration_id = r.id AND p.status = 'active'
+LEFT JOIN public.entry_checkins c ON c.registration_id = r.id AND c.voided_at IS NULL
+LEFT JOIN public.profiles pr ON pr.id = c.checked_in_by
+WHERE r.status = 'confirmed';
+
+DROP VIEW IF EXISTS public.entry_checkin_feed;
+CREATE VIEW public.entry_checkin_feed WITH (security_invoker = true) AS
+SELECT
+  c.id, c.created_at, c.desk, c.method, c.voided_at, c.void_reason,
+  r.id AS registration, r.registration_id, r.name, r.enrollment_no,
+  pr.full_name AS checked_in_by, pv.full_name AS voided_by
+FROM public.entry_checkins c
+JOIN public.registrations r ON r.id = c.registration_id
+LEFT JOIN public.profiles pr ON pr.id = c.checked_in_by
+LEFT JOIN public.profiles pv ON pv.id = c.voided_by;
+
+DROP VIEW IF EXISTS public.entry_audit_feed;
+CREATE VIEW public.entry_audit_feed WITH (security_invoker = true) AS
+SELECT
+  a.id, a.created_at, a.action, a.detail, a.registration_id AS registration, r.registration_id, r.name,
+  pr.full_name AS actor_name, pr.email AS actor_email
+FROM public.entry_audit_log a
+LEFT JOIN public.registrations r ON r.id = a.registration_id
+LEFT JOIN public.profiles pr ON pr.id = a.actor;
+
+-- Admin dashboard tiles, from the same view (so they always agree with the list).
+CREATE OR REPLACE FUNCTION public.entry_overview_counts() RETURNS JSONB AS $$
+BEGIN
+  PERFORM public.entry_require_admin();
+  RETURN (
+    SELECT jsonb_build_object(
+      'confirmed', count(*), 'checked_in', count(checkin_id), 'not_checked_in', count(*) - count(checkin_id)
+    )
+    FROM public.entry_overview
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+REVOKE ALL ON public.entry_overview, public.entry_checkin_feed, public.entry_audit_feed FROM anon;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON public.entry_overview, public.entry_checkin_feed, public.entry_audit_feed FROM authenticated;
+GRANT SELECT ON public.entry_overview, public.entry_checkin_feed, public.entry_audit_feed TO authenticated;
+
+-- Function privileges: the internal helpers can't be called through the API by anyone; the entry points only by
+-- signed-in users, and each one checks the caller's role itself.
+REVOKE EXECUTE ON FUNCTION public.issue_entry_pass(UUID) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.sync_entry_pass() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.backfill_entry_passes() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.entry_state(UUID, UUID, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.entry_resolve_token(TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.entry_require_registration_staff() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.entry_require_admin() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.entry_check_in(UUID, UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.lookup_entry_pass(TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.lookup_entry_manual(TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.check_in_entry_pass(TEXT, UUID, TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.check_in_entry_registration(UUID, UUID, TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.reject_entry_attempt(TEXT, UUID, TEXT, TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.void_entry_checkin(UUID, TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.reissue_entry_pass(UUID) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.my_entry_pass() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.claim_entry_pass_token(UUID, TEXT, TEXT) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.entry_overview_counts() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.entry_overview_counts() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lookup_entry_pass(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lookup_entry_manual(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.check_in_entry_pass(TEXT, UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.check_in_entry_registration(UUID, UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reject_entry_attempt(TEXT, UUID, TEXT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.void_entry_checkin(UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reissue_entry_pass(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_entry_pass() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_entry_pass_token(UUID, TEXT, TEXT) TO authenticated;
