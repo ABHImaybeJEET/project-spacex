@@ -476,6 +476,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   format TEXT DEFAULT 'Solo / Team',
   duration TEXT DEFAULT 'TBA',
   venue TEXT DEFAULT 'NIT Rourkela',
+  sort_order INTEGER NOT NULL DEFAULT 0, -- Position within its category, set by staff in the admin Events tab
   created_by UUID REFERENCES public.profiles(id),
   updated_by UUID REFERENCES public.profiles(id),
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -492,6 +493,7 @@ BEGIN
     ALTER TABLE public.events ALTER COLUMN format DROP NOT NULL;
     ALTER TABLE public.events ALTER COLUMN duration DROP NOT NULL;
     ALTER TABLE public.events ALTER COLUMN venue DROP NOT NULL;
+    ALTER TABLE public.events ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE public.events DROP CONSTRAINT IF EXISTS events_category_check;
     ALTER TABLE public.events ADD CONSTRAINT events_category_check CHECK (category IN ('flagship events', 'standout events', 'main events', 'dts events', 'fun events'));
     -- Brochure links are rendered as public hrefs: only Google Drive/Docs URLs (never javascript:/data:).
@@ -503,6 +505,8 @@ BEGIN
       CHECK (brochure_url IS NULL OR brochure_url ~* '^https?://([a-z0-9-]+\.)*(drive|docs)\.google\.com/.+') NOT VALID;
   END IF;
 END $$;
+
+CREATE INDEX IF NOT EXISTS idx_events_category_sort ON public.events(category, sort_order);
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
