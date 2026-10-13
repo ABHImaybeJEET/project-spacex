@@ -4,7 +4,10 @@
  * The server never reads these: POST /api/register always records REGISTRATION_FEE_INR from src/lib/security.ts.
  * Keep REGISTRATION_FEE in step with it (a unit test checks they match).
  *
- * public/assets/upi-qr.svg encodes UPI_PAY_LINK. If the UPI ID, payee name or fee changes, regenerate it from the new
+ * public/assets/upi-qr.svg is currently a non-scannable "PAYMENT QR / COMING SOON" placeholder; the organisers will
+ * supply the real QR (and its UPI ID and payee name, which must replace the values below) before registrations open.
+ *
+ * The real QR must encode UPI_PAY_LINK. If the UPI ID, payee name or fee changes, regenerate it from the new
  * link as ONE byte-mode segment, error correction M, e.g. with the `qrcode` package:
  *   QRCode.toString([{ data: UPI_PAY_LINK, mode: 'byte' }], { type: 'svg', errorCorrectionLevel: 'M', margin: 1,
  *     color: { dark: '#0c0b0aff', light: '#ECE8DFff' } })
