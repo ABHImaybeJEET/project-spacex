@@ -365,7 +365,7 @@ UPDATE TO authenticated USING (public.is_registration_staff(auth.uid())) WITH CH
 
 -- Registrations inserted directly through the Supabase API by an end user can't choose their own status, fee,
 -- student type or email: these are derived from the verified auth account exactly like /api/register does.
--- There is no free tier: every registration starts 'pending' at 499 whatever the email domain; student_type is only
+-- There is no free tier: every registration starts 'pending' at 1200 whatever the email domain; student_type is only
 -- a reporting label (classifyStudentType in src/lib/security.ts).
 CREATE OR REPLACE FUNCTION public.enforce_registration_insert() RETURNS TRIGGER AS $$
 DECLARE
@@ -385,7 +385,7 @@ BEGIN
   NEW.reviewed_at := NULL;
   NEW.student_type := CASE WHEN v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN 'internal' ELSE 'external' END;
   NEW.status := 'pending';
-  NEW.amount := 499;
+  NEW.amount := 1200;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

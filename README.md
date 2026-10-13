@@ -195,7 +195,8 @@ The registration APIs (`/api/register`, `/api/upload`) check the same switch on 
 
 Edit [`src/config/payment.ts`](src/config/payment.ts). The fee must match `REGISTRATION_FEE_INR` in
 [`src/lib/security.ts`](src/lib/security.ts), which is what the server records. Then regenerate
-`public/assets/upi-qr.svg` from the new `UPI_PAY_LINK` with any QR encoder, and scan it to check before deploying.
+`public/assets/upi-qr.svg` from the new `UPI_PAY_LINK` as a single byte-mode segment (see the comment in
+`payment.ts`), and scan it to check before deploying.
 
 ### Add gallery photos
 

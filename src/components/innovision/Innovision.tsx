@@ -5,7 +5,7 @@ import { CLICKABLE, preloadClick, unlockClick, playClick } from './clickSound';
 /* eslint-disable @typescript-eslint/no-explicit-any -- view-model is dynamically constructed and consumed across many child views */
 /* eslint-disable @typescript-eslint/no-unused-vars -- some destructured vars are kept for future use */
 
-import { Component, createRef, memo, type ComponentType, type FormEvent, type MouseEvent, type TouchEvent, type WheelEvent } from 'react';
+import { Component, createRef, memo, type ComponentType, type MouseEvent, type TouchEvent, type WheelEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
@@ -2639,12 +2639,6 @@ export class Innovision extends Component<Props, State> {
       bagVis: (s.bagOpen ? 'visible' : 'hidden') as 'visible' | 'hidden', bagDelay: s.bagOpen ? '0s' : '.8s', bagO: s.bagOpen ? 1 : 0, bagX: s.bagOpen ? '0%' : '100%', bagHidden: !s.bagOpen,
       openBag: () => { this.openLazy('bag', { bagOpen: true }); },
       closeBag: () => this.setState({ bagOpen: false }),
-      subscribe: (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const f = e.currentTarget, email = f.elements.namedItem('email') as HTMLInputElement | null;
-        if (!email || !email.value) return;
-        f.reset(); this.toast("You're on the mission list.");
-      },
       toastMsg: s.toastMsg,
       heroChars: 'INNOVISION'.split('').map((ch) => ({ ch })),
       briefWords: BRIEF.split(' '),
