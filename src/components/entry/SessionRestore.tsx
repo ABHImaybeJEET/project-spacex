@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { fetchSessionFromDatabase } from '@/lib/supabase';
+import { fetchSessionFromDatabase, getCookie } from '@/lib/supabase';
 import styles from './EntryScanner.module.css';
 
 const LOGIN_URL = '/?auth=login&required=scan'; // the home page returns to /admin/scan after login
@@ -25,7 +25,7 @@ export default function SessionRestore() {
     }
     fetchSessionFromDatabase()
       .then((s) => {
-        if (s.tokens?.access_token) window.location.reload();
+        if (s.user || getCookie('inn_access_token')) window.location.reload();
         else window.location.replace(LOGIN_URL);
       })
       .catch(() => window.location.replace(LOGIN_URL));
