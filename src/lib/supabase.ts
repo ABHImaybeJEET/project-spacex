@@ -55,6 +55,7 @@ export interface EventItem {
   format?: string;
   duration?: string;
   venue?: string;
+  sort_order?: number; // Position within its category; lower shows first
   created_by?: string | null;
   updated_by?: string | null;
   created_at?: string;

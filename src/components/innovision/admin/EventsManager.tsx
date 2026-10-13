@@ -37,6 +37,12 @@ const categoryRank = (cat?: string | null) => {
   return k < 0 ? EVENT_CATEGORIES.length : k;
 };
 
+/** Site order: by category, then by the position staff set, newest first among equal positions. */
+const byDisplayOrder = (a: EventItem, b: EventItem) =>
+  categoryRank(a.category) - categoryRank(b.category) ||
+  (a.sort_order ?? 0) - (b.sort_order ?? 0) ||
+  (b.created_at || '').localeCompare(a.created_at || '');
+
 export type EventCategoryKey = typeof EVENT_CATEGORIES[number]['key'];
 
 export default function EventsManager({
@@ -49,6 +55,7 @@ export default function EventsManager({
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [reordering, setReordering] = useState(false);
 
   // Modals
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -357,6 +364,49 @@ export default function EventsManager({
     });
   };
 
+  // Each category's events in site order, unfiltered: positions and arrow moves ignore the search box.
+  const orderedEvents = [...events].sort(byDisplayOrder);
+  const categoryOrder = (cat?: string | null) =>
+    orderedEvents.filter((ev) => (ev.category || '').toLowerCase() === (cat || '').toLowerCase());
+
+  // Move an event one place up (-1) or down (1) within its category, then save the category's whole order.
+  const moveEvent = async (event: EventItem, dir: -1 | 1) => {
+    if (reordering || !event.id) return;
+    const list = categoryOrder(event.category);
+    const from = list.findIndex((ev) => ev.id === event.id);
+    const to = from + dir;
+    if (from < 0 || to < 0 || to >= list.length) return;
+
+    const reordered = [...list];
+    [reordered[from], reordered[to]] = [reordered[to], reordered[from]];
+    const ids = reordered.map((ev) => ev.id as string);
+    const position = new Map(ids.map((id, i) => [id, i + 1]));
+
+    const previous = events;
+    setEvents((prev) => prev.map((ev) => (ev.id && position.has(ev.id) ? { ...ev, sort_order: position.get(ev.id) } : ev)));
+    setReordering(true);
+    try {
+      const token = await getAuthToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/admin/events/order', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ category: event.category, ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(httpErrorMessage(res) || data.error || 'Failed to save event order');
+    } catch (err: unknown) {
+      setEvents(previous);
+      const msg = err instanceof Error ? err.message : 'Failed to save event order';
+      showToast(msg, 'error');
+    } finally {
+      setReordering(false);
+    }
+  };
+
   // Filtered Events
   const filteredEvents = events.filter((ev) => {
     const matchesSearch =
@@ -369,7 +419,7 @@ export default function EventsManager({
       ev.category?.toLowerCase() === categoryFilter.toLowerCase();
 
     return matchesSearch && matchesCat;
-  }).sort((a, b) => categoryRank(a.category) - categoryRank(b.category));
+  }).sort(byDisplayOrder);
 
   // Category counts for top stat cards
   const countFlagship = events.filter((e) => (e.category || '').toLowerCase() === 'flagship events').length;
@@ -645,7 +695,12 @@ export default function EventsManager({
             gap: '22px',
           }}
         >
-          {filteredEvents.map((event) => (
+          {filteredEvents.map((event) => {
+            const siblings = categoryOrder(event.category);
+            const position = siblings.findIndex((ev) => ev.id === event.id);
+            const canMoveUp = !reordering && position > 0;
+            const canMoveDown = !reordering && position >= 0 && position < siblings.length - 1;
+            return (
             <article
               key={event.id}
               style={{
@@ -755,6 +810,21 @@ export default function EventsManager({
                   >
                     {event.title}
                   </h3>
+                  {position >= 0 && (
+                    <span
+                      title="Position in its category on the site"
+                      style={{
+                        flex: 'none',
+                        marginLeft: '10px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        letterSpacing: '.08em',
+                        color: 'oklch(0.8 0.12 85)',
+                      }}
+                    >
+                      #{position + 1}
+                    </span>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -821,6 +891,33 @@ export default function EventsManager({
                     borderTop: '1px solid rgba(236,232,223,0.1)',
                   }}
                 >
+                  {([
+                    { dir: -1, enabled: canMoveUp, label: 'Move up', points: '18 15 12 9 6 15' },
+                    { dir: 1, enabled: canMoveDown, label: 'Move down', points: '6 9 12 15 18 9' },
+                  ] as const).map((arrow) => (
+                    <button
+                      key={arrow.dir}
+                      type="button"
+                      onClick={() => moveEvent(event, arrow.dir)}
+                      disabled={!arrow.enabled}
+                      aria-label={arrow.label}
+                      title={arrow.label}
+                      style={{
+                        padding: '9px 12px',
+                        background: 'rgba(236,232,223,0.06)',
+                        border: '1px solid rgba(236,232,223,0.22)',
+                        clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                        color: '#ECE8DF',
+                        cursor: arrow.enabled ? 'pointer' : 'not-allowed',
+                        opacity: arrow.enabled ? 1 : 0.35,
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points={arrow.points} />
+                      </svg>
+                    </button>
+                  ))}
+
                   <button
                     type="button"
                     onClick={() => openEditModal(event)}
@@ -871,7 +968,8 @@ export default function EventsManager({
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
 
