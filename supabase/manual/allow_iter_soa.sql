@@ -32,7 +32,7 @@ BEGIN
   NEW.reviewed_at := NULL;
   NEW.student_type := CASE WHEN v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN 'internal' ELSE 'external' END;
   NEW.status := 'pending';
-  NEW.amount := 499;
+  NEW.amount := 1200;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

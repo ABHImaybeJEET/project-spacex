@@ -257,7 +257,7 @@ const optionalString = (v: unknown): string | null | undefined =>
  * The one registration fee (INR) and the status every new registration starts in. There is no free or auto-confirmed
  * tier: every registrant, whatever their email domain, pays and is reviewed by staff. Never read from the request.
  */
-export const REGISTRATION_FEE_INR = 499;
+export const REGISTRATION_FEE_INR = 1200;
 export const NEW_REGISTRATION_STATUS = 'pending';
 
 export const NIT_ROURKELA_COLLEGE = 'National Institute of Technology Rourkela';
