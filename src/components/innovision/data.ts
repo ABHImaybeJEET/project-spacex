@@ -106,7 +106,8 @@ export const WORLDS: World[] = [
     specs: [['Category', 'Fun & games'], ['Format', 'Open to all'], ['Vibe', 'Euphoric'], ['Fuel', 'Team spirit'], ['Status', 'Boarding soon']],
     categories: ['dts events', 'fun events'],
     groups: [['dts events', 'DTS Events'], ['fun events', 'Fun Events']],
-    missions: [['Quiz Night', 'Tech, pop culture and everything in between.', 'Team · 2–3', '3 rounds', 'dts events'], ['Project Expo', 'Walk the hall of student builds and vote for your favourite.', 'Open to all', 'All fest', 'dts events'], ['Gaming Arena', 'Squad up for LAN battles and console showdowns.', 'Squad', 'All night', 'fun events'], ['Treasure Hunt', 'Clues scattered across campus. Only the sharpest crews finish.', 'Team · 3–4', 'Campus-wide', 'fun events']] },
+    // No placeholder line-up: each group shows a "Coming soon" card until its events are published.
+    missions: [] },
 ];
 
 /**

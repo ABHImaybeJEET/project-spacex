@@ -177,7 +177,7 @@ export default function HomeView({ v }: { v: V }) {
         </div>
       </section>
       <section data-sec="gallery" data-tunnel="" aria-label="Gallery" style={{ position: "relative", height: "600vh", background: "#141312", color: "#ECE8DF" }}>
-        <div style={{ position: "sticky", top: "0", height: "100vh", overflow: "hidden" }}>
+        <div className="t-stage" style={{ position: "sticky", top: "0", overflow: "hidden" }}>
           <img decoding="async" src="/assets/starfield.svg" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", opacity: ".75", pointerEvents: "none" }} />
           <div className="t-space" style={{ position: "absolute", inset: "0", perspective: "900px", perspectiveOrigin: "50% 50%" }}>
             <div style={{ position: "absolute", inset: "0", transformStyle: "preserve-3d" }}>
@@ -199,21 +199,25 @@ export default function HomeView({ v }: { v: V }) {
             </div>
           </div>
           {/* Phones only (globals.css): dark fades behind the heading and the counter, so a photo flying past never covers the text. */}
-          <div aria-hidden="true" className="t-scrim t-scrim-top"></div>
+          {/* The heading and its scrim fade out as the visitor scrolls into the tunnel (Innovision#homeScroll). */}
+          <div aria-hidden="true" data-t-head="" className="t-scrim t-scrim-top"></div>
           <div aria-hidden="true" className="t-scrim t-scrim-bot"></div>
-          <header style={{ position: "absolute", left: "clamp(20px,4vw,64px)", top: "calc(72px + 4vh)", maxWidth: "440px", pointerEvents: "none" }}>
+          <header data-t-head="" className="t-head" style={{ position: "absolute", left: "clamp(20px,4vw,64px)", top: "calc(72px + 4vh)", maxWidth: "440px", pointerEvents: "none", willChange: "opacity,transform" }}>
             <p style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 16px", fontSize: "13px", fontWeight: "700", letterSpacing: ".3em", color: "oklch(0.8 0.12 85)" }}>GALLERY</p>
             <h2 style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(34px,4.4vw,68px)", lineHeight: "1" }}>Into the archive</h2>
             <p style={{ margin: "0", fontSize: "16px", lineHeight: "1.6", color: "rgba(236,232,223,.82)", textWrap: "pretty" }}>Keep scrolling to fly through moments from Innovision past.</p>
           </header>
-          <div style={{ position: "absolute", left: "clamp(20px,4vw,64px)", right: "clamp(20px,4vw,64px)", bottom: "calc(clamp(16px,2.6vw,44px) + 64px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "16px", pointerEvents: "none" }}>
+          <div className="t-bar" style={{ position: "absolute", left: "clamp(20px,4vw,64px)", right: "clamp(20px,4vw,64px)", bottom: "calc(clamp(16px,2.6vw,44px) + 64px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "16px", pointerEvents: "none" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "10px", fontFamily: "var(--font-display)", fontWeight: "400" }}>
               <span data-t-count="" style={{ fontSize: "clamp(36px,4vw,60px)", lineHeight: "1" }}>01</span>
               <span style={{ fontSize: "18px", color: "rgba(236,232,223,.7)" }}>/ {v.tunnelTotal}</span>
             </div>
-            <a href="#/gallery" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: "0", padding: "15px 26px", textDecoration: "none", fontWeight: "700", fontSize: "14px", letterSpacing: ".06em", whiteSpace: "nowrap", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF", pointerEvents: "auto" }} className="hv-gold-fill">
-              <span data-scr="">VIEW FULL GALLERY</span>
-            </a>
+            {/* Shown only at the end of the tunnel (Innovision#homeScroll); hidden until then, so it isn't tabbable either. */}
+            <div data-t-cta="" style={{ flexShrink: "0", opacity: "0", visibility: "hidden", pointerEvents: "none", willChange: "opacity,transform" }}>
+              <a href="#/gallery" onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "15px 26px", textDecoration: "none", fontWeight: "700", fontSize: "14px", letterSpacing: ".06em", whiteSpace: "nowrap", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s cubic-bezier(.25,1,.1,1)", color: "#141312", background: "#ECE8DF" }} className="hv-gold-fill">
+                <span data-scr="">VIEW FULL GALLERY</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>

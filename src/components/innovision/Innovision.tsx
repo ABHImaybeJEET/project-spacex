@@ -1002,9 +1002,24 @@ export class Innovision extends Component<Props, State> {
     const tun = this.$('[data-tunnel]');
     if (tun) {
       const fr = this.$$('[data-t-frame]'), N = fr.length, TGAP = 1000, cnt = this.$('[data-t-count]');
+      const head = this.$$('[data-t-head]'), cta = this.$('[data-t-cta]');
       fr.forEach((f, i) => { f.style.zIndex = String(N - i); });
+      // The heading (and the phone scrim behind it) fades out over the first steps into the tunnel; "View full gallery"
+      // fades in once the last photo is on its way. Both follow the scroll, so scrolling back up reverses them.
+      const fade = (el: HTMLElement, o: number, dy: number) => {
+        const os = String(+o.toFixed(3)), vis = o > 0 ? 'visible' : 'hidden';
+        if (el.style.opacity !== os) { el.style.opacity = os; el.style.transform = 'translateY(' + ((1 - o) * dy).toFixed(1) + 'px)'; }
+        if (el.style.visibility !== vis) el.style.visibility = vis;
+      };
       // Only write what changed: replacing the counter's text every scroll update invalidates layout.
       const upd = (p: number) => {
+        const ho = Math.max(0, 1 - p / .05);
+        head.forEach((el) => fade(el, ho, -24));
+        if (cta) {
+          const co = Math.min(1, Math.max(0, (p - .86) / .08));
+          fade(cta, co, 18);
+          cta.style.pointerEvents = co > .6 ? 'auto' : 'none';
+        }
         const travel = p * (N * TGAP - 200);
         // Phones fade a photo out sooner as it passes the camera, before it grows past the room between the heading and the counter.
         const near = innerWidth < 720 || (innerHeight < 500 && innerWidth > innerHeight) ? 120 : 250;
@@ -2670,11 +2685,14 @@ export class Innovision extends Component<Props, State> {
              { key: 'other', title: '', items: list.filter((m) => !dw.groups!.some(([cat]) => cat === m.cat)) }]
           : [{ key: 'all', title: '', items: list }];
         // Numbered in display order; idx is the ticket's place in missions, which the event popup reads.
+        // A titled group with no events yet stays, shown as "Coming soon".
         let n = 0;
-        const groups = sections.filter((g) => g.items.length).map((g) => ({
+        const groups = sections.filter((g) => g.items.length || g.title).map((g) => ({
           key: g.key,
+          title: g.title,
           titleU: g.title.toUpperCase(),
           count: String(g.items.length).padStart(2, '0'),
+          soon: !g.items.length,
           missions: g.items.map((m) => {
             const k = n++;
             return {
@@ -2697,7 +2715,7 @@ export class Innovision extends Component<Props, State> {
           serial: 'IV26-0' + (s.dIndex + 1),
           stampText: 'BOARDING SOON · ' + dw.statL.toUpperCase() + ' · ',
           frame: 'color-mix(in oklab, ' + dw.ink + ' 50%, transparent)',
-          ticker: [0, 1, 2, 3].flatMap(() => ['Now boarding · ' + dw.name, ...missions.map((m) => m.name)]).map((t) => ({ t })),
+          ticker: [0, 1, 2, 3].flatMap(() => ['Now boarding · ' + dw.name, ...groups.flatMap((g) => g.soon ? [g.titleU + ' · Coming soon'] : g.missions.map((m) => m.name))]).map((t) => ({ t })),
           chars: [...dw.name.toUpperCase()].map((ch) => ({ ch: ch === ' ' ? ' ' : ch })),
           words: dw.tagline.split(' ').map((t) => ({ t })),
           specs: dw.specs.map(([k, v], j) => ({ k, v, i: String(j + 1).padStart(2, '0') })),
