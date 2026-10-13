@@ -446,10 +446,15 @@ export default function DetailView({ v }: { v: V }) {
               </p>
               <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Mission manifest</h2>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <strong style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(56px,6vw,104px)", lineHeight: ".8", color: "transparent", WebkitTextStroke: `1.5px ${cw.accentL}` }}>{cw.missionCount}</strong>
-              <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>EVENTS</span><span>ON BOARD</span></span>
-            </div>
+            {/* Until a world has published events, its count reads as "coming soon" rather than "00". */}
+            {cw.missions.length ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <strong style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(56px,6vw,104px)", lineHeight: ".8", color: "transparent", WebkitTextStroke: `1.5px ${cw.accentL}` }}>{cw.missionCount}</strong>
+                <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>EVENTS</span><span>ON BOARD</span></span>
+              </div>
+            ) : (
+              <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>LINE-UP</span><span style={{ color: cw.accentL }}>COMING SOON</span></span>
+            )}
           </header>
           {/* One block of tickets per group: a world that combines categories (DTS and Fun) titles each one. */}
           {cw.groups.map((g, gI) => (
@@ -459,10 +464,18 @@ export default function DetailView({ v }: { v: V }) {
                   <span style={{ width: "10px", height: "10px", flex: "none", transform: "rotate(45deg)", background: cw.accentL }}></span>
                   <h3 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(24px,2.6vw,40px)", lineHeight: "1", letterSpacing: ".04em" }}>{g.titleU}</h3>
                   <span aria-hidden="true" style={{ flex: "1", height: "1.5px", background: "repeating-linear-gradient(90deg,rgba(236,232,223,.3) 0 6px,transparent 6px 12px)" }}></span>
-                  <span style={{ flex: "none", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: cw.accentL }}>{g.count} {g.missions.length === 1 ? "EVENT" : "EVENTS"}</span>
+                  <span style={{ flex: "none", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: cw.accentL }}>{g.soon ? "COMING SOON" : `${g.count} ${g.missions.length === 1 ? "EVENT" : "EVENTS"}`}</span>
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,500px),1fr))", gap: "22px" }}>
+                {/* A group whose events aren't published yet holds one "Coming soon" ticket stub in their place. */}
+                {g.soon && (
+                  <div data-d-card="" style={{ position: "relative", display: "grid", alignContent: "center", justifyItems: "start", gap: "14px", minHeight: "220px", padding: "32px clamp(22px,2.4vw,36px)", border: "1.5px dashed rgba(236,232,223,.3)", borderRadius: "18px", background: "radial-gradient(rgba(236,232,223,.06) 1px,transparent 1.3px) 0 0/14px 14px,linear-gradient(160deg,#23211e,#191816 70%)" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".28em", color: cw.accentL }}>{g.titleU} · {cw.serial}</span>
+                    <strong style={{ fontFamily: "var(--font-cinzel),serif", fontWeight: "900", fontSize: "clamp(28px,3vw,44px)", lineHeight: "1.05", color: "#ECE8DF" }}>Coming soon</strong>
+                    <p style={{ margin: "0", maxWidth: "46ch", fontSize: "15px", lineHeight: "1.6", color: "rgba(236,232,223,.75)", textWrap: "pretty" }}>The {g.title} line-up is still being charted. Check back soon for the full manifest.</p>
+                  </div>
+                )}
                 {g.missions.map((m) => (
 
                   <article key={m.no} data-d-card="" onMouseEnter={v.beep} style={{ display: "flex" }}>

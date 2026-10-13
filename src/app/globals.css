@@ -392,22 +392,35 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 [data-lowpower] [data-lp-skip]{display:none}
 
 /* ---------- home gallery tunnel (HomeView.tsx) ---------- */
+/* The visible height, so the counter and "View full gallery" aren't tucked behind a phone's browser toolbar. */
+.t-stage{height:100vh;height:100dvh}
 .t-scrim{display:none}
-/* Phones: photos are capped by height too (--ar is the photo's width/height; --tx/--ty its offset from the centre), so a tall one can't outgrow the room
-   between the heading and the counter; the tunnel's centre and vanishing point drop into that room; and dark fades sit
-   behind the heading and the counter, so a photo passing beneath never covers the text. */
+/* Narrow phones: a smaller counter and button keep the bottom bar on one line. */
+@media (max-width:400px){
+  .t-bar{gap:10px !important}
+  .t-bar [data-t-count]{font-size:32px !important}
+  .t-bar a{padding:12px 16px !important;font-size:12px !important}
+}
+/* Phones: photos are capped by height too (--ar is the photo's width/height; --tx/--ty its offset from the centre), so a tall
+   one can't outgrow the room between the nav and the counter. The heading fades out as the tunnel starts, so the photos
+   fly through the middle of the screen; dark fades sit behind the heading and the counter, so a photo passing beneath
+   never covers the text. */
 @media (max-width:719px){
-  .t-space{perspective-origin:50% 56% !important}
-  .t-frame{width:min(54vw,calc(28vh * var(--ar))) !important;top:calc(56% + var(--ty) * .5) !important}
+  .t-space{perspective-origin:50% 50% !important}
+  .t-frame{width:min(70vw,calc(36vh * var(--ar))) !important;top:calc(50% + var(--ty) * .5) !important}
   .t-scrim{display:block;position:absolute;left:0;right:0;pointer-events:none}
   .t-scrim-top{top:0;height:calc(4vh + 290px);background:linear-gradient(180deg,#141312 0,rgba(20,19,18,.94) 62%,rgba(20,19,18,0))}
   .t-scrim-bot{bottom:0;height:200px;background:linear-gradient(0deg,#141312 0,rgba(20,19,18,.9) 45%,rgba(20,19,18,0))}
 }
+/* Portrait tablets: the desktop width (30vw) leaves the photos small in a tall screen, so size them like phones do. */
+@media (min-width:720px) and (max-width:1199px) and (orientation:portrait){
+  .t-frame{width:min(56vw,calc(34vh * var(--ar))) !important}
+}
 /* Landscape phones: too short to stack the photos between the heading and the counter, so they fly through the open
-   right-hand side instead, sized off the height. */
+   right-hand side instead, sized off the height so the closest one still fits between the nav and "View full gallery". */
 @media (max-height:499px) and (orientation:landscape){
-  .t-space{perspective-origin:76% 42% !important}
-  .t-frame{width:calc(38vh * var(--ar)) !important;left:calc(76% + var(--tx) * .3) !important;top:calc(42% + var(--ty) * .3) !important}
+  .t-space{perspective-origin:76% 40% !important}
+  .t-frame{width:calc(30vh * var(--ar)) !important;left:calc(76% + var(--tx) * .3) !important;top:calc(40% + var(--ty) * .3) !important}
 }
 
 /* ---------- gallery (GalleryView.tsx) ---------- */
