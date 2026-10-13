@@ -10,7 +10,7 @@ import { jsonLdScript, listPageJsonLd, pageMetadata } from '@/lib/seo';
 export const revalidate = 300;
 
 const DESCRIPTION =
-  'Explore the events of INNOVISION 2026, the techno-management festival of NIT Rourkela: Flagship, Standout, Main, and DTS and Fun Events.';
+  "Explore the events of INNOVISION 2026 by NIT Rourkela, Eastern India's largest techno-management fest: Flagship, Standout, Main, and DTS and Fun Events.";
 
 export const metadata = pageMetadata({ title: 'Events', description: DESCRIPTION, path: '/events', ownImage: true });
 
@@ -39,7 +39,8 @@ export default async function EventsPage() {
         <p className={styles.kicker}>INNOVISION 2026 · NIT ROURKELA</p>
         <h1 className={styles.title}>Innovision 2026 Events</h1>
         <p className={styles.lead}>
-          Innovision is the techno-management festival of NIT Rourkela, Odisha. Its 2026 edition, The Celestial Odyssey,
+          Hosted by NIT Rourkela, Odisha, Innovision is Eastern India&apos;s largest techno-management fest. Its 2026
+          edition, The Celestial Odyssey,
           charts four worlds: <b>Flagship Events</b> for the technical arena, <b>Standout Events</b> for the signature
           showcases, <b>Main Events</b> for workshops and talks, and <b>DTS and Fun Events</b> for the games, quizzes and
           showcases where the fest peaks.

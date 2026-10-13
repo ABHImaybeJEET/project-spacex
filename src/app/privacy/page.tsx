@@ -4,7 +4,7 @@ import { pageMetadata } from '@/lib/seo';
 
 export const metadata = pageMetadata({
   title: 'Privacy Policy',
-  description: 'How INNOVISION 2026, the techno-management festival of NIT Rourkela, collects, uses and protects your personal data.',
+  description: "How INNOVISION 2026, Eastern India's largest techno-management fest, hosted by NIT Rourkela, collects, uses and protects your personal data.",
   path: '/privacy',
 });
 

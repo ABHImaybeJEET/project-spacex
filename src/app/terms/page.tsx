@@ -5,7 +5,7 @@ import { pageMetadata } from '@/lib/seo';
 
 export const metadata = pageMetadata({
   title: 'Terms and Conditions',
-  description: 'The terms for registering for and attending INNOVISION 2026, the techno-management festival of NIT Rourkela.',
+  description: "The terms for registering for and attending INNOVISION 2026, Eastern India's largest techno-management fest, hosted by NIT Rourkela.",
   path: '/terms',
 });
 
