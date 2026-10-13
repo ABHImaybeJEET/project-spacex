@@ -74,7 +74,7 @@ export interface GalleryPhoto {
 export type GalleryItem = GalleryPhoto;
 
 // Cookie-based storage adapter for Supabase Client: ZERO tokens or keys ever touch browser localStorage
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const nameEQ = encodeURIComponent(name) + '=';
   const ca = document.cookie.split(';');
@@ -382,23 +382,23 @@ export async function saveSessionToDatabase(session: Session | null): Promise<bo
 }
 
 /**
- * Fetches the user session directly from the database using the HttpOnly cookie.
+ * Fetches the user session directly from the database using cookies.
+ * Tokens are kept strictly in cookies and never returned in the API response payload.
  */
 export async function fetchSessionFromDatabase(): Promise<{
   user: UserProfile | null;
-  tokens: { access_token: string; refresh_token?: string } | null;
 }> {
   try {
     const res = await fetch('/api/auth/session');
-    if (!res.ok) return { user: null, tokens: null };
+    if (!res.ok) return { user: null };
     const data = await res.json();
     if (data.success && data.user) {
-      return { user: data.user, tokens: data.tokens || null };
+      return { user: data.user };
     }
-    return { user: null, tokens: null };
+    return { user: null };
   } catch (err) {
     console.warn('fetchSessionFromDatabase error:', err);
-    return { user: null, tokens: null };
+    return { user: null };
   }
 }
 
