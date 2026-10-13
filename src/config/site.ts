@@ -6,9 +6,9 @@
  * per-deployment vercel.app URL or a spoofed Host never becomes the canonical address.
  */
 
-// The current (temporary) production address. When the final domain is confirmed, set NEXT_PUBLIC_SITE_URL in Vercel
-// (or change this one line): every canonical URL, og:url, robots.txt, sitemap.xml and JSON-LD URL follows it.
-const DEFAULT_SITE_URL = 'https://project-spacex-seven.vercel.app';
+// The production address. The www host is the primary one: innonitrkl.com (the apex) 308-redirects to it on Vercel.
+// Every canonical URL, og:url, robots.txt, sitemap.xml and JSON-LD URL follows it. NEXT_PUBLIC_SITE_URL overrides it.
+const DEFAULT_SITE_URL = 'https://www.innonitrkl.com';
 
 /** Origin of NEXT_PUBLIC_SITE_URL (no trailing slash), or the default if it is unset or not an http(s) URL. */
 function siteOrigin(value: string | undefined): string {
@@ -20,8 +20,8 @@ function siteOrigin(value: string | undefined): string {
 }
 
 /**
- * Canonical origin. Set NEXT_PUBLIC_SITE_URL to the custom domain once it is live (and add it under Supabase ->
- * Authentication -> URL Configuration, since Google sign-in returns here too).
+ * Canonical origin. Google sign-in returns here too, so it must be listed under Supabase -> Authentication ->
+ * URL Configuration.
  */
 export const SITE_URL = siteOrigin(process.env.NEXT_PUBLIC_SITE_URL);
 
@@ -31,8 +31,14 @@ export const SITE_NAME = 'INNOVISION 2026 | NIT ROURKELA';
 /** Home page title. Other pages use the "%s – INNOVISION 2026 | NIT ROURKELA" template from the root layout. */
 export const SITE_TITLE = SITE_NAME;
 
+/** The fest's official social profiles (the footer's links), for the Organization's sameAs in structured data. */
+export const SOCIAL_PROFILES = [
+  'https://www.instagram.com/inno.nitr_official/',
+  'https://www.linkedin.com/company/innovision-nitrkl/',
+];
+
 export const SITE_DESCRIPTION =
-  'Official website of INNOVISION 2026, the techno-management festival of NIT Rourkela, Odisha. Explore the Flagship, Standout, Main, and DTS and Fun Events.';
+  "Official website of INNOVISION 2026 by NIT Rourkela, Eastern India's largest techno-management fest. Explore the Flagship, Standout, Main, and DTS and Fun Events.";
 
 /**
  * Whether search engines may index this deployment. Only Vercel's production deployment is indexable: preview and

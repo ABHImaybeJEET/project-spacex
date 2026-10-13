@@ -80,7 +80,7 @@ git-ignored, so never commit secrets. Anything prefixed `NEXT_PUBLIC_` is bundle
 | `NEXT_PUBLIC_SUPABASE_URL`             | yes               | Supabase project URL.                                                                         |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes               | Publishable (anon) key. Safe in the browser because RLS is enforced.                          |
 | `SUPABASE_SERVICE_ROLE_KEY`            | prod (secret)     | Backend API routes. Bypasses RLS and signs staff links to payment proofs. Server only.        |
-| `NEXT_PUBLIC_SITE_URL`                 | optional          | Canonical origin for SEO, sitemap and the sign-in return URL. Defaults to the Vercel URL.     |
+| `NEXT_PUBLIC_SITE_URL`                 | optional          | Canonical origin for SEO, sitemap and the sign-in return URL. Defaults to `https://www.innonitrkl.com`. |
 | `GOOGLE_SITE_VERIFICATION`             | optional          | Google Search Console verification token.                                                     |
 | `DATABASE_URL`                         | local tools only  | Direct Postgres connection for running SQL from your machine. Never add it to Vercel.         |
 

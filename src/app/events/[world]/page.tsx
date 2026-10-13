@@ -19,7 +19,7 @@ export function generateStaticParams() {
 }
 
 /** Meta description: which world, of which fest, and its tagline (short enough not to be cut off in results). */
-const description = (w: World) => `${w.name} at INNOVISION 2026, the techno-management festival of NIT Rourkela, Odisha. ${w.tagline}`;
+const description = (w: World) => `${w.name} at INNOVISION 2026, Eastern India's largest techno-management fest, hosted by NIT Rourkela, Odisha. ${w.tagline}`;
 
 export async function generateMetadata({ params }: PageProps<'/events/[world]'>): Promise<Metadata> {
   const w = worldBySlug((await params).world);

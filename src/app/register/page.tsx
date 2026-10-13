@@ -7,12 +7,12 @@ export const metadata = pageMetadata(
   REGISTRATIONS_OPEN
     ? {
         title: 'Register',
-        description: 'Register for Innovision 2026: The Celestial Odyssey, the techno-management fest of NIT Rourkela, Odisha.',
+        description: "Register for Innovision 2026: The Celestial Odyssey, Eastern India's largest techno-management fest, hosted by NIT Rourkela, Odisha.",
         path: '/register',
       }
     : {
         title: 'Registrations Opening Soon',
-        description: 'Registrations for Innovision 2026: The Celestial Odyssey, the techno-management fest of NIT Rourkela, Odisha, open soon.',
+        description: "Registrations open soon for Innovision 2026: The Celestial Odyssey, Eastern India's largest techno-management fest, hosted by NIT Rourkela, Odisha.",
         path: '/register',
       }
 );
