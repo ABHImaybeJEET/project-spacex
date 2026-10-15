@@ -67,7 +67,7 @@ export default function SiteFooter({ v }: { v: V }) {
             <a href="/privacy" style={{ color: "#ECE8DF", textDecoration: "none", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">Privacy Policy</a>
             <a href="/terms" style={{ color: "#ECE8DF", textDecoration: "none", opacity: ".82", transition: "opacity .3s" }} className="hv-link-paper">Terms and Conditions</a>
           </span>
-          <span style={{ fontSize: "18px", fontWeight: "700", color: "#ECE8DF", textShadow: "0 0 10px rgba(236, 232, 223, 0.4)" }}>Crafted with <span style={{ color: "oklch(0.72 0.13 25)" }}>♥</span> by <a href="https://opencodenitr.in/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", textShadow: "0 0 15px rgba(255,255,255,0.7)" }}>OpenCode NIT Rourkela</a></span>
+          <span style={{ fontSize: "18px", fontWeight: "700", color: "#ECE8DF", textShadow: "0 0 10px rgba(236, 232, 223, 0.4)" }}>Crafted with <span style={{ color: "oklch(0.72 0.13 25)" }}>♥</span> by <a href="https://opencodenitr.in/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", textShadow: "0 0 15px rgba(255,255,255,0.7)" }}>OpenCode NIT Rourkela</a> and <a href="https://gdsc-nitr.netlify.app/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", textShadow: "0 0 15px rgba(255,255,255,0.7)" }}>DSC NIT Rourkela</a></span>
           <a href="#top" onClick={v.toTop} onMouseEnter={v.hover} style={{ display: "inline-block", color: "#ECE8DF", textDecoration: "none", fontWeight: "500", letterSpacing: ".06em" }}>
             <span data-scr="">BACK TO ORBIT ↑</span>
           </a>

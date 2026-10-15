@@ -6,7 +6,7 @@ The site takes visitors through four "worlds" of events, with a scroll-driven ho
 photo gallery, a schedule, a merch store and Google sign-in for fest registration. Staff manage it from an admin
 dashboard built into the site.
 
-Built by **OpenCode NIT Rourkela**.
+Built by **OpenCode NIT Rourkela and DSC NIT Rourkela**.
 
 ---
 
@@ -325,4 +325,4 @@ Follow Innovision on [Instagram](https://www.instagram.com/inno.nitr_official) a
 
 ---
 
-<p align="center">Crafted with ♥ by <b>OpenCode NIT Rourkela</b></p>
+<p align="center">Crafted with ♥ by <b>OpenCode NIT Rourkela and DSC NIT Rourkela</b></p>
