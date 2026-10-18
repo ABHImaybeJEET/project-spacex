@@ -34,6 +34,7 @@ import { LiveV } from './SiteFooter';
 import type { V } from './types';
 import {
   getSupabase,
+  isSupabaseConfigured,
   getOrCreateUserProfile,
   updateUserPhone,
   fetchUserRegistration,
@@ -1600,6 +1601,10 @@ export class Innovision extends Component<Props, State> {
     this.cleanups.push(() => clearTimeout(slow));
     try {
       purgeLocalStorageTokens();
+      if (!isSupabaseConfigured()) {
+        this.markAuthReady();
+        return;
+      }
       const supabase = getSupabase();
 
       // 1. Check the active session. getSession waits for the client to start, which (detectSessionInUrl) already

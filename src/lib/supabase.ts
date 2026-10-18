@@ -154,13 +154,38 @@ export function purgeLocalStorageTokens(): void {
   } catch {}
 }
 
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseKey);
+}
+
+export function isSupabaseAdminConfigured(): boolean {
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY;
+  return Boolean(supabaseUrl && (serviceKey || supabaseKey));
+}
+
 // Client-side singleton Supabase client
 let clientInstance: SupabaseClient | null = null;
+let dummyClientInstance: SupabaseClient | null = null;
+
+function getDummyClient(): SupabaseClient {
+  if (!dummyClientInstance) {
+    dummyClientInstance = createClient('https://placeholder.supabase.co', 'placeholder-anon-key', {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
+  return dummyClientInstance;
+}
 
 export function getSupabase(): SupabaseClient {
   if (clientInstance) return clientInstance;
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase URL or Key is missing in environment variables.');
+    console.warn('Supabase URL or Key is missing in environment variables. Using placeholder client.');
+    return getDummyClient();
   }
 
   // Purge any stale tokens from localStorage immediately
@@ -228,6 +253,10 @@ export function getSupabaseAdmin(token?: string): SupabaseClient {
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_KEY;
+
+  if (!supabaseUrl || (!serviceKey && !supabaseKey)) {
+    return getDummyClient();
+  }
 
   if (serviceKey) {
     return createClient(supabaseUrl, serviceKey, {

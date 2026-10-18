@@ -18,6 +18,7 @@ const publishableKey =
 const noSession = { persistSession: false, autoRefreshToken: false };
 
 function bucketAsUser(accessToken: string) {
+  if (!supabaseUrl || !publishableKey) return null;
   return createClient(supabaseUrl, publishableKey, {
     auth: noSession,
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
@@ -26,7 +27,7 @@ function bucketAsUser(accessToken: string) {
 
 function bucketAsServiceRole() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-  if (!serviceKey) return null;
+  if (!serviceKey || !supabaseUrl) return null;
   return createClient(supabaseUrl, serviceKey, { auth: noSession }).storage.from(PAYMENT_PROOFS_BUCKET);
 }
 
@@ -49,7 +50,9 @@ export async function uploadPaymentProof(
 
 /** True if the object exists AND the user can see it (the SELECT policy only shows a user their own folder). */
 export async function paymentProofExists(accessToken: string, path: string): Promise<boolean> {
-  const { data, error } = await bucketAsUser(accessToken).exists(path);
+  const bucket = bucketAsUser(accessToken);
+  if (!bucket) return false;
+  const { data, error } = await bucket.exists(path);
   return !error && data === true;
 }
 

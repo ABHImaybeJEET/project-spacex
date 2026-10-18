@@ -1,5 +1,5 @@
 import { WORLDS, type World } from '@/components/innovision/data';
-import { getSupabaseAdmin, type EventItem } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseConfigured, isSupabaseAdminConfigured, type EventItem } from '@/lib/supabase';
 
 /** Columns anyone may read: no staff user ids or storage file ids. Shared by /api/events and the /events pages. */
 export const PUBLIC_EVENT_COLUMNS = 'id, title, description, poster_url, brochure_url, category, format, duration, venue, created_at, updated_at';
@@ -12,6 +12,9 @@ export type PublicEvent = Pick<EventItem, 'id' | 'title' | 'description' | 'post
  * announcement state until the next revalidation succeeds.
  */
 export async function fetchPublicEvents(): Promise<PublicEvent[] | null> {
+  if (!isSupabaseConfigured() && !isSupabaseAdminConfigured()) {
+    return [];
+  }
   try {
     const { data, error } = await getSupabaseAdmin()
       .from('events')
