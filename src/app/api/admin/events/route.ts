@@ -11,7 +11,7 @@ const MAX_POSTER_SIZE = 1 * 1024 * 1024; // 1MB strictly enforced
 const MAX_FORM_BYTES = MAX_POSTER_SIZE + 64 * 1024;
 
 // In display order: flagship, standout, main, then DTS and fun (which share one world on the site).
-export const ALLOWED_EVENT_CATEGORIES = [
+const ALLOWED_EVENT_CATEGORIES = [
   'flagship events',
   'standout events',
   'main events',
@@ -19,7 +19,7 @@ export const ALLOWED_EVENT_CATEGORIES = [
   'fun events',
 ] as const;
 
-export type AllowedEventCategory = typeof ALLOWED_EVENT_CATEGORIES[number];
+type AllowedEventCategory = typeof ALLOWED_EVENT_CATEGORIES[number];
 
 const TEXT_LIMITS = { title: 200, description: 5000, format: 100, duration: 100, venue: 200, brochure_url: 2048 } as const;
 

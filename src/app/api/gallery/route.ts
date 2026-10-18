@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseConfigured, isSupabaseAdminConfigured } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +14,10 @@ export async function GET() {
   try {
     if (cached && cached.expires > Date.now()) {
       return NextResponse.json(cached.body, { headers: CACHE_HEADERS });
+    }
+
+    if (!isSupabaseConfigured() && !isSupabaseAdminConfigured()) {
+      return NextResponse.json({ success: true, gallery: [] }, { headers: CACHE_HEADERS });
     }
 
     const supabase = getSupabaseAdmin();
