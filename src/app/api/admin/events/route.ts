@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEventStaff, isValidGoogleDriveUrl, isWebPImage } from '@/lib/auth-server';
-import { imagekit } from '@/lib/imagekit';
+import { getImageKit } from '@/lib/imagekit';
 import { formFile, formText, isUuid, jsonText, readFormLimited, readJsonObject } from '@/lib/security';
 
 export const runtime = 'nodejs';
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Upload poster to ImageKit
     const cleanFileName = posterFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const uploadRes = await imagekit.upload({
+    const uploadRes = await getImageKit().upload({
       file: buffer,
       fileName: `event_${Date.now()}_${cleanFileName}`,
       folder: '/innovision/events',
@@ -389,7 +389,7 @@ export async function PATCH(req: NextRequest) {
       }
 
       const cleanFileName = newPosterFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uploadRes = await imagekit.upload({
+      const uploadRes = await getImageKit().upload({
         file: buffer,
         fileName: `event_${Date.now()}_${cleanFileName}`,
         folder: '/innovision/events',
