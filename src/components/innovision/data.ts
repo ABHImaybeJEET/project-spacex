@@ -1,5 +1,6 @@
 // Content and tuning constants for the Innovision 2026 experience.
 import ARCHIVE_JSON from './gallery.json';
+import PAST_SPONSORS_JSON from './past-sponsors.json';
 
 export const A = '/assets/';
 
@@ -105,7 +106,8 @@ export const WORLDS: World[] = [
     specs: [['Category', 'Fun & games'], ['Format', 'Open to all'], ['Vibe', 'Euphoric'], ['Fuel', 'Team spirit'], ['Status', 'Boarding soon']],
     categories: ['dts events', 'fun events'],
     groups: [['dts events', 'DTS Events'], ['fun events', 'Fun Events']],
-    missions: [['Quiz Night', 'Tech, pop culture and everything in between.', 'Team · 2–3', '3 rounds', 'dts events'], ['Project Expo', 'Walk the hall of student builds and vote for your favourite.', 'Open to all', 'All fest', 'dts events'], ['Gaming Arena', 'Squad up for LAN battles and console showdowns.', 'Squad', 'All night', 'fun events'], ['Treasure Hunt', 'Clues scattered across campus. Only the sharpest crews finish.', 'Team · 3–4', 'Campus-wide', 'fun events']] },
+    // No placeholder line-up: each group shows a "Coming soon" card until its events are published.
+    missions: [] },
 ];
 
 /**
@@ -146,7 +148,7 @@ export const SCRAMBLE = 'XYZXYZABCDEFGHIJKLMNOPQRSTUVWXYZ';
 /** Z-distance between consecutive gallery frames. */
 export const GAP = 1100;
 
-export interface GalleryItem { id: string; no: string; title: string; titleU: string; w: string; h: string; imageUrl?: string }
+export interface GalleryItem { id: string; no: string; title: string; titleU: string; w: string; h: string; fr: string; imageUrl?: string }
 
 /**
  * Photos from past fests, as WebP on ImageKit (/innovision/gallery/archive). A static list, so neither the home page
@@ -158,9 +160,9 @@ export const ARCHIVE: ArchivePhoto[] = ARCHIVE_JSON;
 /** An ImageKit URL resized on the CDN to `w` px wide; ImageKit also picks the best format (WebP/AVIF) per browser. */
 export const ikWidth = (url: string, w: number) => url + (url.includes('?') ? '&' : '?') + 'tr=w-' + w;
 
-/** Gallery page frame size: portrait photos get the tall frame. */
+/** Gallery page frame size: portrait photos get the tall frame. fr is its class, which phones resize (globals.css). */
 export const gFrame = (portrait: boolean) =>
-  portrait ? { w: 'min(22vw, 300px)', h: 'min(29vw, 400px)' } : { w: 'min(32vw, 440px)', h: 'min(21vw, 290px)' };
+  portrait ? { w: 'min(22vw, 300px)', h: 'min(29vw, 400px)', fr: 'g-fr-p' } : { w: 'min(32vw, 440px)', h: 'min(21vw, 290px)', fr: 'g-fr-l' };
 
 export const GALLERY: GalleryItem[] = ARCHIVE.map((p, i) => ({
   id: p.id, no: String(i + 1).padStart(2, '0'), title: p.title, titleU: p.title.toUpperCase(),
@@ -194,32 +196,20 @@ export const PRODUCTS: Product[] = [
   { id: 'stickers', name: 'Sticker Pack', price: 99, desc: 'Eight die-cut stickers: planets, astronauts and mission badges.' },
 ];
 
-/** One sponsor: logo is a path under /public (e.g. A + 'sponsors/acme.svg'); url opens in a new tab. */
-export interface Sponsor { name?: string; logo?: string; url?: string }
-export type SponsorTier = { key: string; title: string; /** Card size on the rail: main sponsors get the larger cards. */ size: 'lg' | 'md'; items: Sponsor[] };
-
-/** Shown alone in the featured card at the top of the sponsors section. */
-export const TITLE_SPONSOR: Sponsor = {};
+/**
+ * Brands that have sponsored past fests, in the order of the 2026 sponsorship brochure. Logos are WebP on ImageKit
+ * (/innovision/sponsors/past), trimmed to the mark; width and height are the file's pixels and bg is the logo's own
+ * background colour, which fills its card. url is the brand's official site, left out where none was confirmed.
+ */
+export interface PastSponsor { id: string; name: string; logo: string; width: number; height: number; bg: string; url?: string }
+export const PAST_SPONSORS: PastSponsor[] = PAST_SPONSORS_JSON;
 
 /**
- * Each tier is a horizontally scrolling rail, so any number of sponsors fits. Replace the empty
- * placeholders ({}) with real entries, e.g. { name: 'Acme', logo: A + 'sponsors/acme.svg', url: 'https://acme.com' }.
+ * Images placed into image slots, keyed by slot id (e.g. 'gallery-3', 'merch-tee', 'merch-feature').
+ * Slots without an entry show the placeholder, as in the design.
+ * Example: 'merch-tee': { src: A + 'merch/tee.webp', fit: 'cover' }
  */
-export const SPONSOR_TIERS: SponsorTier[] = [
-  { key: 'main', title: 'Our sponsors', size: 'lg', items: Array.from({ length: 10 }, () => ({})) },
-  { key: 'media', title: 'Media sponsors', size: 'md', items: Array.from({ length: 8 }, () => ({})) },
-  { key: 'food', title: 'Food sponsors', size: 'md', items: Array.from({ length: 8 }, () => ({})) },
-];
-
-/**
- * Images placed into image slots, keyed by slot id (e.g. 'sponsor-1-1', 'gallery-3', 'merch-tee',
- * 'merch-feature'). Slots without an entry show the placeholder, as in the design.
- * Example: 'sponsor-1': { src: A + 'sponsors/acme.webp', fit: 'contain' }
- */
-export const SLOT_IMAGES: Record<string, { src: string; fit?: 'contain' | 'cover' }> = {
-  // Art from the design's title-sponsor slot (.image-slots.state.json); it now decorates the title card beside the logo.
-  'sponsor-title': { src: A + 'sponsor-title.webp' },
-};
+export const SLOT_IMAGES: Record<string, { src: string; fit?: 'contain' | 'cover' }> = {};
 
 /** Schedule day tabs: [theme, planet image]. */
 export const SCHED_DAYS: [string, string][] = [['Launch', 'moon-cratered.webp'], ['Orbit', 'planet-ringed.webp'], ['Re-entry', 'planet-storm.webp']];

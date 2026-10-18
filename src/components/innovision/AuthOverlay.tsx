@@ -5,12 +5,11 @@
 import React, { useState } from 'react';
 import type { V } from './types';
 import { Logo } from './icons';
-import { isIterSoaCollege, isIterSoaEmail } from '@/lib/validation';
+import EntryPassCard from './EntryPassCard';
 
 export default function AuthOverlay({ v }: { v: V }) {
   const [userCollege, setUserCollege] = useState<string | null>(null);
   const collegeValue = userCollege !== null ? userCollege : (v.regVals?.college || '');
-  const isBlockedCollege = !v.isInternal && (isIterSoaCollege(collegeValue) || isIterSoaEmail(v.regVals?.email));
   return (
   <div data-auth-root="" aria-hidden={v.authHidden} style={{ position: "fixed", inset: "0", zIndex: "62", visibility: "hidden", pointerEvents: "none" }}>
     <div data-rift-veil="" style={{ position: "absolute", inset: "0", background: "#070605", opacity: "0" }}></div>
@@ -105,14 +104,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                         {v.err.gender ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.gender}</span>) : null}
                       </fieldset>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>COLLEGE NAME</span>
-                          {isBlockedCollege && (
-                            <span style={{ fontSize: "11px", fontWeight: "700", color: "#f87171", letterSpacing: ".06em" }}>
-                              NOT ELIGIBLE
-                            </span>
-                          )}
-                        </div>
+                        <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>COLLEGE NAME</span>
                         <input
                           name="college"
                           value={v.isInternal ? v.regVals.college : collegeValue}
@@ -126,48 +118,23 @@ export default function AuthOverlay({ v }: { v: V }) {
                           readOnly={v.isInternal}
                           autoComplete="organization"
                           placeholder="Full name of your institute"
-                          aria-invalid={isBlockedCollege || !!v.err.college}
+                          aria-invalid={!!v.err.college}
                           style={{
                             height: "54px",
                             padding: "0 16px",
                             borderRadius: "0",
-                            background: isBlockedCollege ? "rgba(239, 68, 68, 0.08)" : v.isInternal ? "rgba(236,232,223,.08)" : "rgba(236,232,223,.04)",
+                            background: v.isInternal ? "rgba(236,232,223,.08)" : "rgba(236,232,223,.04)",
                             fontSize: "16px",
                             color: "#ECE8DF",
                             outline: "none",
                             transition: "border-color .3s,background-color .3s",
-                            border: isBlockedCollege ? "1.5px solid #ef4444" : `1.5px solid ${v.bc.college}`,
+                            border: `1.5px solid ${v.bc.college}`,
                             cursor: v.isInternal ? "not-allowed" : "text",
                           }}
                           style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)"
                         />
                         {v.isInternal && <span style={{ fontSize: "12px", color: "oklch(0.8 0.12 85)" }}>Verified NIT Rourkela student.</span>}
-                        {!v.isInternal && !isBlockedCollege && (
-                          <span style={{ fontSize: "12px", color: "rgba(236,232,223,0.5)" }}>
-                            Note: Students from ITER - SOA are not eligible to register.
-                          </span>
-                        )}
-                        {isBlockedCollege && (
-                          <div
-                            role="alert"
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "10px 14px",
-                              background: "rgba(239, 68, 68, 0.14)",
-                              border: "1px solid #ef4444",
-                              borderRadius: "4px",
-                              color: "#fca5a5",
-                              fontSize: "13px",
-                              fontWeight: 600,
-                              lineHeight: "1.4",
-                            }}
-                          >
-                            <span>Registration is not allowed for students from ITER - SOA.</span>
-                          </div>
-                        )}
-                        {v.err.college && !isBlockedCollege ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.college}</span>) : null}
+                        {v.err.college ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.college}</span>) : null}
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>EMAIL</span>
@@ -193,7 +160,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                       <h3 data-s-in="" style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(24px,2.2vw,32px)", lineHeight: "1.1" }}>Pay the fee</h3>
                       <div data-s-in="" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,200px),1fr))", gap: "28px", alignItems: "center" }}>
                         <div style={{ position: "relative", width: "100%", maxWidth: "240px", justifySelf: "center", aspectRatio: "1", padding: "12px", background: "#ECE8DF" }}>
-                          <image-slot id="upi-qr" shape="rect" fit="contain" placeholder="Drop your UPI QR code" style={{ display: "block", width: "100%", height: "100%" }}></image-slot>
+                          <img src={v.upiQr} alt={`UPI QR code: pay ₹${v.fee} to ${v.upi}`} width={240} height={240} decoding="async" draggable={false} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", imageRendering: "pixelated" }} />
                           <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="qr" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
                           <span style={{ position: "absolute", left: "-9px", top: "-9px", borderLeftWidth: "2px", borderTopWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
                           <span style={{ position: "absolute", right: "-9px", top: "-9px", borderRightWidth: "2px", borderTopWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
@@ -312,6 +279,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                           <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="pass" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
                         </div>
                       </div>
+                      {v.passQr ? <EntryPassCard key={`${v.passId}-${v.passStatus}`} /> : null}
                       <p data-s-in="" style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "rgba(236,232,223,.78)", textWrap: "pretty", overflowWrap: "anywhere" }}>{v.passNote}</p>
                       <div data-s-in="" style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                         <a href="#/worlds/takeoff" onClick={v.exploreFromPass} onMouseEnter={v.hover} style={{ flex: "1", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 28px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".08em", whiteSpace: "nowrap", color: "#141312", background: "#ECE8DF", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s" }} style-hover="background:oklch(0.8 0.12 85)"><span data-scr="">EXPLORE THE WORLDS</span></a>
@@ -326,7 +294,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                       ) : null}
 <button
                         type="submit"
-                        disabled={v.busy || (v.d.s0 !== 'none' && isBlockedCollege)}
+                        disabled={v.busy}
                         onMouseEnter={v.beep}
                         style={{
                           flex: "1",
@@ -337,30 +305,24 @@ export default function AuthOverlay({ v }: { v: V }) {
                           minHeight: "58px",
                           padding: "0 28px",
                           border: "0",
-                          cursor: (v.d.s0 !== 'none' && isBlockedCollege) ? "not-allowed" : "pointer",
+                          cursor: "pointer",
                           fontWeight: "700",
                           fontSize: "15px",
                           letterSpacing: ".08em",
                           whiteSpace: "nowrap",
-                          color: (v.d.s0 !== 'none' && isBlockedCollege) ? "#fca5a5" : "#141312",
-                          background: (v.d.s0 !== 'none' && isBlockedCollege) ? "rgba(239, 68, 68, 0.25)" : "#ECE8DF",
-                          opacity: (v.d.s0 !== 'none' && isBlockedCollege) ? 0.7 : v.busyO,
+                          color: "#141312",
+                          background: "#ECE8DF",
+                          opacity: v.busyO,
                           clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)",
                           transition: "background-color .4s,opacity .3s,color .3s",
                         }}
-                        style-hover={(v.d.s0 !== 'none' && isBlockedCollege) ? "" : "background:oklch(0.8 0.12 85)"}
+                        style-hover="background:oklch(0.8 0.12 85)"
                         style-active="transform:scale(.98)"
                       >
-                        <span>
-                          {v.d.s0 !== 'none' && isBlockedCollege
-                            ? 'NOT ELIGIBLE (ITER - SOA)'
-                            : v.submitLbl}
-                        </span>
-                        {!(v.d.s0 !== 'none' && isBlockedCollege) && (
-                          <svg width="16" height="10" viewBox="0 0 16 10" aria-hidden="true">
-                            <path d="M11 1l4 4-4 4M15 5H0" fill="none" stroke="currentColor" strokeWidth="1.5"></path>
-                          </svg>
-                        )}
+                        <span>{v.submitLbl}</span>
+                        <svg width="16" height="10" viewBox="0 0 16 10" aria-hidden="true">
+                          <path d="M11 1l4 4-4 4M15 5H0" fill="none" stroke="currentColor" strokeWidth="1.5"></path>
+                        </svg>
                       </button>
                     </div>
                   </form>

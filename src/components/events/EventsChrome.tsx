@@ -6,7 +6,7 @@ import { Logo } from '@/components/innovision/icons';
 import styles from './EventsPage.module.css';
 
 /**
- * Frame shared by /events and /events/<world>: the INNOVISION wordmark home link, the breadcrumb trail the page's
+ * Frame shared by /events, /events/<world>, /privacy and /terms: the INNOVISION wordmark home link, the breadcrumb trail the page's
  * BreadcrumbList JSON-LD describes, and a footer linking every world page. Server-rendered, no client JS.
  * Links into the animated explorer (/#/...) are plain <a>, not <Link>: the explorer reads its hash route once its
  * loader finishes, and a full page load is what keeps that hash (as for a visitor arriving from search).
@@ -49,6 +49,8 @@ export default function EventsChrome({ trail, children }: { trail: [string, stri
               <li><a href={`/#/worlds/${WORLDS[0].slug}`}>Explore the worlds</a></li>
               <li><Link href="/register">Registrations</Link></li>
               <li><Link href="/merch">Official merch</Link></li>
+              <li><Link href="/privacy">Privacy Policy</Link></li>
+              <li><Link href="/terms">Terms and Conditions</Link></li>
             </ul>
           </nav>
           <p style={{ margin: 0, alignSelf: 'flex-end' }}>© 2026 Innovision · NIT Rourkela, Odisha</p>

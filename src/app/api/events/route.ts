@@ -26,6 +26,7 @@ export async function GET() {
       .from('events')
       // Public columns only: no staff user ids or storage file ids.
       .select(PUBLIC_EVENT_COLUMNS)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(500);
 

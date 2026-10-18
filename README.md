@@ -6,7 +6,7 @@ The site takes visitors through four "worlds" of events, with a scroll-driven ho
 photo gallery, a schedule, a merch store and Google sign-in for fest registration. Staff manage it from an admin
 dashboard built into the site.
 
-Built by **OpenCode NIT Rourkela**.
+Built by **OpenCode NIT Rourkela and DSC NIT Rourkela**.
 
 ---
 
@@ -80,7 +80,7 @@ git-ignored, so never commit secrets. Anything prefixed `NEXT_PUBLIC_` is bundle
 | `NEXT_PUBLIC_SUPABASE_URL`             | yes               | Supabase project URL.                                                                         |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes               | Publishable (anon) key. Safe in the browser because RLS is enforced.                          |
 | `SUPABASE_SERVICE_ROLE_KEY`            | prod (secret)     | Backend API routes. Bypasses RLS and signs staff links to payment proofs. Server only.        |
-| `NEXT_PUBLIC_SITE_URL`                 | optional          | Canonical origin for SEO, sitemap and the sign-in return URL. Defaults to the Vercel URL.     |
+| `NEXT_PUBLIC_SITE_URL`                 | optional          | Canonical origin for SEO, sitemap and the sign-in return URL. Defaults to `https://www.innonitrkl.com`. |
 | `GOOGLE_SITE_VERIFICATION`             | optional          | Google Search Console verification token.                                                     |
 | `DATABASE_URL`                         | local tools only  | Direct Postgres connection for running SQL from your machine. Never add it to Vercel.         |
 
@@ -145,6 +145,7 @@ src/
 │   └── events/                 # Chrome for the /events pages
 ├── config/
 │   ├── launch.ts               # Launch switches (registrations, merch store)
+│   ├── payment.ts              # Registration fee, UPI ID and UPI payment link
 │   └── site.ts                 # Canonical URL and site name
 ├── lib/                        # Server and shared helpers: supabase, imagekit, auth, validation, security, seo
 └── proxy.ts                    # Request proxy (Next 16's middleware): CSRF, rate limits, auth gate
@@ -188,6 +189,15 @@ export const MERCH_STORE_OPEN = true;
 ```
 
 While a switch is `false`, its buttons and links lead to a "coming soon" page, and the real flow stays untouched.
+The registration APIs (`/api/register`, `/api/upload`) check the same switch on the server.
+
+### Change the registration fee or UPI ID
+
+Edit [`src/config/payment.ts`](src/config/payment.ts). The fee must match `REGISTRATION_FEE_INR` in
+[`src/lib/security.ts`](src/lib/security.ts), which is what the server records. Then regenerate
+`public/assets/upi-qr.svg` from the new `UPI_PAY_LINK` as a single byte-mode segment (see the comment in
+`payment.ts`), and scan it to check before deploying. Until the organisers send the real QR, `upi-qr.svg` is a
+"coming soon" placeholder.
 
 ### Add gallery photos
 
@@ -315,4 +325,4 @@ Follow Innovision on [Instagram](https://www.instagram.com/inno.nitr_official) a
 
 ---
 
-<p align="center">Crafted with ♥ by <b>OpenCode NIT Rourkela</b></p>
+<p align="center">Crafted with ♥ by <b>OpenCode NIT Rourkela and DSC NIT Rourkela</b></p>

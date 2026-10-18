@@ -55,6 +55,7 @@ export interface EventItem {
   format?: string;
   duration?: string;
   venue?: string;
+  sort_order?: number; // Position within its category; lower shows first
   created_by?: string | null;
   updated_by?: string | null;
   created_at?: string;
@@ -74,7 +75,7 @@ export interface GalleryPhoto {
 export type GalleryItem = GalleryPhoto;
 
 // Cookie-based storage adapter for Supabase Client: ZERO tokens or keys ever touch browser localStorage
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const nameEQ = encodeURIComponent(name) + '=';
   const ca = document.cookie.split(';');
@@ -279,6 +280,23 @@ export function getSupabaseAdmin(token?: string): SupabaseClient {
 }
 
 /**
+ * Server client that runs AS the signed-in caller (publishable key + their access token), never as service_role,
+ * even when the service key is configured. Use it for database functions that authorize the caller themselves
+ * through auth.uid() (the entry pass / check-in functions): with the service role, auth.uid() would be NULL.
+ */
+export function getSupabaseAsUser(token: string): SupabaseClient {
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  });
+}
+
+/**
  * Initiates Google OAuth with Supabase.
  * If internalOnly is true:
  * - passes `hd: nitrkl.ac.in` to hint Google to select @nitrkl.ac.in account
@@ -394,23 +412,23 @@ export async function saveSessionToDatabase(session: Session | null): Promise<bo
 }
 
 /**
- * Fetches the user session directly from the database using the HttpOnly cookie.
+ * Fetches the user session directly from the database using cookies.
+ * Tokens are kept strictly in cookies and never returned in the API response payload.
  */
 export async function fetchSessionFromDatabase(): Promise<{
   user: UserProfile | null;
-  tokens: { access_token: string; refresh_token?: string } | null;
 }> {
   try {
     const res = await fetch('/api/auth/session');
-    if (!res.ok) return { user: null, tokens: null };
+    if (!res.ok) return { user: null };
     const data = await res.json();
     if (data.success && data.user) {
-      return { user: data.user, tokens: data.tokens || null };
+      return { user: data.user };
     }
-    return { user: null, tokens: null };
+    return { user: null };
   } catch (err) {
     console.warn('fetchSessionFromDatabase error:', err);
-    return { user: null, tokens: null };
+    return { user: null };
   }
 }
 
@@ -637,6 +655,8 @@ export async function createRegistration(
   error?: string;
   /** HTTP status of a failed request; undefined when no response arrived (network error). */
   status?: number;
+  /** Form field the server blamed for a failed request (name, college, phone, gender, enrollment_no, payfile, utr). */
+  field?: string;
 }> {
   try {
     const supabase = getSupabase();
@@ -668,6 +688,7 @@ export async function createRegistration(
         success: false,
         status: res.status,
         error: httpErrorMessage(res) || result.message || result.error || 'Registration failed',
+        ...(typeof result.field === 'string' ? { field: result.field } : {}),
       };
     }
 

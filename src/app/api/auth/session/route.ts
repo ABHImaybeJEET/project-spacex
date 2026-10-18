@@ -73,10 +73,6 @@ export async function GET(req: NextRequest) {
     const res = NextResponse.json({
       success: true,
       user: profile || null,
-      tokens: {
-        access_token: currentAccessToken,
-        refresh_token: currentRefreshToken,
-      },
     });
 
     if (currentAccessToken) {

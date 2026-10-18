@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { INDEXABLE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/config/site";
 import { TITLE_TEMPLATE } from "@/lib/seo";
 import "./globals.css";
@@ -44,6 +45,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${dmSerif.variable} ${manrope.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>{children}</body>
+    <html lang="en" className={`${dmSerif.variable} ${manrope.variable}`}>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

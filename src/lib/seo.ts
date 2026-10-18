@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_TITLE } from '@/config/site';
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, SITE_TITLE, SOCIAL_PROFILES } from '@/config/site';
 
 /** Title template for every page except the home page, which uses SITE_TITLE as is. */
 export const TITLE_TEMPLATE = '%s – INNOVISION 2026 | NIT ROURKELA';
 
 /** The home page's link-preview card, drawn by src/app/opengraph-image.tsx (served at /opengraph-image and /twitter-image). */
 export const OG_IMAGE = {
-  alt: 'INNOVISION 2026 | NIT ROURKELA: The Celestial Odyssey, the techno-management festival of NIT Rourkela',
+  alt: "INNOVISION 2026 | NIT ROURKELA: The Celestial Odyssey, Eastern India's largest techno-management fest, hosted by NIT Rourkela",
   width: 1200,
   height: 630,
   type: 'image/png',
@@ -46,8 +46,8 @@ const ORGANIZATION_ID = `${HOME}#organization`;
 /**
  * Schema.org JSON-LD for the home page: the website and the fest's organising identity under NIT Rourkela.
  * Deliberately no Event entries: the events table has no dates (Event requires startDate) and the line-ups and
- * schedule in data.ts are placeholders. No sameAs (the social links in the footer are placeholders, not the fest's
- * accounts) and no logo (the only logo file is white on transparent, which search engines show on white).
+ * schedule in data.ts are placeholders. No logo (the only logo file is white on transparent, which search engines show
+ * on white).
  */
 export function homeJsonLd() {
   return {
@@ -71,7 +71,8 @@ export function homeJsonLd() {
         name: 'Innovision, NIT Rourkela',
         alternateName: 'Innovision',
         url: HOME,
-        description: 'Innovision is the techno-management festival of the National Institute of Technology Rourkela, Odisha.',
+        description: "Innovision is Eastern India's largest techno-management fest, hosted by the National Institute of Technology Rourkela, Odisha.",
+        sameAs: SOCIAL_PROFILES,
         parentOrganization: {
           '@type': 'CollegeOrUniversity',
           name: 'National Institute of Technology Rourkela',

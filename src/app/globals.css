@@ -128,20 +128,18 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 @media (max-width:719px){.wh-card{gap:12px !important;padding:10px 12px 10px 14px !important}.wh-glyph{display:none !important}.wh-main{font-size:14px !important}.wh-sub{font-size:12px !important}}
 
 /* ---------- sponsors ---------- */
-/* Tickers: each strip holds its logos twice and slides by one copy, forever; it pauses while hovered, pressed
-   or holding keyboard focus, and the edges fade so logos drift in and out of view. */
-@keyframes iv-sp{to{transform:translateX(-50%)}}
-.sp-row{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);padding:4px 0}
-.sp-strip{display:flex;width:max-content;animation:iv-sp var(--sp-dur,30s) linear infinite}
-.sp-strip-rev{animation-direction:reverse}
-.sp-row:hover .sp-strip,.sp-row:active .sp-strip,.sp-row:focus-within .sp-strip{animation-play-state:paused}
-.sp-card{transition:border-color .3s,background-color .3s}
-.sp-card:hover{border-color:rgba(20,19,18,.5) !important;background:rgba(20,19,18,.06) !important}
-.sp-logo{width:100%;height:100%;object-fit:contain;filter:grayscale(1);opacity:.78;transition:filter .4s,opacity .4s}
-.sp-card:hover .sp-logo,.sp-card:focus-visible .sp-logo{filter:none;opacity:1}
-/* Without motion the rows stand still and scroll by hand instead, so every logo stays reachable. */
-@media (prefers-reduced-motion:reduce){.sp-row{overflow-x:auto;scrollbar-width:none;-webkit-mask-image:none;mask-image:none}.sp-row::-webkit-scrollbar{display:none}.sp-strip{animation:none}}
-@media (max-width:719px){.sp-title{grid-template-columns:minmax(0,1fr) !important}.sp-title-art{display:none}}
+/* Past sponsors: a wall of logo cards, five across on wide screens and two on phones. A card lifts while hovered or
+   holding keyboard focus. */
+.ps-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.ps-card{position:relative;aspect-ratio:3 / 2;border:1px solid rgba(20,19,18,.14);transition:border-color .3s,transform .4s cubic-bezier(.25,1,.1,1),box-shadow .4s}
+.ps-card:hover,.ps-card:focus-within{border-color:rgba(20,19,18,.5);transform:translateY(-3px);box-shadow:0 14px 26px -18px rgba(20,19,18,.5)}
+.ps-in{position:absolute;inset:0;display:grid;place-items:center}
+.ps-in:focus-visible{outline:2px solid #141312;outline-offset:3px}
+.ps-logo{height:auto;max-height:64%;object-fit:contain}
+@media (max-width:959px){.ps-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:719px){.ps-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}}
+@media (max-width:479px){.ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.ps-card:hover,.ps-card:focus-within{transform:none}}
 
 /* ---------- home hero ---------- */
 /* --d is the disc's diameter and --cy its centre. Rings, disc, orbiters, copy and astronaut all hang off the two,
@@ -316,6 +314,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
   .to-planet{left:-8vw;top:calc(43% - var(--s) * 1.14)}
   .to-rocket{right:5vw;top:calc(43% - var(--s) * .6 - min(9.5vh,85px));height:min(19vh,170px)}
   .to-tagline{top:74%}
+  /* The closing fade into the mission list stays under the tagline, so the ink text never lands on the dark. */
+  .to-fade{height:17% !important}
 }
 
 /* ---------- worlds slider decoration (WorldsView.tsx) ---------- */
@@ -390,6 +390,66 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 [data-lowpower] .fx{filter:var(--fx)}
 /* Every other spark and gallery dust mote, and two of the five curtain cloud layers, sit out. */
 [data-lowpower] [data-lp-skip]{display:none}
+
+/* ---------- home gallery tunnel (HomeView.tsx) ---------- */
+/* The visible height, so the counter and "View full gallery" aren't tucked behind a phone's browser toolbar. */
+.t-stage{height:100vh;height:100dvh}
+.t-scrim{display:none}
+/* Narrow phones: a smaller counter and button keep the bottom bar on one line. */
+@media (max-width:400px){
+  .t-bar{gap:10px !important}
+  .t-bar [data-t-count]{font-size:32px !important}
+  .t-bar a{padding:12px 16px !important;font-size:12px !important}
+}
+/* Phones: photos are capped by height too (--ar is the photo's width/height; --tx/--ty its offset from the centre), so a tall
+   one can't outgrow the room between the nav and the counter. The heading fades out as the tunnel starts, so the photos
+   fly through the middle of the screen; dark fades sit behind the heading and the counter, so a photo passing beneath
+   never covers the text. */
+@media (max-width:719px){
+  .t-space{perspective-origin:50% 50% !important}
+  .t-frame{width:min(70vw,calc(36vh * var(--ar))) !important;top:calc(50% + var(--ty) * .5) !important}
+  .t-scrim{display:block;position:absolute;left:0;right:0;pointer-events:none}
+  .t-scrim-top{top:0;height:calc(4vh + 290px);background:linear-gradient(180deg,#141312 0,rgba(20,19,18,.94) 62%,rgba(20,19,18,0))}
+  .t-scrim-bot{bottom:0;height:200px;background:linear-gradient(0deg,#141312 0,rgba(20,19,18,.9) 45%,rgba(20,19,18,0))}
+}
+/* Portrait tablets: the desktop width (30vw) leaves the photos small in a tall screen, so size them like phones do. */
+@media (min-width:720px) and (max-width:1199px) and (orientation:portrait){
+  .t-frame{width:min(56vw,calc(34vh * var(--ar))) !important}
+}
+/* Landscape phones: too short to stack the photos between the heading and the counter, so they fly through the open
+   right-hand side instead, sized off the height so the closest one still fits between the nav and "View full gallery". */
+@media (max-height:499px) and (orientation:landscape){
+  .t-space{perspective-origin:76% 40% !important}
+  .t-frame{width:calc(30vh * var(--ar)) !important;left:calc(76% + var(--tx) * .3) !important;top:calc(40% + var(--ty) * .3) !important}
+}
+
+/* ---------- gallery (GalleryView.tsx) ---------- */
+/* Phones: a frame sized off the width alone came out about 90-125px wide in portrait, and ran off the bottom of a
+   landscape screen. These fill most of the screen once the photo in focus is scaled up by the perspective (1.25x),
+   with Innovision#galleryTick keeping the spiral tight. Landscape phones size off the height instead. */
+@media (max-width:719px){
+  .g-fr-l{width:min(64vw,340px) !important;height:min(42.2vw,224px) !important}
+  .g-fr-p{width:min(48vw,240px) !important;height:min(64vw,320px) !important}
+}
+@media (max-height:499px) and (orientation:landscape){
+  .g-fr-l{width:70vh !important;height:46vh !important}
+  .g-fr-p{width:42vh !important;height:56vh !important}
+}
+
+/* ---------- touch devices ---------- */
+/* Phones and tablets: drop the effects that cost the most per frame while a page scrolls. Scene art's drop shadows go
+   (each is an extra blur pass over a big layer, every frame it moves): inline filters write theirs as
+   var(--no-ds, drop-shadow(...)), and opacity(1) is a no-op in its place. Low-power mode drops them everywhere. The film
+   grain, a full-screen layer blended over the whole page, goes too. The HUD bar and the world switcher, always on screen,
+   trade the frosted glass (a blur of whatever scrolls beneath, redone every frame) for a near-solid fill. */
+[data-lowpower]{--no-ds:opacity(1)}
+@media (pointer:coarse){
+  :root{--no-ds:opacity(1)}
+  body::after{display:none}
+  .hud-frost,.wn-pill{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  .hud-frost{background:rgba(236,232,223,.97) !important}
+  .wn-pill{background:rgba(236,232,223,.96) !important}
+}
 
 /* ---------- schedule ---------- */
 /* --gut lines the rows up with the 1240px column while letting each carousel run to the screen edge. */

@@ -18,7 +18,7 @@ export default function WorldsView({ v }: { v: V }) {
           {w.deco && (
             <div data-depth=".55" aria-hidden="true" className={w.decoWideOnly ? "wv-deco-wide" : undefined} style={{ position: "absolute", left: w.decoL, right: w.decoRight, top: w.decoT, height: w.decoH, pointerEvents: "none" }}>
               <div style={{ height: "100%", transform: `rotate(${w.decoR})` }}>
-                <img decoding="async" src={w.deco} alt="" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.35) brightness(1.05) drop-shadow(0 18px 24px rgba(0,0,0,.18))", animation: "iv-drift 7s ease-in-out infinite" }} />
+                <img decoding="async" src={w.deco} alt="" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.35) brightness(1.05) var(--no-ds, drop-shadow(0 18px 24px rgba(0,0,0,.18)))", animation: "iv-drift 7s ease-in-out infinite" }} />
               </div>
             </div>
           )}
@@ -43,7 +43,7 @@ export default function WorldsView({ v }: { v: V }) {
             GSAP fades [data-s-label] in and out with the slide, so the hover swap lives on its children (globals.css).
           */}
           <div className="cta-slot" style={{ position: "absolute", left: "0", right: "0", zIndex: "3", display: "flex", justifyContent: "center", padding: "0 16px", pointerEvents: "none" }}>
-            <div data-s-label="" className="cta-wrap" style={{ position: "relative", display: "grid", placeItems: "center", maxWidth: "100%", filter: "drop-shadow(0 14px 22px rgba(20,19,18,.28))" }}>
+            <div data-s-label="" className="cta-wrap" style={{ position: "relative", display: "grid", placeItems: "center", maxWidth: "100%", filter: "var(--no-ds, drop-shadow(0 14px 22px rgba(20,19,18,.28)))" }}>
               <span className="cta-prompt" aria-hidden="true" style={{ gridArea: "1 / 1", display: "inline-flex", alignItems: "center", gap: "10px", padding: "9px 16px 9px 12px", borderRadius: "999px", border: "1px solid rgba(20,19,18,.14)", background: "rgba(236,232,223,.86)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "#141312", fontSize: "13px", fontWeight: "700", letterSpacing: ".04em", whiteSpace: "nowrap", pointerEvents: "auto", cursor: "default" }}>
                 <span style={{ position: "relative", display: "grid", placeItems: "center", width: "22px", height: "22px" }}>
                   <span data-prompt-ring="" style={{ position: "absolute", left: "3px", top: "2px", width: "10px", height: "10px", borderRadius: "50%", border: `1.5px solid ${w.accent}` }}></span>
@@ -73,10 +73,10 @@ export default function WorldsView({ v }: { v: V }) {
             <div data-s-astro="" style={{ position: "absolute", left: "0", right: "0", bottom: w.astroBottom, height: w.astroH, display: "flex", justifyContent: "center", alignItems: "flex-end", pointerEvents: "none" }}>
               {w.astro && (wI === 0 ? (
                 <div data-orbit-fast="" data-arc-orbit="85" data-dur="35" style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "flex-end", transformOrigin: `50% calc(100% + min(56vw, 75vh) - ${w.astroSit ? '7vh' : '3.5vh'})` }}>
-                  <img decoding="async" src={w.astro} alt="" style={{ height: "45%", width: "auto", filter: "grayscale(1) contrast(1.3) brightness(1.05) drop-shadow(0 18px 30px rgba(0,0,0,.35))" }} />
+                  <img decoding="async" src={w.astro} alt="" style={{ height: "45%", width: "auto", filter: "grayscale(1) contrast(1.3) brightness(1.05) var(--no-ds, drop-shadow(0 18px 30px rgba(0,0,0,.35)))" }} />
                 </div>
               ) : (
-                <img decoding="async" src={w.astro} alt="" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.3) brightness(1.05) drop-shadow(0 18px 30px rgba(0,0,0,.35))", ...w.astroStyle }} />
+                <img decoding="async" src={w.astro} alt="" style={{ height: "100%", width: "auto", filter: "grayscale(1) contrast(1.3) brightness(1.05) var(--no-ds, drop-shadow(0 18px 30px rgba(0,0,0,.35)))", ...w.astroStyle }} />
               ))}
             </div>
           </div>
