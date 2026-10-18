@@ -1,0 +1,16 @@
+/* /privacy and /terms: long-form text inside the events-page frame (EventsChrome, EventsPage.module.css). */
+.updated{margin:22px 0 0;font-size:13px;font-weight:700;letter-spacing:.24em;color:rgba(236,232,223,.7)}
+
+.body{max-width:72ch;padding:clamp(40px,7vh,80px) 0;border-bottom:1px solid rgba(236,232,223,.16);font-size:clamp(16px,1.3vw,18px);line-height:1.7;color:rgba(236,232,223,.86)}
+.body h2{margin:clamp(40px,6vh,56px) 0 14px;font-family:var(--font-display);font-weight:400;font-size:clamp(26px,2.8vw,38px);line-height:1.1;color:#ECE8DF}
+.body h2:first-child{margin-top:0}
+.body p{margin:0 0 16px;text-wrap:pretty}
+.body ul{margin:0 0 16px;padding-left:22px}
+.body li{margin-bottom:8px;padding-left:4px}
+.body li::marker{color:oklch(0.8 0.12 85)}
+.body b{color:#ECE8DF;font-weight:600}
+.body a{color:#ECE8DF;text-decoration:underline;text-decoration-color:oklch(0.8 0.12 85);text-underline-offset:3px}
+.body a:hover{color:oklch(0.8 0.12 85)}
+
+.contacts{display:flex;flex-wrap:wrap;gap:12px 40px;margin:0 0 16px;padding:0;list-style:none}
+.contacts li{display:flex;flex-direction:column;gap:2px;margin:0;padding:0}

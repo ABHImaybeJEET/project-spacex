@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { verifyEventStaff, isValidGoogleDriveUrl, isWebPImage } from '@/lib/auth-server';
-import { imagekit } from '@/lib/imagekit';
+import { getImageKit } from '@/lib/imagekit';
 import { formFile, formText, isUuid, jsonText, readFormLimited, readJsonObject } from '@/lib/security';
 
 export const runtime = 'nodejs';
@@ -31,6 +32,18 @@ function textLimitError(fields: Partial<Record<keyof typeof TEXT_LIMITS, string 
   return null;
 }
 
+/** The sort_order that places an event after every other event in its category. */
+async function nextSortOrder(supabase: SupabaseClient, category: string): Promise<number> {
+  const { data } = await supabase
+    .from('events')
+    .select('sort_order')
+    .eq('category', category)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.sort_order ?? 0) + 1;
+}
+
 // GET all events (Staff access)
 export async function GET(req: NextRequest) {
   try {
@@ -43,6 +56,7 @@ export async function GET(req: NextRequest) {
     const { data: events, error } = await supabase
       .from('events')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -179,7 +193,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Upload poster to ImageKit
     const cleanFileName = posterFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const uploadRes = await imagekit.upload({
+    const uploadRes = await getImageKit().upload({
       file: buffer,
       fileName: `event_${Date.now()}_${cleanFileName}`,
       folder: '/innovision/events',
@@ -196,6 +210,7 @@ export async function POST(req: NextRequest) {
       poster_url: posterUrl,
       brochure_url: brochureUrl || null,
       category,
+      sort_order: await nextSortOrder(supabase, category),
       created_by: user.id,
       updated_by: user.id,
     };
@@ -343,7 +358,11 @@ export async function PATCH(req: NextRequest) {
           { status: 400 }
         );
       }
-      updates.category = normCat;
+      if (normCat !== existing.category) {
+        updates.category = normCat;
+        // A moved event goes to the end of its new category.
+        updates.sort_order = await nextSortOrder(supabase, normCat);
+      }
     }
     if (brochureUrl !== undefined) {
       updates.brochure_url = brochureUrl.trim() !== '' ? brochureUrl.trim() : null;
@@ -389,7 +408,7 @@ export async function PATCH(req: NextRequest) {
       }
 
       const cleanFileName = newPosterFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uploadRes = await imagekit.upload({
+      const uploadRes = await getImageKit().upload({
         file: buffer,
         fileName: `event_${Date.now()}_${cleanFileName}`,
         folder: '/innovision/events',

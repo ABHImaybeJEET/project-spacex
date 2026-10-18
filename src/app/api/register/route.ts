@@ -4,13 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { paymentProofExists } from '@/lib/payment-proofs';
 import { registrationsClosedResponse, registrationsOpen } from '@/lib/registration-gate';
-import {
-  isDuplicatePhoneError,
-  isIterSoaCollege,
-  isIterSoaEmail,
-  ITER_SOA_ERROR_MESSAGE,
-  PHONE_IN_USE_ERROR_MESSAGE,
-} from '@/lib/validation';
+import { isDuplicatePhoneError, PHONE_IN_USE_ERROR_MESSAGE } from '@/lib/validation';
 import {
   classifyStudentType,
   createRateLimiter,
@@ -61,7 +55,7 @@ async function utrConflictResponse(client: SupabaseClient, userId: string) {
     });
   }
   return NextResponse.json(
-    { error: 'This UPI transaction ID (UTR) has already been used for another registration.' },
+    { error: 'This UPI transaction ID (UTR) has already been used for another registration.', field: 'utr' },
     { status: 409 }
   );
 }
@@ -142,24 +136,16 @@ export async function POST(req: NextRequest) {
     // 2. Parse and Validate Form Payload
     const body = await readJsonObject(req);
     if (!body.ok) {
-      return NextResponse.json({ error: body.error }, { status: body.status });
+      return NextResponse.json({ error: body.error, field: 'form' }, { status: body.status });
     }
 
     // ownerId comes from the verified session: a payment proof path is only accepted inside this user's own folder.
     const parsed = validateRegistrationInput(body.value, { ownerId: user.id });
     if (!parsed.ok) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return NextResponse.json({ error: parsed.error, field: parsed.field }, { status: 400 });
     }
     const input = parsed.data;
     const college = studentType === 'internal' ? NIT_ROURKELA_COLLEGE : input.college;
-
-    // Exclusion rule: Students from ITER - SOA are not allowed to register
-    if (isIterSoaCollege(college) || isIterSoaEmail(verifiedEmail)) {
-      return NextResponse.json(
-        { error: ITER_SOA_ERROR_MESSAGE },
-        { status: 403 }
-      );
-    }
 
     const adminClient = getSupabaseAdmin(token);
 
@@ -192,7 +178,7 @@ export async function POST(req: NextRequest) {
     // so Storage RLS only lets them see their own folder).
     if (!(await paymentProofExists(token, input.payment_proof_path))) {
       return NextResponse.json(
-        { error: 'Payment screenshot not found. Please re-upload your screenshot.' },
+        { error: 'Payment screenshot not found. Please re-upload your screenshot.', field: 'payfile' },
         { status: 400 }
       );
     }
@@ -234,7 +220,7 @@ export async function POST(req: NextRequest) {
         return utrConflictResponse(adminClient, user.id);
       }
       if (isDuplicatePhoneError(regError)) {
-        return NextResponse.json({ error: PHONE_IN_USE_ERROR_MESSAGE }, { status: 409 });
+        return NextResponse.json({ error: PHONE_IN_USE_ERROR_MESSAGE, field: 'phone' }, { status: 409 });
       }
       // Unique violation on user_id (concurrent double submit): return the registration that won.
       if (!/registration_id/i.test(`${regError.message} ${regError.details ?? ''}`)) {

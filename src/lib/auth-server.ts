@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 
@@ -6,6 +5,8 @@ export interface StaffAuthSuccess {
   user: User;
   role: 'admin' | 'it-team' | 'registration-team';
   supabase: SupabaseClient;
+  /** The caller's validated access token, for calls that must run as the caller (getSupabaseAsUser). */
+  token: string;
 }
 
 export interface StaffAuthFailure {
@@ -14,6 +15,18 @@ export interface StaffAuthFailure {
 }
 
 export type StaffAuthResult = StaffAuthSuccess | StaffAuthFailure;
+
+/**
+ * Where a caller's tokens are read from: a route handler's NextRequest, or `{ headers: await headers(), cookies:
+ * await cookies() }` in a server component (next/headers).
+ */
+export interface AuthSource {
+  headers: { get(name: string): string | null };
+  cookies: {
+    get(name: string): { value: string } | undefined;
+    getAll(): { name: string; value: string }[];
+  };
+}
 
 const isUsableToken = (t: string | null | undefined): t is string =>
   !!t && t !== 'null' && t !== 'undefined' && t.length < 8192;
@@ -36,7 +49,7 @@ function tokenFromSupabaseCookie(value: string): string | null {
  * Candidate access tokens for a request, in priority order: `Authorization: Bearer`, the `inn_access_token`
  * cookie, then Supabase's own auth cookie. None of these are trusted until Supabase Auth validates them.
  */
-export function extractAccessTokens(req: NextRequest): string[] {
+export function extractAccessTokens(req: AuthSource): string[] {
   const tokens: string[] = [];
   const authHeader = req.headers.get('authorization');
   const bearer = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
@@ -64,7 +77,7 @@ export interface AuthenticatedUser {
  * Never spends refresh tokens: rotating them here without re-issuing cookies would revoke the user's real session
  * (Supabase refresh-token reuse detection). Clients refresh via the Supabase SDK or GET /api/auth/session.
  */
-export async function getAuthenticatedUser(req: NextRequest): Promise<AuthenticatedUser | null> {
+export async function getAuthenticatedUser(req: AuthSource): Promise<AuthenticatedUser | null> {
   const verifier = getSupabaseAdmin();
 
   for (const token of extractAccessTokens(req)) {
@@ -79,7 +92,7 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<Authentica
  * Server-side helper to verify that the request originates from an authorized
  * IT Team member or Administrator ('admin' or 'it-team' role).
  */
-export async function verifyEventStaff(req: NextRequest): Promise<StaffAuthResult> {
+export async function verifyEventStaff(req: AuthSource): Promise<StaffAuthResult> {
   const auth = await getAuthenticatedUser(req);
   if (!auth) {
     return { error: 'Unauthorized: Session missing or expired. Please sign in again.', status: 401 };
@@ -96,14 +109,14 @@ export async function verifyEventStaff(req: NextRequest): Promise<StaffAuthResul
     return { error: 'Forbidden: Admin or IT-Team authorization required.', status: 403 };
   }
 
-  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase };
+  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase, token: auth.token };
 }
 
 /**
  * Server-side helper to verify that the request originates from an authorized
  * Registration Team member or Administrator ('admin' or 'registration-team' role).
  */
-export async function verifyRegistrationStaff(req: NextRequest): Promise<StaffAuthResult> {
+export async function verifyRegistrationStaff(req: AuthSource): Promise<StaffAuthResult> {
   const auth = await getAuthenticatedUser(req);
   if (!auth) {
     return { error: 'Unauthorized: Session missing or expired. Please sign in again.', status: 401 };
@@ -120,11 +133,11 @@ export async function verifyRegistrationStaff(req: NextRequest): Promise<StaffAu
     return { error: 'Forbidden: Admin or Registration-Team authorization required.', status: 403 };
   }
 
-  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase };
+  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase, token: auth.token };
 }
 
 /** Like verifyEventStaff / verifyRegistrationStaff, but only lets the 'admin' role through. */
-export async function verifyAdmin(req: NextRequest): Promise<StaffAuthResult> {
+export async function verifyAdmin(req: AuthSource): Promise<StaffAuthResult> {
   const auth = await getAuthenticatedUser(req);
   if (!auth) {
     return { error: 'Unauthorized: Session missing or expired. Please sign in again.', status: 401 };
@@ -141,7 +154,7 @@ export async function verifyAdmin(req: NextRequest): Promise<StaffAuthResult> {
     return { error: 'Forbidden: Superadmin access required to modify user roles', status: 403 };
   }
 
-  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase };
+  return { user: auth.user, role: profile.role as 'admin' | 'it-team' | 'registration-team', supabase, token: auth.token };
 }
 
 export { isValidGoogleDriveUrl } from '@/lib/validation';

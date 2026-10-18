@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { UserProfile, Registration } from '@/lib/supabase';
+import EntryPassCard from './EntryPassCard';
 
 interface ProfileOverlayProps {
   isOpen: boolean;
@@ -402,9 +403,9 @@ export default function ProfileOverlay({
               <div>
                 <p style={{ margin: '0 0 16px', fontSize: '14px', lineHeight: 1.5, color: 'rgba(236,232,223,0.8)' }}>
                   {registration.status === 'confirmed'
-                    ? 'Your registration has been approved. Your boarding pass is verified for entry at the gate.'
+                    ? 'Your registration is confirmed. Download your entry pass below and show the QR with your college ID at the registration desk.'
                     : registration.status === 'pending'
-                    ? 'Your registration details & payment proof are under review by the Registration Team. Your pass will unlock upon confirmation.'
+                    ? 'Your payment is being verified and your registration will be approved soon. Keep checking MY PASS: your entry QR will appear there once approved.'
                     : 'Your registration could not be verified. Please visit the helpdesk or contact the event administrators.'}
                 </p>
 
@@ -423,6 +424,8 @@ export default function ProfileOverlay({
                     {registration.registration_id}
                   </span>
                 </div>
+
+                <EntryPassCard key={`${registration.registration_id}-${registration.status}`} />
 
                 <button
                   id="view-pass-btn"

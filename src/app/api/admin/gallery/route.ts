@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEventStaff, isWebPImage } from '@/lib/auth-server';
-import { imagekit } from '@/lib/imagekit';
+import { getImageKit } from '@/lib/imagekit';
 import { formFile, formText, isImageKitPathInFolder, isUuid, readFormLimited, readJsonObject } from '@/lib/security';
 
 export const runtime = 'nodejs';
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Upload image to ImageKit
     const cleanFileName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const uploadRes = await imagekit.upload({
+    const uploadRes = await getImageKit().upload({
       file: buffer,
       fileName: `gallery_${Date.now()}_${cleanFileName}`,
       folder: '/innovision/gallery',
@@ -242,9 +242,9 @@ export async function DELETE(req: NextRequest) {
       try {
         // file_id comes from a database row, so confirm it really is a gallery image before using the ImageKit
         // private key to delete it (never registration proofs or event posters).
-        const details = await imagekit.getFileDetails(item.file_id);
+        const details = await getImageKit().getFileDetails(item.file_id);
         if (isImageKitPathInFolder(details.filePath, '/innovision/gallery')) {
-          await imagekit.deleteFile(item.file_id);
+          await getImageKit().deleteFile(item.file_id);
         } else {
           console.warn('Refusing to delete ImageKit file outside the gallery folder:', item.file_id, details.filePath);
         }

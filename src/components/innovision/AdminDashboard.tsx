@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { UserProfile, Registration } from '@/lib/supabase';
-import { getSupabase, fetchSessionFromDatabase } from '@/lib/supabase';
+import { getSupabase, fetchSessionFromDatabase, getCookie } from '@/lib/supabase';
 import { csvCell, GENDER_OPTIONS, safeHttpUrl } from '@/lib/validation';
 
 const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === value)?.label ?? value;
 import EventsManager from './admin/EventsManager';
 import GalleryManager from './admin/GalleryManager';
+import EntryManager from './admin/EntryManager';
 import { httpErrorMessage } from '@/lib/api-errors';
 
 interface AdminDashboardProps {
@@ -30,7 +31,7 @@ export default function AdminDashboard({
   const canReviewRegistrations = isAdmin || isRegTeam;
 
   const defaultTab = canReviewRegistrations ? 'registrations' : 'events';
-  const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users'>(defaultTab);
+  const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users' | 'entry'>(defaultTab);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingRegs, setLoadingRegs] = useState(false);
@@ -96,10 +97,11 @@ export default function AdminDashboard({
         }
       }
 
-      // Fallback 3: Query server session (auto-refreshes tokens if expired)
+      // Fallback 3: Query server session (auto-refreshes tokens in cookies if expired)
       const dbAuth = await fetchSessionFromDatabase();
-      if (dbAuth.tokens?.access_token) {
-        return dbAuth.tokens.access_token;
+      if (dbAuth.user) {
+        const cookieToken = getCookie('inn_access_token');
+        if (cookieToken) return cookieToken;
       }
     } catch (e) {
       console.warn('getAuthToken error:', e);
@@ -201,6 +203,7 @@ export default function AdminDashboard({
   // Active tab: 'users' is strictly admin-only; staff have their own tabs
   let activeTab = tab;
   if (tab === 'users' && !isAdmin) activeTab = defaultTab;
+  if (tab === 'entry' && !isAdmin) activeTab = defaultTab;
   if (tab === 'registrations' && !canReviewRegistrations) activeTab = defaultTab;
   if ((tab === 'events' || tab === 'gallery') && !isAdmin && !isItTeam) activeTab = defaultTab;
 
@@ -751,20 +754,36 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* Top Bar */}
+      {/* Top Bar. The dialog clips overflow, so tabs that don't fit must wrap or scroll, never run off-screen (that hid
+          OPEN SCANNER on phones). Wide screens wrap the tabs; below 860px they get their own row that scrolls sideways,
+          with the scanner link first. */}
+      <style>{`
+        .adm-nav > * { flex-shrink: 0; white-space: nowrap; }
+        @media (max-width: 860px) {
+          .adm-head { flex-wrap: wrap; padding-top: 12px !important; padding-bottom: 0 !important; }
+          .adm-left { display: contents !important; }
+          .adm-brand { flex: 1 1 0 !important; }
+          .adm-title { font-size: 15px !important; }
+          .adm-nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: thin; margin: 0 calc(-1 * clamp(16px, 3vw, 40px)) !important; padding: 0 clamp(16px, 3vw, 40px) 2px; scroll-padding-inline: clamp(16px, 3vw, 40px); }
+          .adm-nav > * { min-height: 44px; }
+          .adm-scan { order: -1; }
+        }
+      `}</style>
       <header
+        className="adm-head"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: '12px 16px',
           padding: '18px clamp(16px, 3vw, 40px)',
           borderBottom: '1px solid rgba(236,232,223,0.12)',
           background: 'rgba(16,15,14,0.95)',
           backdropFilter: 'blur(10px)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="adm-left" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1 1 auto', minWidth: 0 }}>
+          <div className="adm-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 0 }}>
             <span
               style={{
                 width: '10px',
@@ -775,11 +794,15 @@ export default function AdminDashboard({
               }}
             />
             <span
+              className="adm-title"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontWeight: 400,
                 fontSize: 'clamp(18px, 1.8vw, 22px)',
                 letterSpacing: '.06em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               COMMAND CENTER · {currentUser.role.toUpperCase()}
@@ -787,7 +810,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Navigation Tabs */}
-          <nav style={{ display: 'flex', gap: '8px', marginLeft: '24px' }}>
+          <nav className="adm-nav" aria-label="Dashboard sections" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginLeft: '24px', minWidth: 0 }}>
             {canReviewRegistrations && (
             <button
               id="tab-registrations"
@@ -871,6 +894,50 @@ export default function AdminDashboard({
                 USERS & ROLES ({users.length})
               </button>
             )}
+
+            {isAdmin && (
+              <button
+                id="tab-entry"
+                type="button"
+                onClick={() => setTab('entry')}
+                style={{
+                  padding: '8px 18px',
+                  border: 0,
+                  borderBottom: activeTab === 'entry' ? '2px solid oklch(0.8 0.12 85)' : '2px solid transparent',
+                  background: activeTab === 'entry' ? 'rgba(236,232,223,0.06)' : 'transparent',
+                  color: activeTab === 'entry' ? '#ECE8DF' : 'rgba(236,232,223,0.5)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  letterSpacing: '.14em',
+                  cursor: 'pointer',
+                }}
+              >
+                ENTRY
+              </button>
+            )}
+
+            {/* Venue check-in scanner (registration team and admins; the page and its API check the role again). */}
+            {canReviewRegistrations && (
+              <a
+                id="open-scanner-link"
+                className="adm-scan"
+                href="/admin/scan"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  padding: '8px 18px',
+                  borderBottom: '2px solid transparent',
+                  color: 'oklch(0.8 0.12 85)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  letterSpacing: '.14em',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                OPEN SCANNER ↗
+              </a>
+            )}
           </nav>
         </div>
 
@@ -883,6 +950,8 @@ export default function AdminDashboard({
             alignItems: 'center',
             gap: '8px',
             padding: '8px 16px',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
             border: '1px solid rgba(236,232,223,0.24)',
             background: 'transparent',
             color: '#ECE8DF',
@@ -1373,6 +1442,11 @@ export default function AdminDashboard({
             setConfirmModal={setConfirmModal}
             setPreviewImage={setPreviewImage}
           />
+        )}
+
+        {/* TAB 5: VENUE ENTRY / CHECK-IN (Admin Only) */}
+        {activeTab === 'entry' && isAdmin && (
+          <EntryManager getAuthToken={getAuthToken} showToast={showToast} setConfirmModal={setConfirmModal} />
         )}
 
         {/* TAB 4: USERS DIRECTORY & ROLE MANAGEMENT (Admin Only) */}

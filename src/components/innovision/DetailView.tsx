@@ -157,7 +157,7 @@ function TouchdownFront() {
           {/* Low-gravity hop: the shadow shrinks while the astronaut is up and a dust ring puffs out on landing. */}
           <span className="td-hop" style={{ position: "absolute", left: "-6vh", top: "-1.2vh", width: "12vh", height: "2.4vh", borderRadius: "50%", background: "rgba(29,24,48,.5)", animation: "iv-hopshadow 3.6s infinite" }}></span>
           <span className="td-hop" style={{ position: "absolute", left: "-12vh", top: "-3.4vh", width: "24vh", height: "5.6vh", borderRadius: "50%", background: "radial-gradient(closest-side,rgba(236,232,223,.95),rgba(236,232,223,0))", border: "1.5px dotted rgba(29,24,48,.45)", animation: "iv-dust 3.6s ease-out infinite" }}></span>
-          <img decoding="async" src="/assets/indian-astronaut.webp" alt="Astronaut making a low-gravity hop on a cratered ledge" className="td-astro td-hop" style={{ transformOrigin: "50% 100%", filter: VIOLET + " drop-shadow(0 12px 14px rgba(0,0,0,.25))", animation: "iv-hop 3.6s infinite" }} />
+          <img decoding="async" src="/assets/indian-astronaut.webp" alt="Astronaut making a low-gravity hop on a cratered ledge" className="td-astro td-hop" style={{ transformOrigin: "50% 100%", filter: VIOLET + " var(--no-ds, drop-shadow(0 12px 14px rgba(0,0,0,.25)))", animation: "iv-hop 3.6s infinite" }} />
         </div>
       </div>
     </div>
@@ -191,7 +191,7 @@ function SpotlightBack() {
       </div>
       <div data-speed="-0.22" data-sx="0.06" className="sp-sat">
         <div data-depth=".45" style={{ height: "100%" }}>
-          <img decoding="async" src="/assets/satellite.webp" alt="" style={{ height: "100%", width: "auto", transform: "rotate(-12deg)", filter: BLUE + " drop-shadow(0 14px 18px rgba(0,0,0,.2))", animation: "iv-drift 7s ease-in-out infinite" }} />
+          <img decoding="async" src="/assets/satellite.webp" alt="" style={{ height: "100%", width: "auto", transform: "rotate(-12deg)", filter: BLUE + " var(--no-ds, drop-shadow(0 14px 18px rgba(0,0,0,.2)))", animation: "iv-drift 7s ease-in-out infinite" }} />
         </div>
       </div>
     </>
@@ -237,7 +237,7 @@ export default function DetailView({ v }: { v: V }) {
                 <div data-speed="-0.22" aria-hidden="true" className="to-rocket">
                   <div data-depth=".45" style={{ height: "100%" }}>
                     <div style={{ height: "100%", transform: "rotate(16deg)" }}>
-                      <img decoding="async" src="/assets/rocket.svg" alt="" style={{ height: "100%", width: "auto", filter: MONO + " drop-shadow(0 18px 24px rgba(0,0,0,.2))", animation: "iv-drift 6s ease-in-out infinite" }} />
+                      <img decoding="async" src="/assets/rocket.svg" alt="" style={{ height: "100%", width: "auto", filter: MONO + " var(--no-ds, drop-shadow(0 18px 24px rgba(0,0,0,.2)))", animation: "iv-drift 6s ease-in-out infinite" }} />
                     </div>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ export default function DetailView({ v }: { v: V }) {
             {v.isTakeoff && (
               <div data-speed="0" style={{ position: "absolute", left: "calc(50% - max(124vw, 170vh) / 2)", bottom: "-4%", width: "max(124vw, 170vh)", aspectRatio: "4000 / 973", pointerEvents: "none" }}>
                 <div data-depth=".35" style={{ position: "absolute", inset: "0" }}>
-                  <img decoding="async" src="/assets/lab.webp" alt="" style={{ position: "absolute", left: "10%", bottom: "14%", width: "24%", height: "auto", transform: "rotate(4deg)", filter: `${MONO} drop-shadow(0 12px 16px rgba(0,0,0,.4))` }} />
+                  <img decoding="async" src="/assets/lab.webp" alt="" style={{ position: "absolute", left: "10%", bottom: "14%", width: "24%", height: "auto", transform: "rotate(4deg)", filter: `${MONO} var(--no-ds, drop-shadow(0 12px 16px rgba(0,0,0,.4)))` }} />
                   <img decoding="async" src="/assets/mesa.svg" alt="" style={{ position: "absolute", left: "0", bottom: "0", width: "50.6%", height: "auto", transform: "scaleX(-1)", filter: MONO }} />
                   <img decoding="async" src="/assets/mesa.svg" alt="" style={{ position: "absolute", right: "0", bottom: "0", width: "50.6%", height: "auto", filter: MONO }} />
                   <div style={{ position: "absolute", left: "50%", bottom: "35%", width: "22%", aspectRatio: "6 / 1", marginLeft: "-11%" }}>
@@ -308,7 +308,7 @@ export default function DetailView({ v }: { v: V }) {
                         <span style={{ position: "absolute", left: "52.55cqw", top: "-5.1cqw", width: "8.9cqw", height: "19.1cqw", borderRadius: "45% 45% 50% 50% / 20% 20% 80% 80%", background: "radial-gradient(ellipse 50% 100% at 50% 0,#fff,rgba(255,244,230,.7) 45%,transparent 100%)", transformOrigin: "50% 0", animation: "iv-flame .16s ease-in-out infinite alternate", animationDelay: "0.05s" }}></span>
                         <span style={{ position: "absolute", left: "61.45cqw", top: "-2.55cqw", width: "8.9cqw", height: "17.8cqw", borderRadius: "45% 45% 50% 50% / 20% 20% 80% 80%", background: "radial-gradient(ellipse 50% 100% at 50% 0,#fff,rgba(255,244,230,.7) 45%,transparent 100%)", transformOrigin: "50% 0", animation: "iv-flame .16s ease-in-out infinite alternate", animationDelay: "0.1s" }}></span>
                       </div>
-                      <img decoding="async" src="/assets/lander.webp" alt="Lander on the launch pad" style={{ position: "relative", display: "block", width: "100%", height: "auto", filter: "grayscale(1) contrast(1.15) drop-shadow(0 14px 18px rgba(0,0,0,.25))" }} />
+                      <img decoding="async" src="/assets/lander.webp" alt="Lander on the launch pad" style={{ position: "relative", display: "block", width: "100%", height: "auto", filter: "grayscale(1) contrast(1.15) var(--no-ds, drop-shadow(0 14px 18px rgba(0,0,0,.25)))" }} />
                     </div>
                   </div>
                 </div>
@@ -325,8 +325,10 @@ export default function DetailView({ v }: { v: V }) {
             )}
 
             {/* ---- copy ---- */}
+            {/* The compact tagline is solid ink, not a blend mode: phone browsers can drop mix-blend-mode on text whose words
+                animate, which left white text on the light sky. A glow in the sky's tint keeps it legible over the art. */}
             {v.compact && (
-              <h2 className={v.isHighpoint ? "hp-tagline" : v.isTouchdown ? "d-tagline td-tagline" : v.isTakeoff ? "d-tagline to-tagline" : "d-tagline"} style={{ position: "absolute", left: "0", right: "0", width: v.taglineW, margin: "0 auto", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(26px,3.1vw,56px)", lineHeight: "1.04", textAlign: "center", color: "#fff", mixBlendMode: "difference", pointerEvents: "none" }}>
+              <h2 className={v.isHighpoint ? "hp-tagline" : v.isTouchdown ? "d-tagline td-tagline" : v.isTakeoff ? "d-tagline to-tagline" : "d-tagline"} style={{ position: "absolute", left: "0", right: "0", width: v.taglineW, margin: "0 auto", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(26px,3.1vw,56px)", lineHeight: "1.04", textAlign: "center", color: cw.ink, textShadow: `0 0 14px ${cw.tint}, 0 0 4px ${cw.tint}`, pointerEvents: "none" }}>
                 {cw.words.map((wd, wdI) => (
                   <span key={wdI} data-d-word="" style={{ display: "inline-block", margin: "0 .14em" }}>{wd.t}</span>
                 ))}
@@ -394,7 +396,7 @@ export default function DetailView({ v }: { v: V }) {
             )}
 
             <CornerFrame color={cw.frame} rulers={['34%', '30%']} />
-            <div data-d-fade="" style={{ position: "absolute", left: "0", right: "0", bottom: "0", height: "45%", background: "linear-gradient(180deg,rgba(20,19,18,0),#141312 85%)", pointerEvents: "none" }}></div>
+            <div data-d-fade="" className={v.isTakeoff ? "to-fade" : undefined} style={{ position: "absolute", left: "0", right: "0", bottom: "0", height: "45%", background: "linear-gradient(180deg,rgba(20,19,18,0),#141312 85%)", pointerEvents: "none" }}></div>
           </div>
         </div>
 
@@ -444,10 +446,15 @@ export default function DetailView({ v }: { v: V }) {
               </p>
               <h2 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5vw,80px)", lineHeight: "1" }}>Mission manifest</h2>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <strong style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(56px,6vw,104px)", lineHeight: ".8", color: "transparent", WebkitTextStroke: `1.5px ${cw.accentL}` }}>{cw.missionCount}</strong>
-              <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>EVENTS</span><span>ON BOARD</span></span>
-            </div>
+            {/* Until a world has published events, its count reads as "coming soon" rather than "00". */}
+            {cw.missions.length ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <strong style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(56px,6vw,104px)", lineHeight: ".8", color: "transparent", WebkitTextStroke: `1.5px ${cw.accentL}` }}>{cw.missionCount}</strong>
+                <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>EVENTS</span><span>ON BOARD</span></span>
+              </div>
+            ) : (
+              <span style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", letterSpacing: ".3em", color: "rgba(236,232,223,.65)" }}><span>LINE-UP</span><span style={{ color: cw.accentL }}>COMING SOON</span></span>
+            )}
           </header>
           {/* One block of tickets per group: a world that combines categories (DTS and Fun) titles each one. */}
           {cw.groups.map((g, gI) => (
@@ -457,10 +464,18 @@ export default function DetailView({ v }: { v: V }) {
                   <span style={{ width: "10px", height: "10px", flex: "none", transform: "rotate(45deg)", background: cw.accentL }}></span>
                   <h3 style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(24px,2.6vw,40px)", lineHeight: "1", letterSpacing: ".04em" }}>{g.titleU}</h3>
                   <span aria-hidden="true" style={{ flex: "1", height: "1.5px", background: "repeating-linear-gradient(90deg,rgba(236,232,223,.3) 0 6px,transparent 6px 12px)" }}></span>
-                  <span style={{ flex: "none", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: cw.accentL }}>{g.count} {g.missions.length === 1 ? "EVENT" : "EVENTS"}</span>
+                  <span style={{ flex: "none", fontSize: "12px", fontWeight: "700", letterSpacing: ".3em", color: cw.accentL }}>{g.soon ? "COMING SOON" : `${g.count} ${g.missions.length === 1 ? "EVENT" : "EVENTS"}`}</span>
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,500px),1fr))", gap: "22px" }}>
+                {/* A group whose events aren't published yet holds one "Coming soon" ticket stub in their place. */}
+                {g.soon && (
+                  <div data-d-card="" style={{ position: "relative", display: "grid", alignContent: "center", justifyItems: "start", gap: "14px", minHeight: "220px", padding: "32px clamp(22px,2.4vw,36px)", border: "1.5px dashed rgba(236,232,223,.3)", borderRadius: "18px", background: "radial-gradient(rgba(236,232,223,.06) 1px,transparent 1.3px) 0 0/14px 14px,linear-gradient(160deg,#23211e,#191816 70%)" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".28em", color: cw.accentL }}>{g.titleU} · {cw.serial}</span>
+                    <strong style={{ fontFamily: "var(--font-cinzel),serif", fontWeight: "900", fontSize: "clamp(28px,3vw,44px)", lineHeight: "1.05", color: "#ECE8DF" }}>Coming soon</strong>
+                    <p style={{ margin: "0", maxWidth: "46ch", fontSize: "15px", lineHeight: "1.6", color: "rgba(236,232,223,.75)", textWrap: "pretty" }}>The {g.title} line-up is still being charted. Check back soon for the full manifest.</p>
+                  </div>
+                )}
                 {g.missions.map((m) => (
 
                   <article key={m.no} data-d-card="" onMouseEnter={v.beep} style={{ display: "flex" }}>
@@ -545,7 +560,7 @@ export default function DetailView({ v }: { v: V }) {
                         <span style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "48px", lineHeight: "1", color: cw.accentL }}>{m.no}</span>
                         <span style={{ position: "relative", width: "80px", height: "80px" }}>
                           <span style={{ position: "absolute", inset: "0", display: "grid", gridTemplate: "100%/100%", placeItems: "center", borderRadius: "50%", overflow: "hidden", background: "radial-gradient(circle at 32% 28%,rgba(236,232,223,.16),transparent 58%),url(/assets/starfield.svg) center/260% auto,#0d0c0b", boxShadow: "inset 0 0 0 3px #2b2926,inset 0 0 0 4px rgba(236,232,223,.3),inset 0 12px 20px rgba(0,0,0,.65)" }}>
-                            <img decoding="async" src={m.img} alt="" style={{ height: "62px", width: "auto", maxWidth: "88%", objectFit: "contain", filter: "grayscale(1) contrast(1.3) brightness(1.15) drop-shadow(0 6px 8px rgba(0,0,0,.5))", animation: "iv-porthole 5s ease-in-out infinite" }} />
+                            <img decoding="async" src={m.img} alt="" style={{ height: "62px", width: "auto", maxWidth: "88%", objectFit: "contain", filter: "grayscale(1) contrast(1.3) brightness(1.15) var(--no-ds, drop-shadow(0 6px 8px rgba(0,0,0,.5)))", animation: "iv-porthole 5s ease-in-out infinite" }} />
                           </span>
                           <span style={{ position: "absolute", inset: "-8px", borderRadius: "50%", border: "1.5px dotted rgba(236,232,223,.4)" }}></span>
                         </span>

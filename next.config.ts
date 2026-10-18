@@ -60,6 +60,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // The check-in scanner needs the camera. Must stay AFTER the global "/:path*" entry: when two entries set the
+        // same header for a path, the last one wins (Next.js headers docs, "Header Overriding Behavior").
+        source: "/admin/scan",
+        headers: [
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" },
+        ],
+      },
+      {
         // API responses carry personal data and tokens: never let a browser or CDN cache them. The two public,
         // anonymous endpoints (events, gallery) are excluded and set their own cache headers.
         source: "/api/:path((?!events$|gallery$).*)",

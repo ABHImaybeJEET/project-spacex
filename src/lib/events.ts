@@ -2,12 +2,12 @@ import { WORLDS, type World } from '@/components/innovision/data';
 import { getSupabaseAdmin, type EventItem } from '@/lib/supabase';
 
 /** Columns anyone may read: no staff user ids or storage file ids. Shared by /api/events and the /events pages. */
-export const PUBLIC_EVENT_COLUMNS = 'id, title, description, poster_url, brochure_url, category, format, duration, venue, created_at, updated_at';
+export const PUBLIC_EVENT_COLUMNS = 'id, title, description, poster_url, brochure_url, category, format, duration, venue, sort_order, created_at, updated_at';
 
-export type PublicEvent = Pick<EventItem, 'id' | 'title' | 'description' | 'poster_url' | 'brochure_url' | 'category' | 'format' | 'duration' | 'venue' | 'created_at' | 'updated_at'>;
+export type PublicEvent = Pick<EventItem, 'id' | 'title' | 'description' | 'poster_url' | 'brochure_url' | 'category' | 'format' | 'duration' | 'venue' | 'sort_order' | 'created_at' | 'updated_at'>;
 
 /**
- * Published events, newest first, for the server-rendered /events pages. Read-only. Never throws: if the database is
+ * Published events in the order staff set (newest first within a position), for the server-rendered /events pages. Read-only. Never throws: if the database is
  * unreachable or not configured (e.g. a build without Supabase env), it returns null and the pages show their
  * announcement state until the next revalidation succeeds.
  */
@@ -16,6 +16,7 @@ export async function fetchPublicEvents(): Promise<PublicEvent[] | null> {
     const { data, error } = await getSupabaseAdmin()
       .from('events')
       .select(PUBLIC_EVENT_COLUMNS)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) {

@@ -4,7 +4,7 @@
 -- Why: public.enforce_registration_insert() still auto-confirms registrations from verified @nitrkl.ac.in accounts
 -- at amount 0 when a row is inserted by an end user. End users already have no INSERT privilege on registrations
 -- (REVOKE in supabase/schema.sql, section 11), so this trigger is defense in depth only, but it must not keep a free
--- path alive. This replaces the function body only: every directly inserted registration becomes 'pending' at 499,
+-- path alive. This replaces the function body only: every directly inserted registration becomes 'pending' at 1200,
 -- and student_type stays a reporting label ('internal' = verified @nitrkl.ac.in), matching /api/register.
 --
 -- What it does NOT do: it touches no table, column, constraint, index, policy or existing row. Registrations already
@@ -25,11 +25,6 @@ BEGIN
 
   SELECT lower(email), email_confirmed_at INTO v_email, v_confirmed FROM auth.users WHERE id = auth.uid();
 
-  -- Same ITER - SOA email rule as /api/register (isIterSoaEmail); the college CHECK only covers the typed name.
-  IF v_email LIKE '%@soa.%' OR v_email LIKE '%@iter.%' THEN
-    RAISE EXCEPTION 'Registration is not allowed for students from ITER - SOA.' USING ERRCODE = '42501';
-  END IF;
-
   NEW.user_id := auth.uid();
   NEW.email := COALESCE(v_email, '');
   NEW.registration_id := 'IV26-' || (1000 + (('x' || substr(md5(gen_random_uuid()::text), 1, 7))::bit(28)::int % 9000))::text;
@@ -37,7 +32,7 @@ BEGIN
   NEW.reviewed_at := NULL;
   NEW.student_type := CASE WHEN v_email LIKE '%@nitrkl.ac.in' AND v_confirmed IS NOT NULL THEN 'internal' ELSE 'external' END;
   NEW.status := 'pending';
-  NEW.amount := 499;
+  NEW.amount := 1200;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
