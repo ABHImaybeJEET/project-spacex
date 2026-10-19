@@ -237,14 +237,20 @@ export interface RegistrationInput {
   payment_proof_path: string;
   /** 12-digit UPI transaction id. Always required. */
   utr: string;
+  /** Someone else's referral code, normalized; null when left empty (optional). /api/register checks it exists. */
+  referred_by_code: string | null;
 }
 
 /** Must match GENDER_OPTIONS in validation.ts and the registrations.gender CHECK in supabase/schema.sql. */
 export const REGISTRATION_GENDERS = ['male', 'female', 'others'] as const;
 export type RegistrationGender = (typeof REGISTRATION_GENDERS)[number];
 
+/** Must match REFERRAL_CODE_PATTERN in validation.ts and registrations_referral_code_check in supabase/schema.sql. */
+export const REFERRAL_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{6}$/;
+
 /** Form field a validation error belongs to, so the registration form can show it on the right step. */
-export type RegistrationField = 'name' | 'college' | 'phone' | 'gender' | 'enrollment_no' | 'payfile' | 'utr' | 'form';
+export type RegistrationField =
+  | 'name' | 'college' | 'phone' | 'gender' | 'enrollment_no' | 'referred_by_code' | 'payfile' | 'utr' | 'form';
 
 export type RegistrationValidation =
   | { ok: true; data: RegistrationInput }
@@ -292,6 +298,7 @@ export function validateRegistrationInput(
   const gender = typeof b.gender === 'string' ? b.gender.trim().toLowerCase() : '';
   const proofPath = optionalString(b.payment_proof_path);
   const rawUtr = optionalString(b.utr);
+  const rawReferral = optionalString(b.referred_by_code);
 
   if (!name || !rawPhone || !college) {
     return {
@@ -300,7 +307,7 @@ export function validateRegistrationInput(
       field: !name ? 'name' : !college ? 'college' : 'phone',
     };
   }
-  if (enrollment === undefined || proofPath === undefined || rawUtr === undefined) {
+  if (enrollment === undefined || proofPath === undefined || rawUtr === undefined || rawReferral === undefined) {
     return { ok: false, error: 'Invalid field types in registration payload.', field: 'form' };
   }
   if (name.length < 2 || name.length > 100) {
@@ -321,6 +328,16 @@ export function validateRegistrationInput(
   const enrollment_no = enrollment ? enrollment.trim() : '';
   if (enrollment_no.length > 50 || (enrollment_no && !/^[A-Za-z0-9/_ -]+$/.test(enrollment_no))) {
     return { ok: false, error: 'Enrollment number contains invalid characters.', field: 'enrollment_no' };
+  }
+
+  // Optional. Same normalization as the form (normalizeReferralCode in validation.ts): case, spaces and dashes ignored.
+  const referred_by_code = (rawReferral || '').replace(/[\s-]+/g, '').toUpperCase();
+  if (referred_by_code && !REFERRAL_CODE_PATTERN.test(referred_by_code)) {
+    return {
+      ok: false,
+      error: 'Referral codes are 6 letters and numbers. Check the code, or leave the field empty.',
+      field: 'referred_by_code',
+    };
   }
 
   if (!proofPath) {
@@ -346,6 +363,7 @@ export function validateRegistrationInput(
       gender: gender as RegistrationGender,
       payment_proof_path: proofPath,
       utr,
+      referred_by_code: referred_by_code || null,
     },
   };
 }

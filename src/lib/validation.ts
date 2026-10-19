@@ -26,6 +26,17 @@ export function isGender(value: unknown): value is Gender {
 }
 
 /**
+ * Referral codes: 6 characters from an alphabet without look-alikes (no 0/O, no 1/I). The database generates them
+ * (public.new_referral_code in supabase/schema.sql, section 14) and checks this same pattern.
+ */
+export const REFERRAL_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{6}$/;
+
+/** What a registrant typed as someone's referral code, upper-cased without spaces or dashes ('' when left empty). */
+export function normalizeReferralCode(value: string): string {
+  return value.replace(/[\s-]+/g, '').toUpperCase();
+}
+
+/**
  * Validates whether a given URL is a legitimate Google Drive or Google Docs link.
  */
 export function isValidGoogleDriveUrl(url: string): boolean {

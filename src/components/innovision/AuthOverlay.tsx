@@ -154,6 +154,12 @@ export default function AuthOverlay({ v }: { v: V }) {
                         <span style={{ display: "flex", gap: "8px" }}><span style={{ display: "flex", alignItems: "center", padding: "0 14px", border: "1.5px solid rgba(236,232,223,.28)", fontSize: "16px", fontWeight: "500" }}>+91</span><input name="phone" defaultValue={v.regVals.phone} type="tel" autoComplete="tel-national" inputMode="numeric" placeholder="98765 43210" aria-invalid={v.inv.phone} style={{ flex: "1", minWidth: "0", height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.phone}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" /></span>
                         {v.err.phone ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.phone}</span>) : null}
                       </label>
+                      <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>REFERRAL CODE <span style={{ fontWeight: "500", color: "rgba(236,232,223,.55)" }}>(OPTIONAL)</span></span>
+                        <input name="referred_by_code" defaultValue={v.regVals.referred_by_code} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength="12" placeholder="e.g. K7QM2X" aria-invalid={v.inv.referred_by_code} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.referred_by_code}`, letterSpacing: ".12em", textTransform: "uppercase" }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+                        <span style={{ fontSize: "13px", lineHeight: "1.4", color: "rgba(236,232,223,.62)" }}>Got a code from a friend who registered? Enter it here.</span>
+                        {v.err.referred_by_code ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.referred_by_code}</span>) : null}
+                      </label>
                     </div>
 
                     <div style={{ display: v.d.s2, flexDirection: "column", gap: "22px" }}>
@@ -280,6 +286,18 @@ export default function AuthOverlay({ v }: { v: V }) {
                         </div>
                       </div>
                       {v.passQr ? <EntryPassCard key={`${v.passId}-${v.passStatus}`} /> : null}
+                      {v.refCode ? (
+                        <div data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "18px 20px", border: "1.5px solid rgba(236,232,223,.22)", background: "rgba(236,232,223,.03)" }}>
+                          <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>YOUR REFERRAL CODE</span>
+                          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px 20px" }}>
+                            <span style={{ fontWeight: "800", fontSize: "28px", letterSpacing: ".18em", fontVariantNumeric: "tabular-nums", color: "oklch(0.8 0.12 85)" }}>{v.refCode}</span>
+                            <span style={{ display: "flex", gap: "18px" }}>
+                              <button type="button" onClick={v.copyRefCode} aria-live="polite" style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">{v.refCodeLbl}</button>
+                            </span>
+                          </div>
+                          <span style={{ fontSize: "14px", lineHeight: "1.5", color: "rgba(236,232,223,.7)", textWrap: "pretty" }}>Share it with friends. When they register with your code and their registration is approved, it counts as your referral.</span>
+                        </div>
+                      ) : null}
                       <p data-s-in="" style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "rgba(236,232,223,.78)", textWrap: "pretty", overflowWrap: "anywhere" }}>{v.passNote}</p>
                       <div data-s-in="" style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                         <a href="#/worlds/takeoff" onClick={v.exploreFromPass} onMouseEnter={v.hover} style={{ flex: "1", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 28px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".08em", whiteSpace: "nowrap", color: "#141312", background: "#ECE8DF", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s" }} style-hover="background:oklch(0.8 0.12 85)"><span data-scr="">EXPLORE THE WORLDS</span></a>

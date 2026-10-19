@@ -51,7 +51,7 @@ import {
 import { REGISTRATIONS_LIVE, REGISTRATIONS_SOON_PATH, MERCH_PATH } from '@/config/launch';
 import { REGISTRATION_FEE, UPI_ID, UPI_PAY_LINK, UPI_QR_SRC } from '@/config/payment';
 import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
-import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
+import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS, normalizeReferralCode, REFERRAL_CODE_PATTERN } from '@/lib/validation';
 import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
 
 gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin);
@@ -154,6 +154,8 @@ interface State {
   registration: Registration | null;
   user: UserProfile | null;
   authReady: boolean; auth: boolean; authMode: string; step: number; err: any; busyLbl: string; files: any; drag: string; copied: boolean; schedFilter: string;
+  /** The referral code on the pass was just copied (shows COPIED). */
+  refCopied: boolean;
   dbGallery: GalleryPhoto[];
   dbEvents: EventItem[];
 }
@@ -174,7 +176,7 @@ const partList = (p: SlideParts) => [p.hero, p.rot, ...p.astro, p.outline, ...p.
 export class Innovision extends Component<Props, State> {
   rootRef = createRef<HTMLDivElement>();
   state: State = { view: 'loading', index: 0, dIndex: 0, about: false, compact: false, narrow: false, menu: false, toastOn: false, toastMsg: '', curtainLabel: 'INNOVISION', curtainKicker: 'NOW ENTERING',
-    auth: false, authMode: 'register', step: 0, err: {} as any, busyLbl: '', user: null, files: {} as any, drag: '', copied: false, gIdx: 0, schedDay: 0, schedFilter: 'all', saved: [], hudSolid: false, gBusy: false, gErr: '', gUser: null, hint: false, notice: false, coarse: false, lowPower: false, lazy: {},
+    auth: false, authMode: 'register', step: 0, err: {} as any, busyLbl: '', user: null, files: {} as any, drag: '', copied: false, refCopied: false, gIdx: 0, schedDay: 0, schedFilter: 'all', saved: [], hudSolid: false, gBusy: false, gErr: '', gUser: null, hint: false, notice: false, coarse: false, lowPower: false, lazy: {},
     adminOpen: false, profileOpen: false, phoneModalOpen: false, eventPop: null, registration: null, authReady: false, dbGallery: [], dbEvents: [] };
   busy = false; pending = false; slideDir = 0;
   authBusy = false; authClosing = false;
@@ -182,7 +184,7 @@ export class Innovision extends Component<Props, State> {
   _authReady = (() => { let res = () => {}; const p = new Promise<void>((r) => { res = r; }); return { p, res, done: false }; })();
   /** Bumped on every sign-out, so a profile lookup still in flight can't put a logged-out visitor back. */
   _authEpoch = 0;
-  _toast: any; _copy: any; reg: any; pass: any; _rEls: any; _rift: any; authO: any; _warpRaf: any; _warpTw: any; _stars: any;
+  _toast: any; _copy: any; _refCopy: any; reg: any; pass: any; _rEls: any; _rift: any; authO: any; _warpRaf: any; _warpTw: any; _stars: any;
   // flagship rover ticker; _rvReseq is set when roverPauses changes so the drive sequence is rebuilt
   _rvTick: ((time: number, dms: number) => void) | null = null; _rvReseq = false;
   // schedule: day swap in progress
@@ -2251,6 +2253,14 @@ export class Innovision extends Component<Props, State> {
     const no = () => this.toast('UPI ID: ' + t);
     try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, no); else no(); } catch (e) { no(); }
   };
+  /** Copies the registrant's own referral code from the pass. */
+  copyReferral = () => {
+    const code = this.state.registration?.referral_code;
+    if (!code) return;
+    const ok = () => { this.setState({ refCopied: true }); clearTimeout(this._refCopy); this._refCopy = setTimeout(() => this.setState({ refCopied: false }), 1600); };
+    const no = () => this.toast('Your referral code: ' + code);
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(ok, no); else no(); } catch { no(); }
+  };
   // @ts-ignore
   authSubmit = (e) => {
     e.preventDefault();
@@ -2326,9 +2336,14 @@ export class Innovision extends Component<Props, State> {
       else if (enrollment_no.length > 50 || (enrollment_no && !/^[A-Za-z0-9/_ -]+$/.test(enrollment_no))) {
         err.enrollment_no = 'Use only letters, numbers, spaces and / _ - (up to 50 characters).';
       }
+      // Optional; whether the code belongs to someone is checked by the server on submit.
+      const referred_by_code = normalizeReferralCode(v('referred_by_code'));
+      if (referred_by_code && !REFERRAL_CODE_PATTERN.test(referred_by_code)) {
+        err.referred_by_code = 'Referral codes are 6 letters and numbers. Check the code, or leave it empty.';
+      }
 
       if (this.fail(err)) return;
-      this.reg = { name, college, email, phone, enrollment_no, gender };
+      this.reg = { name, college, email, phone, enrollment_no, gender, referred_by_code };
 
       // Every student, NIT Rourkela included, continues to Step 1 (payment).
       this.toStep(1);
@@ -2360,6 +2375,7 @@ export class Innovision extends Component<Props, State> {
           utr,
           amount: this.fee(),
           status: 'pending' as const,
+          ...(r.referred_by_code ? { referred_by_code: r.referred_by_code } : {}),
         };
 
         const saveRes = await createRegistration(regPayload);
@@ -2368,7 +2384,7 @@ export class Innovision extends Component<Props, State> {
           const msg = saveRes.error || 'Registration failed';
           this.toast(msg);
           const field = saveRes.field || '';
-          const detailsField = ['name', 'college', 'phone', 'gender', 'enrollment_no'].includes(field);
+          const detailsField = ['name', 'college', 'phone', 'gender', 'enrollment_no', 'referred_by_code'].includes(field);
           if (isTransientFailure(saveRes.status) || !(detailsField || field === 'payfile' || field === 'utr')) {
             // Rate limited, server error, offline, closed or signed out: stay on this step with the UTR and screenshot
             // intact, so the student can submit again by hand. Nothing is resubmitted automatically.
@@ -2386,7 +2402,8 @@ export class Innovision extends Component<Props, State> {
             this.fail({ utr: msg });
             return;
           }
-          // Details from the first step (name, college, phone, gender, enrollment number): go back to fix them.
+          // Details from the first step (name, college, phone, gender, enrollment number, referral code): go back to
+          // fix them.
           this.setState({ busyLbl: '' });
           this.toStep(0);
           this.setState({ err: { [field]: msg } });
@@ -2435,7 +2452,7 @@ export class Innovision extends Component<Props, State> {
   authVals(s) {
   // @ts-ignore
     const am = s.authMode, st = s.step, reg = am === 'register', show = (b) => (b ? 'flex' : 'none'), gold = 'oklch(0.8 0.12 85)', cream = '#ECE8DF', bad = 'oklch(0.74 0.15 35)';
-    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
+    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', referred_by_code: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
     const bc = {}, inv = {};
   // @ts-ignore
     Object.keys(E).forEach((k) => { bc[k] = E[k] ? bad : 'rgba(236,232,223,.28)'; inv[k] = String(!!E[k]); });
@@ -2449,6 +2466,7 @@ export class Innovision extends Component<Props, State> {
       phone: user?.phone || R.phone || '',
       enrollment_no: user?.enrollment_no || s.registration?.enrollment_no || R.enrollment_no || '',
       gender: R.gender || s.registration?.gender || '',
+      referred_by_code: R.referred_by_code || '',
     };
   // @ts-ignore
     const up = (kind, ek, prompt) => {
@@ -2507,6 +2525,9 @@ export class Innovision extends Component<Props, State> {
         : P.status === 'REJECTED'
         ? 'Your registration could not be approved. Please contact the helpdesk.'
         : 'Your payment is being verified and your registration will be approved soon. Keep checking MY PASS: once approved, your entry QR appears here, ready to download.',
+      // The registrant's own referral code, shared from the pass (not once the registration was rejected).
+      refCode: String(P.status || '').toUpperCase() !== 'REJECTED' ? s.registration?.referral_code || '' : '',
+      copyRefCode: this.copyReferral, refCodeLbl: s.refCopied ? 'COPIED' : 'COPY CODE',
       exploreFromPass: this.exploreFromPass,
       googleLogin: this.googleLogin, gBusy: s.gBusy, gErr: s.gErr, gLbl: s.gBusy ? 'Waiting for Google…' : 'Continue with Google',
       gNote: reg && st === 0 && s.user ? 'Signed in as ' + s.user.email + (isInternal ? ' (NIT RKL Student)' : '') + '.' : '',
