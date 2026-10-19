@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { clientIp, createRateLimiter, isCrossSiteMutation } from '@/lib/security';
-import { REGISTRATIONS_OPEN } from '@/config/launch';
+import { REGISTRATIONS_LIVE } from '@/config/launch';
 
 // Largest legitimate body: a 2MB upload plus multipart overhead. Bigger requests are refused before buffering.
 const MAX_API_BODY_BYTES = 3 * 1024 * 1024;
@@ -70,7 +70,7 @@ export function proxy(request: NextRequest) {
 
   // While registrations are closed, /register is a public "opening soon" page (src/config/launch.ts).
   const isRegisterPage =
-    REGISTRATIONS_OPEN &&
+    REGISTRATIONS_LIVE &&
     (pathname === '/register' ||
       pathname.startsWith('/register/') ||
       pathname === '/registration' ||

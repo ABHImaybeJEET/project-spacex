@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { REGISTRATIONS_OPEN } from '@/config/launch';
+import { REGISTRATIONS_LIVE } from '@/config/launch';
 
 /**
  * Server-side gate for the registration write endpoints (POST /api/register, POST /api/upload). Hiding the REGISTER
@@ -10,13 +10,14 @@ import { REGISTRATIONS_OPEN } from '@/config/launch';
 export const REGISTRATIONS_CLOSED_MESSAGE = 'Registrations are not open yet.';
 
 /**
- * REGISTRATIONS_OPEN (src/config/launch.ts) is the only production switch. The integration tests drive the real route
- * handlers and need registration open; INNOVISION_TEST_REGISTRATIONS_OPEN does that, but only when NODE_ENV is 'test'.
- * `next build` / `next start` always run with NODE_ENV=production, so the override can't open a deployment, and nothing
- * from the request (body, query, headers) is ever consulted.
+ * REGISTRATIONS_OPEN (src/config/launch.ts) is the only production switch; REGISTRATIONS_LIVE adds the `next dev`
+ * override (OPEN_REGISTRATIONS_IN_DEV). The integration tests drive the real route handlers and need registration open;
+ * INNOVISION_TEST_REGISTRATIONS_OPEN does that, but only when NODE_ENV is 'test'. `next build` / `next start` always
+ * run with NODE_ENV=production, so neither override can open a deployment, and nothing from the request (body, query,
+ * headers) is ever consulted.
  */
 export function registrationsOpen(): boolean {
-  if (REGISTRATIONS_OPEN) return true;
+  if (REGISTRATIONS_LIVE) return true;
   return process.env.NODE_ENV === 'test' && process.env.INNOVISION_TEST_REGISTRATIONS_OPEN === 'true';
 }
 
