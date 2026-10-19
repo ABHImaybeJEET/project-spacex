@@ -50,7 +50,7 @@ import {
   type EventItem,
   type GalleryPhoto,
 } from '@/lib/supabase';
-import { REGISTRATIONS_LIVE, REGISTRATIONS_SOON_PATH, MERCH_PATH } from '@/config/launch';
+import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_PATH } from '@/config/launch';
 import { REGISTRATION_FEE, UPI_ID, UPI_PAY_LINK, UPI_QR_SRC } from '@/config/payment';
 import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
 import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS, normalizeReferralCode, REFERRAL_CODE_PATTERN } from '@/lib/validation';
@@ -89,7 +89,7 @@ const LOAD_FAIL = "Couldn't load that part of the site. Check your connection an
  * Pages of their own that the experience links to: /merch, and the registrations teaser while that flow is closed
  * (src/config/launch.ts). They open without reloading the site (leaveTo).
  */
-const OWN_PAGES = [MERCH_PATH, !REGISTRATIONS_LIVE && REGISTRATIONS_SOON_PATH].filter(Boolean) as string[];
+const OWN_PAGES = [MERCH_PATH, !REGISTRATIONS_OPEN && REGISTRATIONS_SOON_PATH].filter(Boolean) as string[];
 /**
  * Devices that start in low-power mode: few cores or little memory, Save-Data, or reduced motion.
  * iOS Safari reports 2-4 cores whatever the phone (anti-fingerprinting), so there only the frame-rate check judges.
@@ -353,7 +353,7 @@ export class Innovision extends Component<Props, State> {
       const isOpenRegister = search.get('open') === 'register' || window.location.hash === '#register';
 
       // Registrations closed (src/config/launch.ts): a register deep link lands on the "opening soon" page instead.
-      if (!REGISTRATIONS_LIVE && (isOpenRegister || search.get('required') === 'register')) {
+      if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
         this.showRegistrationsSoon(true);
       } else if (isAuthRequired) {
         // Remembered across the Google sign-in round trip, so the student lands on the form once signed in, and a
@@ -1509,7 +1509,7 @@ export class Innovision extends Component<Props, State> {
     // A click before the session check finishes waits for it, so a signed-in visitor isn't sent to log in.
     if (!this._authReady.done) await this._authReady.p;
     // Registrations closed (src/config/launch.ts): anyone without a pass goes to the "opening soon" page.
-    if (!REGISTRATIONS_LIVE && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
+    if (!REGISTRATIONS_OPEN && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
     if (!this.state.user) {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('inv_pending_action', 'register');
@@ -1525,7 +1525,7 @@ export class Innovision extends Component<Props, State> {
     const disc = t && t.closest && t.closest('[data-hero]') ? this.$('[data-hero-disc]') : null;
     this.openAuth('register', disc || t, !!disc);
   };
-  /** Leaves for the "registrations opening soon" page (/register while REGISTRATIONS_LIVE is false). */
+  /** Leaves for the "registrations opening soon" page (/register while REGISTRATIONS_OPEN is false). */
   showRegistrationsSoon(replace?: boolean) {
     if (typeof window === 'undefined') return;
     sessionStorage.removeItem('inv_pending_action');
@@ -1950,7 +1950,7 @@ export class Innovision extends Component<Props, State> {
     if (!this.$ || !gsap || this.authBusy || this.authClosing) return;
 
     // Registrations closed (src/config/launch.ts): every route into the registration form ends at the "opening soon" page.
-    if (mode === 'register' && !REGISTRATIONS_LIVE && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
+    if (mode === 'register' && !REGISTRATIONS_OPEN && !(this.state.registration || this.pass)) { this.showRegistrationsSoon(); return; }
 
     // Strict Auth Middleware Guard: Block access to registration if unauthenticated
     if (mode === 'register' && !this.state.user) {
@@ -2087,7 +2087,7 @@ export class Innovision extends Component<Props, State> {
 
     if (m === s.authMode || s.busyLbl) return;
 
-    if (m === 'register' && !REGISTRATIONS_LIVE) { this.showRegistrationsSoon(); return; }
+    if (m === 'register' && !REGISTRATIONS_OPEN) { this.showRegistrationsSoon(); return; }
 
     // Strict Auth Middleware: Intercept switching to register without login
     if (m === 'register' && !s.user) {

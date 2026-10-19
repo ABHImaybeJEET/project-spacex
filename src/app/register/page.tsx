@@ -1,10 +1,10 @@
-import { REGISTRATIONS_LIVE } from '@/config/launch';
+import { REGISTRATIONS_OPEN } from '@/config/launch';
 import RegistrationsOpeningSoon from '@/components/coming-soon/RegistrationsOpeningSoon';
 import { pageMetadata } from '@/lib/seo';
 import { redirectToRegistrationFlow } from './redirectToRegistrationFlow';
 
 export const metadata = pageMetadata(
-  REGISTRATIONS_LIVE
+  REGISTRATIONS_OPEN
     ? {
         title: 'Register',
         description: "Register for Innovision 2026: The Celestial Odyssey, Eastern India's largest techno-management fest, hosted by NIT Rourkela, Odisha.",
@@ -23,6 +23,6 @@ export const metadata = pageMetadata(
  * Once open, it hands off to the registration flow (see redirectToRegistrationFlow).
  */
 export default async function RegisterPage() {
-  if (!REGISTRATIONS_LIVE) return <RegistrationsOpeningSoon />;
+  if (!REGISTRATIONS_OPEN) return <RegistrationsOpeningSoon />;
   return redirectToRegistrationFlow();
 }
