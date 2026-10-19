@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { verifyEventStaff } from '@/lib/auth-server';
 import { isUuid, readJsonObject } from '@/lib/security';
-import { ALLOWED_EVENT_CATEGORIES, type AllowedEventCategory } from '../route';
+import { ALLOWED_EVENT_CATEGORIES, type AllowedEventCategory } from '@/lib/events';
 
 export const runtime = 'nodejs';
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { UserProfile, Registration } from '@/lib/supabase';
-import { getSupabase, fetchSessionFromDatabase } from '@/lib/supabase';
+import { getSupabase, fetchSessionFromDatabase, getCookie } from '@/lib/supabase';
 import { csvCell, GENDER_OPTIONS, safeHttpUrl } from '@/lib/validation';
 
 const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === value)?.label ?? value;
@@ -98,10 +98,11 @@ export default function AdminDashboard({
         }
       }
 
-      // Fallback 3: Query server session (auto-refreshes tokens if expired)
+      // Fallback 3: Query server session (auto-refreshes tokens in cookies if expired)
       const dbAuth = await fetchSessionFromDatabase();
-      if (dbAuth.tokens?.access_token) {
-        return dbAuth.tokens.access_token;
+      if (dbAuth.user) {
+        const cookieToken = getCookie('inn_access_token');
+        if (cookieToken) return cookieToken;
       }
     } catch (e) {
       console.warn('getAuthToken error:', e);

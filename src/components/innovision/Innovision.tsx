@@ -33,6 +33,7 @@ import { LiveV } from './SiteFooter';
 import type { V } from './types';
 import {
   getSupabase,
+  isSupabaseConfigured,
   getOrCreateUserProfile,
   updateUserPhone,
   fetchUserRegistration,
@@ -42,6 +43,7 @@ import {
   cleanAuthUrl,
   saveSessionToDatabase,
   fetchSessionFromDatabase,
+  getCookie,
   purgeLocalStorageTokens,
   type UserProfile,
   type Registration,
@@ -1608,6 +1610,10 @@ export class Innovision extends Component<Props, State> {
     this.cleanups.push(() => clearTimeout(slow));
     try {
       purgeLocalStorageTokens();
+      if (!isSupabaseConfigured()) {
+        this.markAuthReady();
+        return;
+      }
       const supabase = getSupabase();
 
       // 1. Check the active session. getSession waits for the client to start, which (detectSessionInUrl) already
@@ -1639,11 +1645,13 @@ export class Innovision extends Component<Props, State> {
         // 3. Fall back to Server/Database session via cookies (ZERO localStorage)
         const dbAuth = await fetchSessionFromDatabase();
         if (dbAuth.user) {
-          if (dbAuth.tokens?.access_token) {
+          const cookieAccessToken = getCookie('inn_access_token');
+          const cookieRefreshToken = getCookie('inn_refresh_token');
+          if (cookieAccessToken) {
             try {
               await supabase.auth.setSession({
-                access_token: dbAuth.tokens.access_token,
-                refresh_token: dbAuth.tokens.refresh_token || '',
+                access_token: cookieAccessToken,
+                refresh_token: cookieRefreshToken || '',
               });
             } catch (e) {
               console.warn('setSession failed:', e);

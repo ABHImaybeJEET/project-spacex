@@ -79,7 +79,7 @@ export interface GalleryPhoto {
 export type GalleryItem = GalleryPhoto;
 
 // Cookie-based storage adapter for Supabase Client: ZERO tokens or keys ever touch browser localStorage
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const nameEQ = encodeURIComponent(name) + '=';
   const ca = document.cookie.split(';');
@@ -159,13 +159,38 @@ export function purgeLocalStorageTokens(): void {
   } catch {}
 }
 
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseKey);
+}
+
+export function isSupabaseAdminConfigured(): boolean {
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY;
+  return Boolean(supabaseUrl && (serviceKey || supabaseKey));
+}
+
 // Client-side singleton Supabase client
 let clientInstance: SupabaseClient | null = null;
+let dummyClientInstance: SupabaseClient | null = null;
+
+function getDummyClient(): SupabaseClient {
+  if (!dummyClientInstance) {
+    dummyClientInstance = createClient('https://placeholder.supabase.co', 'placeholder-anon-key', {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
+  return dummyClientInstance;
+}
 
 export function getSupabase(): SupabaseClient {
   if (clientInstance) return clientInstance;
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase URL or Key is missing in environment variables.');
+    console.warn('Supabase URL or Key is missing in environment variables. Using placeholder client.');
+    return getDummyClient();
   }
 
   // Purge any stale tokens from localStorage immediately
@@ -233,6 +258,10 @@ export function getSupabaseAdmin(token?: string): SupabaseClient {
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_KEY;
+
+  if (!supabaseUrl || (!serviceKey && !supabaseKey)) {
+    return getDummyClient();
+  }
 
   if (serviceKey) {
     return createClient(supabaseUrl, serviceKey, {
@@ -387,23 +416,23 @@ export async function saveSessionToDatabase(session: Session | null): Promise<bo
 }
 
 /**
- * Fetches the user session directly from the database using the HttpOnly cookie.
+ * Fetches the user session directly from the database using cookies.
+ * Tokens are kept strictly in cookies and never returned in the API response payload.
  */
 export async function fetchSessionFromDatabase(): Promise<{
   user: UserProfile | null;
-  tokens: { access_token: string; refresh_token?: string } | null;
 }> {
   try {
     const res = await fetch('/api/auth/session');
-    if (!res.ok) return { user: null, tokens: null };
+    if (!res.ok) return { user: null };
     const data = await res.json();
     if (data.success && data.user) {
-      return { user: data.user, tokens: data.tokens || null };
+      return { user: data.user };
     }
-    return { user: null, tokens: null };
+    return { user: null };
   } catch (err) {
     console.warn('fetchSessionFromDatabase error:', err);
-    return { user: null, tokens: null };
+    return { user: null };
   }
 }
 

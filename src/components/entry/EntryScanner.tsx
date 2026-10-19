@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { fetchSessionFromDatabase, getSupabase } from '@/lib/supabase';
+import { fetchSessionFromDatabase, getCookie, getSupabase } from '@/lib/supabase';
 import { DESK_RE, REJECT_REASONS, REJECT_REASON_LABELS, type RejectReason } from '@/lib/entry-shared';
 import styles from './EntryScanner.module.css';
 
@@ -89,7 +89,8 @@ async function currentToken(): Promise<string | null> {
     const { data } = await getSupabase().auth.getSession();
     if (data.session?.access_token) return data.session.access_token;
   } catch {}
-  return (await fetchSessionFromDatabase()).tokens?.access_token ?? null;
+  await fetchSessionFromDatabase();
+  return getCookie('inn_access_token');
 }
 
 /** After a 401: force a refresh (the auto-refresh timer is throttled on phones), else the server-side refresh. */
@@ -98,7 +99,8 @@ async function refreshedToken(): Promise<string | null> {
     const { data, error } = await getSupabase().auth.refreshSession();
     if (!error && data.session?.access_token) return data.session.access_token;
   } catch {}
-  return (await fetchSessionFromDatabase()).tokens?.access_token ?? null;
+  await fetchSessionFromDatabase();
+  return getCookie('inn_access_token');
 }
 
 const offline = () => typeof navigator !== 'undefined' && navigator.onLine === false;
