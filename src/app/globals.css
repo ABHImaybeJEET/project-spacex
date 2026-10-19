@@ -102,7 +102,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .hv-gold:hover{color:oklch(0.8 0.12 85) !important}
 .hv-bronze:hover{color:#8a6a2a !important}
 .hv-bronze-fill:hover{background:#8a6a2a !important;color:#ECE8DF !important}
-.hv-bronze-bg:hover{background:#8a6a2a !important}
 .hv-gold-bg:hover{background:oklch(0.8 0.12 85) !important}
 .hv-link-paper:hover{opacity:1 !important;color:#ECE8DF !important}
 .hv-link-white:hover{opacity:1 !important;color:#fff !important}

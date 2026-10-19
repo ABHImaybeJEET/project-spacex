@@ -174,7 +174,7 @@ export const CONTACTS: { name: string; phone: string }[] = [
   { name: 'Manjeet Srichandan', phone: '7735510636' },
 ];
 
-/** Top navigation: [label, key]. Events/Schedule/Gallery/Merch are routes; the rest scroll the home page. */
+/** Top navigation: [label, key]. Events/Schedule/Gallery are routes, Merch is its own page (/merch); the rest scroll the home page. */
 export const LINKS: [string, string][] = [['Home', 'home'], ['Events', 'events'], ['Schedule', 'schedule'], ['Gallery', 'gallery'], ['Sponsors', 'sponsors'], ['Merch', 'merch']];
 /** LINKS keys left out of the navbar (top bar and phone menu) for now. Their views and routes still work. */
 export const NAVBAR_HIDDEN: string[] = ['schedule'];
@@ -182,19 +182,6 @@ export const NAVBAR_HIDDEN: string[] = ['schedule'];
 /** Frames in the home page's gallery tunnel, filled with the first ARCHIVE photos: [x offset, y offset]. */
 export const TUNNEL: [string, string][] = [['-15vw', '-6vh'], ['17vw', '7vh'], ['-18vw', '9vh'], ['15vw', '-10vh'], ['-8vw', '-11vh'], ['6vw', '5vh']];
 export const TUNNEL_C = ['oklch(0.76 0.11 38)', 'oklch(0.77 0.09 250)', 'oklch(0.77 0.09 295)', 'oklch(0.8 0.08 178)'];
-
-const INK: [string, string] = ['Ink', '#141312'], BONE: [string, string] = ['Bone', '#ECE8DF'];
-const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-
-export interface Product { id: string; name: string; price: number; tag?: string; desc: string; sizes?: string[]; colors?: [string, string][] }
-
-export const PRODUCTS: Product[] = [
-  { id: 'tee', name: 'Odyssey Tee', price: 499, tag: 'Bestseller', desc: 'Heavyweight cotton tee with the celestial disc printed across the back.', sizes: SIZES, colors: [INK, BONE, ['Ember', 'oklch(0.56 0.13 32)']] },
-  { id: 'hoodie', name: 'Orbit Hoodie', price: 1199, tag: 'Limited', desc: 'Brushed fleece hoodie with an embroidered Innovision wordmark.', sizes: SIZES, colors: [INK, ['Dusk', 'oklch(0.55 0.12 295)']] },
-  { id: 'cap', name: 'Mission Cap', price: 349, desc: 'Six-panel cap with a tonal orbit patch. One size, adjustable strap.', colors: [INK, ['Mint', 'oklch(0.56 0.09 178)']] },
-  { id: 'mug', name: 'Celestial Mug', price: 299, desc: 'Matte ceramic mug for late-night hackathon fuel.', colors: [INK, BONE] },
-  { id: 'stickers', name: 'Sticker Pack', price: 99, desc: 'Eight die-cut stickers: planets, astronauts and mission badges.' },
-];
 
 /**
  * Brands that have sponsored past fests, in the order of the 2026 sponsorship brochure. Logos are WebP on ImageKit
@@ -205,9 +192,9 @@ export interface PastSponsor { id: string; name: string; logo: string; width: nu
 export const PAST_SPONSORS: PastSponsor[] = PAST_SPONSORS_JSON;
 
 /**
- * Images placed into image slots, keyed by slot id (e.g. 'gallery-3', 'merch-tee', 'merch-feature').
+ * Images placed into image slots, keyed by slot id (e.g. 'gallery-3').
  * Slots without an entry show the placeholder, as in the design.
- * Example: 'merch-tee': { src: A + 'merch/tee.webp', fit: 'cover' }
+ * Example: 'gallery-3': { src: A + 'gallery/3.webp', fit: 'cover' }
  */
 export const SLOT_IMAGES: Record<string, { src: string; fit?: 'contain' | 'cover' }> = {};
 
@@ -271,6 +258,3 @@ export const SCHED: SchedEvent[][] = [
    ['18:00', 90, 'Antakshari Night', 3, 'Library Annexe'], ['18:30', 60, 'Sponsor Meet and Greet', 2, 'Design Studio'], ['19:00', 60, 'Prize Distribution', 2, 'Main Auditorium'], ['19:30', 60, 'Club Showcase', 3, 'Central Lawns'],
    ['20:00', 30, 'DJ Warm-up', 3, 'Open Air Theatre'], ['20:30', 150, 'Closing Night Pro Show', 3, 'Open Air Theatre']],
 ];
-
-export const inr = (n: number) => '₹' + n.toLocaleString('en-IN');
-
