@@ -9,6 +9,7 @@ const genderLabel = (value: string) => GENDER_OPTIONS.find((g) => g.value === va
 import EventsManager from './admin/EventsManager';
 import GalleryManager from './admin/GalleryManager';
 import EntryManager from './admin/EntryManager';
+import ReferralLeaderboard from './admin/ReferralLeaderboard';
 import { httpErrorMessage } from '@/lib/api-errors';
 
 interface AdminDashboardProps {
@@ -31,7 +32,7 @@ export default function AdminDashboard({
   const canReviewRegistrations = isAdmin || isRegTeam;
 
   const defaultTab = canReviewRegistrations ? 'registrations' : 'events';
-  const [tab, setTab] = useState<'registrations' | 'events' | 'gallery' | 'users' | 'entry'>(defaultTab);
+  const [tab, setTab] = useState<'registrations' | 'referrals' | 'events' | 'gallery' | 'users' | 'entry'>(defaultTab);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingRegs, setLoadingRegs] = useState(false);
@@ -204,7 +205,7 @@ export default function AdminDashboard({
   let activeTab = tab;
   if (tab === 'users' && !isAdmin) activeTab = defaultTab;
   if (tab === 'entry' && !isAdmin) activeTab = defaultTab;
-  if (tab === 'registrations' && !canReviewRegistrations) activeTab = defaultTab;
+  if ((tab === 'registrations' || tab === 'referrals') && !canReviewRegistrations) activeTab = defaultTab;
   if ((tab === 'events' || tab === 'gallery') && !isAdmin && !isItTeam) activeTab = defaultTab;
 
   if (!isOpen || !isStaff) return null;
@@ -334,6 +335,7 @@ export default function AdminDashboard({
       'Amount (INR)',
       'UPI UTR',
       'Payment Screenshot (private ref)',
+      'Referral Code',
       'Registered At',
     ];
 
@@ -350,6 +352,7 @@ export default function AdminDashboard({
       r.amount,
       r.utr,
       r.payment_proof_path,
+      r.referral_code,
       r.created_at,
     ].map(csvCell));
 
@@ -829,6 +832,27 @@ export default function AdminDashboard({
               }}
             >
               REGISTRATIONS ({totalRegs})
+            </button>
+            )}
+
+            {canReviewRegistrations && (
+            <button
+              id="tab-referrals"
+              type="button"
+              onClick={() => setTab('referrals')}
+              style={{
+                padding: '8px 18px',
+                border: 0,
+                borderBottom: activeTab === 'referrals' ? '2px solid oklch(0.8 0.12 85)' : '2px solid transparent',
+                background: activeTab === 'referrals' ? 'rgba(236,232,223,0.06)' : 'transparent',
+                color: activeTab === 'referrals' ? '#ECE8DF' : 'rgba(236,232,223,0.5)',
+                fontWeight: 700,
+                fontSize: '12px',
+                letterSpacing: '.14em',
+                cursor: 'pointer',
+              }}
+            >
+              LEADERBOARD
             </button>
             )}
 
@@ -1442,6 +1466,11 @@ export default function AdminDashboard({
             setConfirmModal={setConfirmModal}
             setPreviewImage={setPreviewImage}
           />
+        )}
+
+        {/* REFERRAL LEADERBOARD (Admin + Registration-Team) */}
+        {activeTab === 'referrals' && canReviewRegistrations && (
+          <ReferralLeaderboard getAuthToken={getAuthToken} />
         )}
 
         {/* TAB 5: VENUE ENTRY / CHECK-IN (Admin Only) */}

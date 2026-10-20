@@ -13,7 +13,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import {
   A, WORLDS, PRELOAD_CRITICAL, PRELOAD_DEFERRED, HERO_SPARKS, LOADER_SPARKS, STATUS, SCRAMBLE, GAP, GALLERY, ARCHIVE, ikWidth, gFrame,
-  LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, PRODUCTS, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, PAST_SPONSORS, inr, type Product, type WorldKey,
+  LINKS, NAVBAR_HIDDEN, TUNNEL, TUNNEL_C, BRIEF, SCHED, SCHED_DAYS, SCHED_BLOCKS, PAST_SPONSORS, type WorldKey,
 } from './data';
 import HomeView from './HomeView';
 import WorldsView from './WorldsView';
@@ -25,7 +25,6 @@ import ProfileOverlay from './ProfileOverlay';
 import PhoneModal from './PhoneModal';
 import EventPopup from './EventPopup';
 import AdminDashboard from './AdminDashboard';
-import CartPill from './CartPill';
 import Toast from './Toast';
 import WorldHint from './WorldHint';
 import DetailNotice from './DetailNotice';
@@ -34,6 +33,7 @@ import { LiveV } from './SiteFooter';
 import type { V } from './types';
 import {
   getSupabase,
+  isSupabaseConfigured,
   getOrCreateUserProfile,
   updateUserPhone,
   fetchUserRegistration,
@@ -50,10 +50,10 @@ import {
   type EventItem,
   type GalleryPhoto,
 } from '@/lib/supabase';
-import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_STORE_OPEN, MERCH_SOON_PATH } from '@/config/launch';
+import { REGISTRATIONS_OPEN, REGISTRATIONS_SOON_PATH, MERCH_PATH } from '@/config/launch';
 import { REGISTRATION_FEE, UPI_ID, UPI_PAY_LINK, UPI_QR_SRC } from '@/config/payment';
 import { SKIP_INTRO_KEY } from '@/components/coming-soon/SkipIntroOnReturn';
-import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS } from '@/lib/validation';
+import { isValidGoogleDriveUrl, GENDER_OPTIONS as GENDERS, normalizeReferralCode, REFERRAL_CODE_PATTERN } from '@/lib/validation';
 import { httpErrorMessage, isTransientFailure } from '@/lib/api-errors';
 
 gsap.registerPlugin(ScrollTrigger, ScrambleTextPlugin);
@@ -67,20 +67,16 @@ ScrollTrigger.config({ ignoreMobileResize: true });
 const LAZY = {
   detail: { sel: '[data-view="detail"]', load: () => import('./DetailView') },
   gallery: { sel: '[data-view="gallery"]', load: () => import('./GalleryView') },
-  merch: { sel: '[data-view="merch"]', load: () => import('./MerchView') },
   schedule: { sel: '[data-view="schedule"]', load: () => import('./ScheduleView') },
   menu: { sel: '[data-menu]', load: () => import('./MenuOverlay') },
   auth: { sel: '[data-auth-root]', load: () => import('./AuthOverlay') },
-  bag: { sel: '[data-bag]', load: () => import('./BagPanel') },
 };
 type LazyKey = keyof typeof LAZY;
 const DetailView = dynamic(LAZY.detail.load, { ssr: false });
 const GalleryView = dynamic(LAZY.gallery.load, { ssr: false });
-const MerchView = dynamic(LAZY.merch.load, { ssr: false });
 const ScheduleView = dynamic(LAZY.schedule.load, { ssr: false });
 const MenuOverlay = dynamic(LAZY.menu.load, { ssr: false });
 const AuthOverlay = dynamic(LAZY.auth.load, { ssr: false });
-const BagPanel = dynamic(LAZY.bag.load, { ssr: false });
 /** Save-Data or a 2G-class connection: nothing is fetched ahead of need. */
 const slowNet = () => {
   const c = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
@@ -89,8 +85,11 @@ const slowNet = () => {
 /** A left click with no modifier: links with a page of their own (e.g. /events/...) stay in the experience for these. */
 const plainClick = (e: MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 const LOAD_FAIL = "Couldn't load that part of the site. Check your connection and try again.";
-/** Teaser pages (src/config/launch.ts) live while their flow is closed; they open without reloading the site (leaveTo). */
-const TEASERS = [!REGISTRATIONS_OPEN && REGISTRATIONS_SOON_PATH, !MERCH_STORE_OPEN && MERCH_SOON_PATH].filter(Boolean) as string[];
+/**
+ * Pages of their own that the experience links to: /merch, and the registrations teaser while that flow is closed
+ * (src/config/launch.ts). They open without reloading the site (leaveTo).
+ */
+const OWN_PAGES = [MERCH_PATH, !REGISTRATIONS_OPEN && REGISTRATIONS_SOON_PATH].filter(Boolean) as string[];
 /**
  * Devices that start in low-power mode: few cores or little memory, Save-Data, or reduced motion.
  * iOS Safari reports 2-4 cores whatever the phone (anti-fingerprinting), so there only the frame-rate check judges.
@@ -109,13 +108,10 @@ type PureProps = { v: V; deps: readonly unknown[] };
  */
 const pure = (View: ComponentType<{ v: V }>) => memo(function Pure({ v }: PureProps) { return <View v={v} />; },
   (a, b) => a.deps.length === b.deps.length && a.deps.every((d, k) => Object.is(d, b.deps[k])));
-const HomeV = pure(HomeView), WorldsV = pure(WorldsView), DetailV = pure(DetailView), GalleryV = pure(GalleryView), MerchV = pure(MerchView), ScheduleV = pure(ScheduleView), LoaderV = pure(Loader);
+const HomeV = pure(HomeView), WorldsV = pure(WorldsView), DetailV = pure(DetailView), GalleryV = pure(GalleryView), ScheduleV = pure(ScheduleView), LoaderV = pure(Loader);
 
-type ViewName = 'loading' | 'home' | 'worlds' | 'detail' | 'gallery' | 'merch' | 'schedule';
+type ViewName = 'loading' | 'home' | 'worlds' | 'detail' | 'gallery' | 'schedule';
 type Route = { view: Exclude<ViewName, 'loading'>; index: number; section?: string };
-/** A bag line: product id, colour index (-1 if none), size ('' if none), quantity. */
-type BagLine = { id: string; key: string; c: number; s: string; qty: number };
-type Sel = { color?: number; size?: string };
 type SlideParts = { hero: HTMLElement | null; rot: HTMLElement | null; astro: HTMLElement[]; link: HTMLElement[]; outline: HTMLElement | null; labels: HTMLElement[] };
 type El = HTMLElement & { _tw?: gsap.core.Tween };
 type Attracted = HTMLElement & { _a: { x: number; y: number; tx: number; ty: number; s: number; on: boolean } };
@@ -138,7 +134,7 @@ interface State {
   /** dIndex: world shown by the detail page; it only follows index when that page is prepared. */
   view: ViewName; index: number; dIndex: number; about: boolean; compact: boolean; narrow: boolean;
   menu: boolean; toastOn: boolean; toastMsg: string; curtainLabel: string; curtainKicker: string;
-  gIdx: number; sel: Record<string, Sel>; bag: BagLine[]; bagOpen: boolean; added: string | null;
+  gIdx: number;
   /** Schedule: selected day index, starred event ids. */
   schedDay: number; saved: string[];
   /** Lighter rendering (see goLowPower); only ever switches on. */
@@ -160,16 +156,12 @@ interface State {
   registration: Registration | null;
   user: UserProfile | null;
   authReady: boolean; auth: boolean; authMode: string; step: number; err: any; busyLbl: string; files: any; drag: string; copied: boolean; schedFilter: string;
+  /** The referral code on the pass was just copied (shows COPIED). */
+  refCopied: boolean;
   dbGallery: GalleryPhoto[];
   dbEvents: EventItem[];
 }
 
-/** Bag lines read back from storage, minus anything malformed (unknown shape, bad quantity, unknown product). */
-const cleanBag = (raw: unknown): BagLine[] => (Array.isArray(raw) ? raw : [])
-  .filter((l) => l && typeof l.id === 'string' && typeof l.key === 'string' && PRODUCTS.some((p) => p.id === l.key) && Number.isFinite(l.qty) && l.qty > 0)
-  .map((l) => ({ id: l.id, key: l.key, c: Number.isInteger(l.c) ? l.c : -1, s: typeof l.s === 'string' ? l.s : '', qty: Math.min(99, Math.floor(l.qty)) }));
-
-const BAG_KEY = 'innovisionCart';
 const SAVED_KEY = 'iv26-schedule-saved';
 const HINT_KEY = 'iv26-hint-worlds';
 
@@ -186,7 +178,7 @@ const partList = (p: SlideParts) => [p.hero, p.rot, ...p.astro, p.outline, ...p.
 export class Innovision extends Component<Props, State> {
   rootRef = createRef<HTMLDivElement>();
   state: State = { view: 'loading', index: 0, dIndex: 0, about: false, compact: false, narrow: false, menu: false, toastOn: false, toastMsg: '', curtainLabel: 'INNOVISION', curtainKicker: 'NOW ENTERING',
-    auth: false, authMode: 'register', step: 0, err: {} as any, busyLbl: '', user: null, files: {} as any, drag: '', copied: false, gIdx: 0, sel: {}, bag: [], bagOpen: false, added: null, schedDay: 0, schedFilter: 'all', saved: [], hudSolid: false, gBusy: false, gErr: '', gUser: null, hint: false, notice: false, coarse: false, lowPower: false, lazy: {},
+    auth: false, authMode: 'register', step: 0, err: {} as any, busyLbl: '', user: null, files: {} as any, drag: '', copied: false, refCopied: false, gIdx: 0, schedDay: 0, schedFilter: 'all', saved: [], hudSolid: false, gBusy: false, gErr: '', gUser: null, hint: false, notice: false, coarse: false, lowPower: false, lazy: {},
     adminOpen: false, profileOpen: false, phoneModalOpen: false, eventPop: null, registration: null, authReady: false, dbGallery: [], dbEvents: [] };
   busy = false; pending = false; slideDir = 0;
   authBusy = false; authClosing = false;
@@ -194,7 +186,7 @@ export class Innovision extends Component<Props, State> {
   _authReady = (() => { let res = () => {}; const p = new Promise<void>((r) => { res = r; }); return { p, res, done: false }; })();
   /** Bumped on every sign-out, so a profile lookup still in flight can't put a logged-out visitor back. */
   _authEpoch = 0;
-  _toast: any; _copy: any; reg: any; pass: any; _rEls: any; _rift: any; authO: any; _warpRaf: any; _warpTw: any; _stars: any;
+  _toast: any; _copy: any; _refCopy: any; reg: any; pass: any; _rEls: any; _rift: any; authO: any; _warpRaf: any; _warpTw: any; _stars: any;
   // flagship rover ticker; _rvReseq is set when roverPauses changes so the drive sequence is rebuilt
   _rvTick: ((time: number, dms: number) => void) | null = null; _rvReseq = false;
   // schedule: day swap in progress
@@ -222,7 +214,6 @@ export class Innovision extends Component<Props, State> {
   private ctx?: gsap.Context;
   private cleanups: (() => void)[] = [];
   private _toast?: ReturnType<typeof setTimeout>;
-  private _added?: ReturnType<typeof setTimeout>;
 
   // DOM helpers (set in boot)
   $: (s: string) => HTMLElement | null = () => null;
@@ -264,13 +255,11 @@ export class Innovision extends Component<Props, State> {
 
   componentDidMount() {
     this.alive = true;
-    let bag: BagLine[] = [];
     // Stored values may be from an older version or edited by hand: keep only well-formed entries.
-    try { bag = cleanBag(JSON.parse(localStorage.getItem(BAG_KEY) || '[]')); } catch {}
     let saved: string[] = [];
     try { const sv = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); if (Array.isArray(sv)) saved = sv.filter((x) => typeof x === 'string'); } catch {}
     try { this.hintSeen = localStorage.getItem(HINT_KEY) === '1'; } catch {}
-    this.setState({ bag, saved, compact: innerWidth < 1100, narrow: innerWidth < 720, coarse: matchMedia('(pointer: coarse)').matches });
+    this.setState({ saved, compact: innerWidth < 1100, narrow: innerWidth < 720, coarse: matchMedia('(pointer: coarse)').matches });
     if (lowPowerDevice()) this.goLowPower();
     // Resize work forces layout (title fit, map panels), so it runs at most once per frame.
     let rz = 0;
@@ -295,7 +284,7 @@ export class Innovision extends Component<Props, State> {
     this.alive = false;
     // A remount (dev strict mode) reuses this instance: low-power mode and the view tickers are set up again.
     document.documentElement.removeAttribute('data-lowpower'); this.lowPower = false; this.viewTicks = [];
-    clearTimeout(this._toast); clearTimeout(this._added); clearTimeout(this._hintT); clearTimeout(this._noticeT);
+    clearTimeout(this._toast); clearTimeout(this._hintT); clearTimeout(this._noticeT);
     this._dayBusy = false;
     this.cleanups.splice(0).forEach((fn) => fn());
     this.io?.disconnect(); this.io = undefined; this.off.clear(); this.amb.clear();
@@ -340,14 +329,14 @@ export class Innovision extends Component<Props, State> {
       // A page restored from the back/forward cache doesn't boot again, so a flag set meanwhile by a teaser page
       // must not carry over to the next real load.
       this.listen(window, 'pageshow', (e) => { if ((e as PageTransitionEvent).persisted) { try { sessionStorage.removeItem(SKIP_INTRO_KEY); } catch {} } });
-      // Plain links to a teaser page (MERCH in the navbar, menu, footer and merch section) switch pages client-side.
+      // Plain links to a page of its own (MERCH in the navbar, menu and footer; REGISTER while closed) switch pages client-side.
       this.listen(document, 'click', (e) => {
         const ev = e as globalThis.MouseEvent;
         if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
         const a = (ev.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
         if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
         const u = new URL(a.href);
-        if (u.origin !== location.origin || !TEASERS.includes(u.pathname)) return;
+        if (u.origin !== location.origin || !OWN_PAGES.includes(u.pathname)) return;
         ev.preventDefault();
         this.leaveTo(u.pathname + u.search);
       });
@@ -362,6 +351,7 @@ export class Innovision extends Component<Props, State> {
       const search = new URLSearchParams(window.location.search);
       const isAuthRequired = search.get('required') === 'register' || search.get('auth') === 'login';
       const isOpenRegister = search.get('open') === 'register' || window.location.hash === '#register';
+      const isOpenLogin = search.get('open') === 'login';
 
       // Registrations closed (src/config/launch.ts): a register deep link lands on the "opening soon" page instead.
       if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
@@ -389,6 +379,13 @@ export class Innovision extends Component<Props, State> {
           } else {
             this.openAuth('register');
           }
+        }, 1200);
+      } else if (isOpenLogin) {
+        // LOG IN / PROFILE from a page of its own (the merch page's top bar): log in, or the profile if signed in.
+        setTimeout(async () => {
+          if (!this._authReady.done) await this._authReady.p;
+          if (!this.alive) return;
+          if (this.state.user) this.openProfile(); else this.openAuth('login');
         }, 1200);
       }
     }
@@ -678,8 +675,8 @@ export class Innovision extends Component<Props, State> {
     this._warmed = true;
     if (slowNet()) return;
     // The overlay and view a visitor is most likely to open next are fetched ahead too (their own hover/tap also does).
-    // The teaser pages too, so REGISTER / MERCH open at once (a no-op on the dev server).
-    this.cleanups.push(this.idle(() => { this.prefetch('auth'); this.prefetch('detail'); TEASERS.forEach((p) => this.props.router?.prefetch(p)); }));
+    // The pages of their own too, so MERCH (and REGISTER while closed) open at once (a no-op on the dev server).
+    this.cleanups.push(this.idle(() => { this.prefetch('auth'); this.prefetch('detail'); OWN_PAGES.forEach((p) => this.props.router?.prefetch(p)); }));
     const queue = [...PRELOAD_DEFERRED];
     let cancel = () => {}, live = true;
     const batch = () => {
@@ -720,7 +717,7 @@ export class Innovision extends Component<Props, State> {
   attach(k: LazyKey) {
     if (this._attached.has(k)) return;
     this._attached.add(k);
-    if (k !== 'detail' && k !== 'gallery' && k !== 'merch' && k !== 'schedule') return;
+    if (k !== 'detail' && k !== 'gallery' && k !== 'schedule') return;
     const el = this.$(LAZY[k].sel)!;
     // Hidden views pause their loops (see syncLoops); the loops for its [data-spin] etc. start paused.
     el.setAttribute('data-idle', '');
@@ -848,7 +845,6 @@ export class Innovision extends Component<Props, State> {
   async prepView(to: Route) {
     if (to.view in LAZY && !(await this.mount(to.view as LazyKey))) return false;
     if (to.view === 'home') { gsap.set(this.$$('[data-hero-disc],[data-hero-sweep]'), { autoAlpha: 1, scale: 1 }); this.$('[data-view="home"]')!.scrollTop = 0; }
-    else if (to.view === 'merch') this.$('[data-view="merch"]')!.scrollTop = 0;
     else if (to.view === 'schedule') this.$('[data-view="schedule"]')!.scrollTop = 0;
     else if (to.view === 'gallery') { this.gZ = -2600; this.gTarget = -2600; }
     else { await this.setSlide(to.index); if (to.view === 'detail') await this.prepDetail(to.index); }
@@ -862,7 +858,6 @@ export class Innovision extends Component<Props, State> {
     if (to.view === 'home') return this.homeEnter();
     if (to.view === 'gallery') return this.galleryEnter();
     if (to.view === 'schedule') return this.schedEnter();
-    if (to.view === 'merch') return gsap.timeline().fromTo(this.$('[data-view="merch"] [data-m-reveal]'), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 1.2, ease: 'expo.out', stagger: .06 }, .1);
     if (to.view === 'worlds') this.queueHint();
     return to.view === 'detail' ? this.detailEnter() : this.worldsEnter(to.index);
   }
@@ -950,25 +945,12 @@ export class Innovision extends Component<Props, State> {
     this.gTy = y;
   };
 
-  /* ---------- store / bag ---------- */
+  /* ---------- toast ---------- */
   toast(msg: string) {
     this.setState({ toastOn: true, toastMsg: msg });
     clearTimeout(this._toast);
     this._toast = setTimeout(() => this.setState({ toastOn: false }), 3200);
   }
-  saveBag(bag: BagLine[]) { try { localStorage.setItem(BAG_KEY, JSON.stringify(bag)); } catch {} }
-  setBag(bag: BagLine[]) { this.setState({ bag }); this.saveBag(bag); }
-  pick(id: string, patch: Sel) { this.setState((st) => ({ sel: { ...st.sel, [id]: { ...(st.sel[id] || {}), ...patch } } })); }
-  addToCart(p: Product, size: string | null, color: number) {
-    const c = p.colors ? color : -1, s = size || '', id = p.id + '|' + c + '|' + s;
-    const bag = this.state.bag.map((l) => ({ ...l })), f = bag.find((l) => l.id === id);
-    if (f) f.qty += 1; else bag.push({ id, key: p.id, c, s, qty: 1 });
-    this.setBag(bag);
-    this.setState({ added: p.id });
-    clearTimeout(this._added);
-    this._added = setTimeout(() => this.setState({ added: null }), 1400);
-  }
-  setQty(id: string, d: number) { this.setBag(this.state.bag.map((l) => (l.id === id ? { ...l, qty: l.qty + d } : l)).filter((l) => l.qty > 0)); }
 
   /* ---------- home ---------- */
   homeEnter() {
@@ -1080,7 +1062,7 @@ export class Innovision extends Component<Props, State> {
   /** Puts the HUD on its frosted bar once the active view's page has scrolled under it. */
   hudSync() {
     const v = this.state.view;
-    const sc = v === 'detail' ? this.$('[data-d-scroller]') : v === 'home' || v === 'merch' || v === 'schedule' ? this.$('[data-view="' + v + '"]') : null;
+    const sc = v === 'detail' ? this.$('[data-d-scroller]') : v === 'home' || v === 'schedule' ? this.$('[data-view="' + v + '"]') : null;
     const solid = !!sc && sc.scrollTop > 24;
     if (solid !== this.state.hudSolid) this.setState({ hudSolid: solid });
     if (solid && v === 'detail') this.hideNotice();
@@ -1370,9 +1352,9 @@ export class Innovision extends Component<Props, State> {
     const f = WORLDS.findIndex((w) => w.slug === k || w.key === k), idx = this.state.index;
     if (v === 'worlds') return { view: 'worlds', index: f >= 0 ? f : idx };
     if (v === 'world' && f >= 0) return { view: 'detail', index: f };
-    // Store closed (src/config/launch.ts): #/merch bookmarks go to the "dropping soon" page.
-    if (v === 'merch' && !MERCH_STORE_OPEN) { this.leaveTo(MERCH_SOON_PATH, true); return { view: 'home', index: idx }; }
-    if (v === 'gallery' || v === 'merch' || v === 'schedule') return { view: v, index: idx };
+    // The merch has a page of its own: old #/merch links and bookmarks go there.
+    if (v === 'merch') { this.leaveTo(MERCH_PATH, true); return { view: 'home', index: idx }; }
+    if (v === 'gallery' || v === 'schedule') return { view: v, index: idx };
     if (v === 'sponsors') return { view: 'home', section: 'sponsors', index: idx };
     return { view: 'home', index: idx };
   }
@@ -1384,10 +1366,10 @@ export class Innovision extends Component<Props, State> {
     if (this.state.view === 'loading') return;
     if (this.busy) { this.pending = true; return; }
     const to = this.parse(), s = this.state;
-    if (s.about || s.menu || s.bagOpen) this.setState({ about: false, menu: false, bagOpen: false });
+    if (s.about || s.menu) this.setState({ about: false, menu: false });
     if (to.view === s.view && to.view === 'home') { if (to.section) this.scrollHome(to.section, true); return; }
     if (to.view === s.view && to.view === 'gallery') { this.gTarget = 0; return; }
-    if (to.view === s.view && (to.view === 'merch' || to.view === 'schedule' || to.index === s.index)) return;
+    if (to.view === s.view && (to.view === 'schedule' || to.index === s.index)) return;
     this.busy = true;
     try { await this.transition(to); } finally { this.busy = false; this.slideDir = 0; }
     if (this.pending) { this.pending = false; this.route(); }
@@ -1408,7 +1390,7 @@ export class Innovision extends Component<Props, State> {
       await this.slideTo(to.index, this.slideDir || (to.index > this.state.index ? 1 : -1));
       return;
     }
-    const label = to.view === 'worlds' ? 'The Worlds' : to.view === 'merch' ? 'The Store' : to.view === 'gallery' ? 'The Gallery' : to.view === 'schedule' ? 'The Schedule' : w.name;
+    const label = to.view === 'worlds' ? 'The Worlds' : to.view === 'gallery' ? 'The Gallery' : to.view === 'schedule' ? 'The Schedule' : w.name;
     // A lazy view's chunk downloads while the curtain falls.
     if (to.view in LAZY) this.prefetch(to.view as LazyKey);
     const back: Route = { view: from as Route['view'], index: this.state.index };
@@ -1450,7 +1432,7 @@ export class Innovision extends Component<Props, State> {
   onKey(e: KeyboardEvent) {
     const s = this.state;
     if (e.key === 'Escape' && s.eventPop != null && s.view === 'detail') { this.setState({ eventPop: null }); return; }
-    if (e.key === 'Escape' && (s.about || s.menu || s.bagOpen)) { this.setState({ about: false, menu: false, bagOpen: false }); return; }
+    if (e.key === 'Escape' && (s.about || s.menu)) { this.setState({ about: false, menu: false }); return; }
     const v = s.view;
     if (v === 'worlds') {
       if (e.key === 'ArrowRight') { e.preventDefault(); this.stepSlide(1); }
@@ -1636,6 +1618,10 @@ export class Innovision extends Component<Props, State> {
     this.cleanups.push(() => clearTimeout(slow));
     try {
       purgeLocalStorageTokens();
+      if (!isSupabaseConfigured()) {
+        this.markAuthReady();
+        return;
+      }
       const supabase = getSupabase();
 
       // 1. Check the active session. getSession waits for the client to start, which (detectSessionInUrl) already
@@ -2283,6 +2269,14 @@ export class Innovision extends Component<Props, State> {
     const no = () => this.toast('UPI ID: ' + t);
     try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, no); else no(); } catch (e) { no(); }
   };
+  /** Copies the registrant's own referral code from the pass. */
+  copyReferral = () => {
+    const code = this.state.registration?.referral_code;
+    if (!code) return;
+    const ok = () => { this.setState({ refCopied: true }); clearTimeout(this._refCopy); this._refCopy = setTimeout(() => this.setState({ refCopied: false }), 1600); };
+    const no = () => this.toast('Your referral code: ' + code);
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(ok, no); else no(); } catch { no(); }
+  };
   // @ts-ignore
   authSubmit = (e) => {
     e.preventDefault();
@@ -2358,9 +2352,14 @@ export class Innovision extends Component<Props, State> {
       else if (enrollment_no.length > 50 || (enrollment_no && !/^[A-Za-z0-9/_ -]+$/.test(enrollment_no))) {
         err.enrollment_no = 'Use only letters, numbers, spaces and / _ - (up to 50 characters).';
       }
+      // Optional; whether the code belongs to someone is checked by the server on submit.
+      const referred_by_code = normalizeReferralCode(v('referred_by_code'));
+      if (referred_by_code && !REFERRAL_CODE_PATTERN.test(referred_by_code)) {
+        err.referred_by_code = 'Referral codes are 6 letters and numbers. Check the code, or leave it empty.';
+      }
 
       if (this.fail(err)) return;
-      this.reg = { name, college, email, phone, enrollment_no, gender };
+      this.reg = { name, college, email, phone, enrollment_no, gender, referred_by_code };
 
       // Every student, NIT Rourkela included, continues to Step 1 (payment).
       this.toStep(1);
@@ -2392,6 +2391,7 @@ export class Innovision extends Component<Props, State> {
           utr,
           amount: this.fee(),
           status: 'pending' as const,
+          ...(r.referred_by_code ? { referred_by_code: r.referred_by_code } : {}),
         };
 
         const saveRes = await createRegistration(regPayload);
@@ -2400,7 +2400,7 @@ export class Innovision extends Component<Props, State> {
           const msg = saveRes.error || 'Registration failed';
           this.toast(msg);
           const field = saveRes.field || '';
-          const detailsField = ['name', 'college', 'phone', 'gender', 'enrollment_no'].includes(field);
+          const detailsField = ['name', 'college', 'phone', 'gender', 'enrollment_no', 'referred_by_code'].includes(field);
           if (isTransientFailure(saveRes.status) || !(detailsField || field === 'payfile' || field === 'utr')) {
             // Rate limited, server error, offline, closed or signed out: stay on this step with the UTR and screenshot
             // intact, so the student can submit again by hand. Nothing is resubmitted automatically.
@@ -2418,7 +2418,8 @@ export class Innovision extends Component<Props, State> {
             this.fail({ utr: msg });
             return;
           }
-          // Details from the first step (name, college, phone, gender, enrollment number): go back to fix them.
+          // Details from the first step (name, college, phone, gender, enrollment number, referral code): go back to
+          // fix them.
           this.setState({ busyLbl: '' });
           this.toStep(0);
           this.setState({ err: { [field]: msg } });
@@ -2467,7 +2468,7 @@ export class Innovision extends Component<Props, State> {
   authVals(s) {
   // @ts-ignore
     const am = s.authMode, st = s.step, reg = am === 'register', show = (b) => (b ? 'flex' : 'none'), gold = 'oklch(0.8 0.12 85)', cream = '#ECE8DF', bad = 'oklch(0.74 0.15 35)';
-    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
+    const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', referred_by_code: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
     const bc = {}, inv = {};
   // @ts-ignore
     Object.keys(E).forEach((k) => { bc[k] = E[k] ? bad : 'rgba(236,232,223,.28)'; inv[k] = String(!!E[k]); });
@@ -2481,6 +2482,7 @@ export class Innovision extends Component<Props, State> {
       phone: user?.phone || R.phone || '',
       enrollment_no: user?.enrollment_no || s.registration?.enrollment_no || R.enrollment_no || '',
       gender: R.gender || s.registration?.gender || '',
+      referred_by_code: R.referred_by_code || '',
     };
   // @ts-ignore
     const up = (kind, ek, prompt) => {
@@ -2539,6 +2541,9 @@ export class Innovision extends Component<Props, State> {
         : P.status === 'REJECTED'
         ? 'Your registration could not be approved. Please contact the helpdesk.'
         : 'Your payment is being verified and your registration will be approved soon. Keep checking MY PASS: once approved, your entry QR appears here, ready to download.',
+      // The registrant's own referral code, shared from the pass (not once the registration was rejected).
+      refCode: String(P.status || '').toUpperCase() !== 'REJECTED' ? s.registration?.referral_code || '' : '',
+      copyRefCode: this.copyReferral, refCodeLbl: s.refCopied ? 'COPIED' : 'COPY CODE',
       exploreFromPass: this.exploreFromPass,
       googleLogin: this.googleLogin, gBusy: s.gBusy, gErr: s.gErr, gLbl: s.gBusy ? 'Waiting for Google…' : 'Continue with Google',
       gNote: reg && st === 0 && s.user ? 'Signed in as ' + s.user.email + (isInternal ? ' (NIT RKL Student)' : '') + '.' : '',
@@ -2547,11 +2552,10 @@ export class Innovision extends Component<Props, State> {
       user: s.user,
     };
   }
-  checkout = () => { this.toast('Pre-orders open with registrations. Stay in orbit.'); };
   linkGo = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     const href = e.currentTarget.getAttribute('href') || '#/';
-    this.setState({ menu: false, about: false, bagOpen: false });
+    this.setState({ menu: false, about: false });
     this.go(href);
   };
   onWheel = (e: WheelEvent) => {
@@ -2577,24 +2581,19 @@ export class Innovision extends Component<Props, State> {
     // On a world's page the world switcher shows only at the top, where you land after Enter; once the page scrolls
     // (hudSolid) it gives the scene and the mission list the whole screen.
     const navShown = navOn && !(s.view === 'detail' && s.hudSolid);
-    const act = s.view === 'merch' ? 'merch' : s.view === 'gallery' ? 'gallery' : s.view === 'schedule' ? 'schedule' : navOn ? 'events' : 'home';
-    // Store closed (src/config/launch.ts): MERCH links leave for the "dropping soon" page.
-    const merchHref = MERCH_STORE_OPEN ? '#/merch' : MERCH_SOON_PATH;
+    const act = s.view === 'gallery' ? 'gallery' : s.view === 'schedule' ? 'schedule' : navOn ? 'events' : 'home';
     const routed = (k: string) => k === 'events' || k === 'merch' || k === 'gallery' || k === 'schedule';
     const navLinks = LINKS.map(([label, k]) => ({
       label: label.toUpperCase(), name: label, cur: String(k === act) as 'true' | 'false', o: k === act ? 1 : .68, bar: k === act ? 1 : 0, dc: k === act ? 'oklch(0.8 0.12 85)' : '#ECE8DF',
-      href: k === 'events' ? '#/worlds/' + w.slug : k === 'merch' ? merchHref : k === 'gallery' ? '#/gallery' : k === 'schedule' ? '#/schedule' : '#/',
+      href: k === 'events' ? '#/worlds/' + w.slug : k === 'merch' ? MERCH_PATH : k === 'gallery' ? '#/gallery' : k === 'schedule' ? '#/schedule' : '#/',
       onClick: (e: MouseEvent<HTMLAnchorElement>) => {
         if (routed(k)) { if (this.state.about || this.state.menu) this.setState({ about: false, menu: false }); return; }
         e.preventDefault(); this.goSection(k === 'home' ? null : k);
       },
     }));
-    const lines = s.bag.map((l) => ({ ...l, p: PRODUCTS.find((x) => x.id === l.key) })).filter((l): l is BagLine & { p: Product } => !!l.p);
-    const count = lines.reduce((a, l) => a + l.qty, 0), total = lines.reduce((a, l) => a + l.qty * l.p.price, 0);
-    const cartOn = s.view === 'merch' && count > 0;
     return {
       // Navbar (top bar and phone menu) hides Schedule; the view, #/schedule route and footer link stay.
-      navLinks, hudLinks: navLinks.filter((_, i) => !NAVBAR_HIDDEN.includes(LINKS[i][1])), footLinks: navLinks.slice(0, 5), wide: !s.compact, merchHref,
+      navLinks, hudLinks: navLinks.filter((_, i) => !NAVBAR_HIDDEN.includes(LINKS[i][1])), footLinks: navLinks.slice(0, 5), wide: !s.compact,
       // Wide screens open the About drawer; compact screens open the full-screen menu.
       // The MENU button only exists on compact screens; wide screens show LOG IN in its place.
       menuButton: () => { this.openLazy('menu', { menu: true }); },
@@ -2623,25 +2622,6 @@ export class Innovision extends Component<Props, State> {
       tunnelTotal: String(TUNNEL.length).padStart(2, '0'),
       // Logos are sized by the square root of their aspect ratio, so wide wordmarks and square marks carry similar weight.
       pastSponsors: PAST_SPONSORS.map((s) => ({ ...s, src: ikWidth(s.logo, 400), w: Math.min(78, 36 * Math.sqrt(s.width / s.height)).toFixed(1) + '%' })),
-      products: PRODUCTS.map((p) => {
-        const sl = s.sel[p.id] || {}, size = sl.size || (p.sizes ? 'M' : null), color = sl.color || 0;
-        return {
-          ...p, slot: 'merch-' + p.id, ph: p.name + ' product photo', priceL: inr(p.price), hasTag: !!p.tag, tagU: (p.tag || '').toUpperCase(),
-          hasSizes: !!p.sizes, hasColors: !!p.colors, colorName: p.colors ? p.colors[color][0] : '',
-          sizes: (p.sizes || []).map((z) => ({ z, on: z === size, bg: z === size ? '#141312' : 'transparent', fg: z === size ? '#ECE8DF' : '#141312', onClick: () => this.pick(p.id, { size: z }) })),
-          colors: (p.colors || []).map(([n, c], k) => ({ n, c, on: k === color, ring: k === color ? '#141312' : 'transparent', onClick: () => this.pick(p.id, { color: k }) })),
-          add: () => this.addToCart(p, size, color), addLabel: s.added === p.id ? 'ADDED ✓' : 'ADD TO CART', addBg: s.added === p.id ? '#8a6a2a' : '#141312',
-        };
-      }),
-      cartO: cartOn ? 1 : 0, cartY: cartOn ? '0px' : '24px', cartPE: (cartOn ? 'auto' : 'none') as 'auto' | 'none',
-      cartCountL: count + (count === 1 ? ' item' : ' items'), cartTotal: inr(total),
-      clearCart: () => this.setBag([]),
-      checkout: this.checkout,
-      bagLines: lines.map((l) => ({ name: l.p.name, meta: [l.c >= 0 && l.p.colors?.[l.c] ? l.p.colors[l.c][0] : '', l.s].filter(Boolean).join(' · '), qty: l.qty, lineStr: inr(l.qty * l.p.price), inc: () => this.setQty(l.id, 1), dec: () => this.setQty(l.id, -1), remove: () => this.setQty(l.id, -l.qty) })),
-      bagCountStr: String(count), subtotalStr: inr(total), bagEmpty: count === 0,
-      bagVis: (s.bagOpen ? 'visible' : 'hidden') as 'visible' | 'hidden', bagDelay: s.bagOpen ? '0s' : '.8s', bagO: s.bagOpen ? 1 : 0, bagX: s.bagOpen ? '0%' : '100%', bagHidden: !s.bagOpen,
-      openBag: () => { this.openLazy('bag', { bagOpen: true }); },
-      closeBag: () => this.setState({ bagOpen: false }),
       toastMsg: s.toastMsg,
       heroChars: 'INNOVISION'.split('').map((ch) => ({ ch })),
       briefWords: BRIEF.split(' '),
@@ -2812,7 +2792,6 @@ export class Innovision extends Component<Props, State> {
         <WorldsV v={v} deps={[s.narrow, s.compact, s.dbEvents]} />
         {s.lazy.detail && <DetailV v={v} deps={[s.dIndex, s.compact, s.dbEvents]} />}
         {s.lazy.gallery && <GalleryV v={v} deps={[s.gIdx, s.dbGallery]} />}
-        {s.lazy.merch && <MerchV v={v} deps={[s.sel, s.added]} />}
         {s.lazy.schedule && <ScheduleV v={v} deps={[s.schedDay, s.schedFilter, s.saved, s.narrow]} />}
         <Hud v={v} />
         <WorldNav v={v} />
@@ -2847,8 +2826,6 @@ export class Innovision extends Component<Props, State> {
             currentUser={s.user}
           />
         )}
-        {s.lazy.bag && <BagPanel v={v} />}
-        <CartPill v={v} />
         <Toast v={v} />
         <LoaderV v={v} deps={[]} />
         </LiveV>

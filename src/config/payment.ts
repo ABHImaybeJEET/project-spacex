@@ -11,10 +11,10 @@
  * link as ONE byte-mode segment, error correction M, e.g. with the `qrcode` package:
  *   QRCode.toString([{ data: UPI_PAY_LINK, mode: 'byte' }], { type: 'svg', errorCorrectionLevel: 'M', margin: 1,
  *     color: { dark: '#0c0b0aff', light: '#ECE8DFff' } })
- * Left to pick its own segments, `qrcode` splits the link into byte + numeric + byte, and with a 4-digit fee that
+ * Left to pick its own segments, `qrcode` splits the link into byte + numeric + byte around the fee, and that
  * symbol fails to decode in ZXing (the reader behind many Android apps). Check it scans to the new link.
  */
-export const REGISTRATION_FEE = 1200;
+export const REGISTRATION_FEE = 999;
 export const UPI_ID = 'innovision@sbi';
 export const UPI_PAYEE_NAME = 'Innovision NIT Rourkela';
 export const UPI_NOTE = 'Innovision 2026 registration';

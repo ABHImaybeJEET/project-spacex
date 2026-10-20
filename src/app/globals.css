@@ -102,7 +102,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .hv-gold:hover{color:oklch(0.8 0.12 85) !important}
 .hv-bronze:hover{color:#8a6a2a !important}
 .hv-bronze-fill:hover{background:#8a6a2a !important;color:#ECE8DF !important}
-.hv-bronze-bg:hover{background:#8a6a2a !important}
 .hv-gold-bg:hover{background:oklch(0.8 0.12 85) !important}
 .hv-link-paper:hover{opacity:1 !important;color:#ECE8DF !important}
 .hv-link-white:hover{opacity:1 !important;color:#fff !important}
@@ -736,3 +735,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;o
 @keyframes ev-fade{from{opacity:0}}
 @keyframes ev-rise{from{opacity:0;transform:translateY(24px) scale(.97)}}
 @media (prefers-reduced-motion:reduce){.ev-pop,.ev-pop-box{animation:none}.hv-ticket-open:hover,.hv-ticket-open:focus-visible{transform:none}}
+
+/* 404 page quick links (src/app/not-found.tsx): inline styles set the resting look, so these win with !important. */
+.nf-chip{transition:border-color .3s,background-color .3s}
+.nf-chip:hover,.nf-chip:focus-visible{border-color:oklch(0.8 0.12 85) !important;background:rgba(236,232,223,.1) !important}
+@media (prefers-reduced-motion:reduce){.nf-chip{transition:none}}

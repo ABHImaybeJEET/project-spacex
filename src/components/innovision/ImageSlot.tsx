@@ -7,7 +7,7 @@ interface Props {
   fit?: 'cover' | 'contain';
   placeholder?: string;
   style?: CSSProperties;
-  /** 'lazy' for slots in secondary views (gallery, store); never on the first screen. */
+  /** 'lazy' for slots in secondary views (gallery); never on the first screen. */
   loading?: 'lazy' | 'eager';
 }
 
