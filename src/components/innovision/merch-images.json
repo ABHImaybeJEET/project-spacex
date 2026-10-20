@@ -1,0 +1,98 @@
+{
+  "hoodie-red": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/hoodie-red_Mg1t_OAen.webp",
+    "fileId": "6ad5f95fead997d09ab7757b",
+    "width": 1502,
+    "height": 1047,
+    "bytes": 54924,
+    "source": "IMG-20261018-WA0010.jpg.jpeg"
+  },
+  "hoodie-blue": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/hoodie-blue_1LAILp0Eh.webp",
+    "fileId": "6ad5f960ead997d09ab77b94",
+    "width": 1502,
+    "height": 1047,
+    "bytes": 56816,
+    "source": "IMG-20261018-WA0011.jpg.jpeg"
+  },
+  "hoodie-crimson": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/hoodie-crimson_OPXMYzMK0.webp",
+    "fileId": "6ad5f962ead997d09ab7824b",
+    "width": 1502,
+    "height": 1047,
+    "bytes": 55620,
+    "source": "IMG-20261018-WA0013.jpg.jpeg"
+  },
+  "hoodie-green": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/hoodie-green_oFLdL93fh.webp",
+    "fileId": "6ad5f963ead997d09ab787dc",
+    "width": 1502,
+    "height": 1047,
+    "bytes": 56528,
+    "source": "IMG-20261018-WA0012.jpg.jpeg"
+  },
+  "tshirt-red": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/tshirt-red_oULIGaBQC.webp",
+    "fileId": "6ad5f965ead997d09ab78ce8",
+    "width": 1600,
+    "height": 890,
+    "bytes": 52266,
+    "source": "IMG-20261018-WA0014.jpg.jpeg"
+  },
+  "tshirt-blue": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/tshirt-blue_GVdWSesob.webp",
+    "fileId": "6ad5f967ead997d09ab792a3",
+    "width": 1600,
+    "height": 890,
+    "bytes": 53612,
+    "source": "IMG-20261018-WA0017.jpg.jpeg"
+  },
+  "tshirt-crimson": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/tshirt-crimson_M24pNW6PI.webp",
+    "fileId": "6ad5f968ead997d09ab79b3e",
+    "width": 1600,
+    "height": 890,
+    "bytes": 52820,
+    "source": "IMG-20261018-WA0016.jpg.jpeg"
+  },
+  "tshirt-green": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/tshirt-green_XKZWae8Q5.webp",
+    "fileId": "6ad5f96aead997d09ab7a6ff",
+    "width": 1600,
+    "height": 890,
+    "bytes": 52628,
+    "source": "IMG-20261018-WA0015.jpg.jpeg"
+  },
+  "zipper-red": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/zipper-red_OIaMj5w5D.webp",
+    "fileId": "6ad5f96bead997d09ab7ab05",
+    "width": 1599,
+    "height": 949,
+    "bytes": 62110,
+    "source": "IMG-20261018-WA0018.jpg.jpeg"
+  },
+  "zipper-blue": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/zipper-blue_EjA_3u3dG.webp",
+    "fileId": "6ad5f96dead997d09ab7b13a",
+    "width": 1599,
+    "height": 949,
+    "bytes": 63298,
+    "source": "IMG-20261018-WA0021.jpg.jpeg"
+  },
+  "zipper-crimson": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/zipper-crimson_mFpVgmh_o.webp",
+    "fileId": "6ad5f96fead997d09ab7b699",
+    "width": 1599,
+    "height": 949,
+    "bytes": 57414,
+    "source": "IMG-20261018-WA0019.jpg.jpeg"
+  },
+  "zipper-green": {
+    "url": "https://ik.imagekit.io/zr1vkuqit/innovision/merch/2026/zipper-green_lEbUOxIab.webp",
+    "fileId": "6ad5f970ead997d09ab7ba2d",
+    "width": 1599,
+    "height": 949,
+    "bytes": 62368,
+    "source": "IMG-20261018-WA0020.jpg.jpeg"
+  }
+}

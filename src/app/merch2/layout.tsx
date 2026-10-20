@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   ...pageMetadata({
     title: 'Official Merch',
     description:
-      'The official Innovision 2026 merch collection from NIT Rourkela: limited-run tees, hoodies and keepsakes, pre-ordered online and collected on campus during the fest.',
+      'Explore official Innovision 2026 hoodies, T-shirts and zippers from NIT Rourkela. View all four artwork colours and order online.',
     path: '/merch2',
   }),
   robots: { index: false, follow: false },
