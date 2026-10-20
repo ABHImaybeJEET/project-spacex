@@ -1,0 +1,59 @@
+/* /merch: the official merch, inside the EventsChrome frame (ink / bone / gold palette). */
+
+.grid{display:grid;gap:clamp(20px,2.6vw,32px);grid-template-columns:1fr;margin:0;padding:0;list-style:none}
+.grid>li{display:flex}
+
+.card{display:flex;flex-direction:column;width:100%;border:1px solid rgba(236,232,223,.18);background:rgba(20,19,18,.7)}
+.figure{position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(120% 90% at 50% 30%,#F3F0E9 0%,#DCD7CB 100%)}
+.no{position:absolute;left:16px;top:14px;z-index:1;font-size:12px;font-weight:700;letter-spacing:.24em;color:rgba(20,19,18,.55)}
+.drawing{position:absolute;inset:14% 12% 10%;display:flex;align-items:center;justify-content:center}
+.photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+.body{display:flex;flex-direction:column;gap:16px;flex:1;padding:22px 22px 24px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.name{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(26px,2.4vw,30px);line-height:1.1}
+.price{flex:none;font-weight:700;font-size:18px;color:oklch(0.8 0.12 85)}
+.desc{margin:0;font-size:15px;line-height:1.6;color:rgba(236,232,223,.84);text-wrap:pretty}
+
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.label{min-width:64px;font-size:11px;font-weight:700;letter-spacing:.24em;color:oklch(0.8 0.12 85)}
+.swatches{display:flex;gap:10px}
+.swatch{width:34px;height:34px;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 3px #141312,inset 0 0 0 4px rgba(236,232,223,.28);cursor:pointer;transition:border-color .3s,transform .3s cubic-bezier(.25,1,.1,1)}
+.swatch:hover{transform:scale(1.08)}
+.swatch[aria-pressed="true"]{border-color:oklch(0.8 0.12 85)}
+.swatch:focus-visible{outline:2px solid #ECE8DF;outline-offset:3px}
+.colourName{font-size:14px;color:rgba(236,232,223,.84)}
+.sizes{font-size:14px;letter-spacing:.06em;color:rgba(236,232,223,.84)}
+
+.book{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:auto;padding:17px 24px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.08em;color:#141312;background:#ECE8DF;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:background-color .4s cubic-bezier(.25,1,.1,1)}
+.book:hover{background:oklch(0.8 0.12 85)}
+.book:focus-visible{outline:2px solid oklch(0.8 0.12 85);outline-offset:3px}
+.bookOff,.bookOff:hover{color:rgba(236,232,223,.7);background:rgba(236,232,223,.1);cursor:default}
+
+/* How booking works. */
+.steps{display:grid;gap:clamp(16px,2vw,24px);grid-template-columns:1fr;margin:0;padding:0;list-style:none;counter-reset:step}
+.steps li{display:flex;flex-direction:column;gap:10px;padding:22px 22px 24px;border-top:3px solid oklch(0.8 0.12 85);background:rgba(20,19,18,.6)}
+.steps li::before{counter-increment:step;content:'0' counter(step);font-size:12px;font-weight:700;letter-spacing:.24em;color:oklch(0.8 0.12 85)}
+.steps h3{margin:0;font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.15}
+.steps p{margin:0;font-size:15px;line-height:1.6;color:rgba(236,232,223,.84);text-wrap:pretty}
+
+/* Phones: one card under another. Tablets: one card per row, picture beside the details. Desktops: three across. */
+@media (min-width:640px) and (max-width:1023px){
+  .card{flex-direction:row}
+  .figure{flex:0 0 44%;aspect-ratio:auto;min-height:380px}
+  .body{padding:28px 28px 30px}
+}
+@media (min-width:1024px){
+  .grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:760px){
+  .steps{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:420px){
+  .body{padding:18px 16px 20px}
+  .label{min-width:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .swatch,.book{transition:none}
+  .swatch:hover{transform:none}
+}

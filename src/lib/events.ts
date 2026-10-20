@@ -4,6 +4,20 @@ import { getSupabaseAdmin, isSupabaseConfigured, isSupabaseAdminConfigured, type
 /** Columns anyone may read: no staff user ids or storage file ids. Shared by /api/events and the /events pages. */
 export const PUBLIC_EVENT_COLUMNS = 'id, title, description, poster_url, brochure_url, category, format, duration, venue, sort_order, created_at, updated_at';
 
+/**
+ * Categories staff can give an event, in display order: flagship, standout, main, then DTS and fun (which share one
+ * world on the site). Shared by /api/admin/events and /api/admin/events/order (route files can only export handlers).
+ */
+export const ALLOWED_EVENT_CATEGORIES = [
+  'flagship events',
+  'standout events',
+  'main events',
+  'dts events',
+  'fun events',
+] as const;
+
+export type AllowedEventCategory = typeof ALLOWED_EVENT_CATEGORIES[number];
+
 export type PublicEvent = Pick<EventItem, 'id' | 'title' | 'description' | 'poster_url' | 'brochure_url' | 'category' | 'format' | 'duration' | 'venue' | 'sort_order' | 'created_at' | 'updated_at'>;
 
 /**

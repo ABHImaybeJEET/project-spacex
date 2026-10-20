@@ -3,23 +3,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { verifyEventStaff, isValidGoogleDriveUrl, isWebPImage } from '@/lib/auth-server';
 import { getImageKit } from '@/lib/imagekit';
 import { formFile, formText, isUuid, jsonText, readFormLimited, readJsonObject } from '@/lib/security';
+import { ALLOWED_EVENT_CATEGORIES, type AllowedEventCategory } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
 const MAX_POSTER_SIZE = 1 * 1024 * 1024; // 1MB strictly enforced
 // Poster plus the text fields and multipart overhead.
 const MAX_FORM_BYTES = MAX_POSTER_SIZE + 64 * 1024;
-
-// In display order: flagship, standout, main, then DTS and fun (which share one world on the site).
-export const ALLOWED_EVENT_CATEGORIES = [
-  'flagship events',
-  'standout events',
-  'main events',
-  'dts events',
-  'fun events',
-] as const;
-
-export type AllowedEventCategory = typeof ALLOWED_EVENT_CATEGORIES[number];
 
 const TEXT_LIMITS = { title: 200, description: 5000, format: 100, duration: 100, venue: 200, brochure_url: 2048 } as const;
 
