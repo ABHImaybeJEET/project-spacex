@@ -183,7 +183,7 @@ export const NAVBAR_HIDDEN: string[] = ['schedule'];
 export const TUNNEL: [string, string][] = [['-15vw', '-6vh'], ['17vw', '7vh'], ['-18vw', '9vh'], ['15vw', '-10vh'], ['-8vw', '-11vh'], ['6vw', '5vh']];
 export const TUNNEL_C = ['oklch(0.76 0.11 38)', 'oklch(0.77 0.09 250)', 'oklch(0.77 0.09 295)', 'oklch(0.8 0.08 178)'];
 
-/* The /merch2 orbit store (MerchOrbitView, useMerchV.ts) reads these. /merch itself uses src/config/merch.ts. */
+/* The /merch orbit store (MerchOrbitView, useMerchV.ts) reads these. */
 const INK: [string, string] = ['Ink', '#141312'], BONE: [string, string] = ['Bone', '#ECE8DF'];
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 

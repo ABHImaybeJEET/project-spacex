@@ -13,7 +13,7 @@
  * REGISTRATIONS_OPEN gates the proxy auth gate, /register, the REGISTER buttons and the /api/register + /api/upload
  * writes (src/lib/registration-gate.ts), the same way in every environment.
  */
-export const REGISTRATIONS_OPEN = true;
+export const REGISTRATIONS_OPEN = false;
 export const MERCH_STORE_OPEN = true;
 
 /** Where the REGISTER buttons point while registrations are closed. */

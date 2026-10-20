@@ -351,6 +351,7 @@ export class Innovision extends Component<Props, State> {
       const search = new URLSearchParams(window.location.search);
       const isAuthRequired = search.get('required') === 'register' || search.get('auth') === 'login';
       const isOpenRegister = search.get('open') === 'register' || window.location.hash === '#register';
+      const isOpenLogin = search.get('open') === 'login';
 
       // Registrations closed (src/config/launch.ts): a register deep link lands on the "opening soon" page instead.
       if (!REGISTRATIONS_OPEN && (isOpenRegister || search.get('required') === 'register')) {
@@ -378,6 +379,13 @@ export class Innovision extends Component<Props, State> {
           } else {
             this.openAuth('register');
           }
+        }, 1200);
+      } else if (isOpenLogin) {
+        // LOG IN / PROFILE from a page of its own (the merch page's top bar): log in, or the profile if signed in.
+        setTimeout(async () => {
+          if (!this._authReady.done) await this._authReady.p;
+          if (!this.alive) return;
+          if (this.state.user) this.openProfile(); else this.openAuth('login');
         }, 1200);
       }
     }

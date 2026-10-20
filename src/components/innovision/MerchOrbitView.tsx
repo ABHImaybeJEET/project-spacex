@@ -3,8 +3,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Logo, Sparkle } from './icons';
+import { Sparkle } from './icons';
+import MerchHud from './MerchHud';
 import merchImages from './merch-images.json';
 
 const MERCH_ORDER_URL = 'https://forms.gle/E3HUhcp9nLoDCJGR9';
@@ -317,15 +317,12 @@ export default function MerchOrbitView({ standalone = false }: { v?: unknown; st
 
 
 
-      <section style={{ position: 'relative', padding: 'clamp(64px,10vh,110px) clamp(20px,4vw,64px) 48px', background: '#141312', color: '#ECE8DF', overflow: 'hidden' }}>
+      {/* The site's top bar (the explorer's, standalone); the hero's top padding keeps its content clear of it. */}
+      {standalone && <MerchHud />}
+
+      <section style={{ position: 'relative', padding: 'calc(clamp(64px,10vh,110px) + 58px) clamp(20px,4vw,64px) 48px', background: '#141312', color: '#ECE8DF', overflow: 'hidden' }}>
         <img decoding="async" src="/assets/starfield.svg" alt="" style={{ position: 'absolute', inset: '0', width: '100%', height: '100%', objectFit: 'cover', opacity: '.7', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto' }}>
-          <header style={{ minHeight: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', borderBottom: '1px solid rgba(236,232,223,.16)' }}>
-            <Link href="/" aria-label="INNOVISION home" style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', color: '#ECE8DF', textDecoration: 'none', fontFamily: 'var(--font-display)', fontSize: '16px', letterSpacing: '.04em' }}>
-              <Logo style={{ width: '24px' }} />INNOVISION
-            </Link>
-            <span style={{ fontSize: '9px', letterSpacing: '.14em', color: 'rgba(236,232,223,.68)' }}>OFFICIAL MERCH <span style={{ color: 'oklch(0.8 0.12 85)' }}>/</span> 2026</span>
-          </header>
           <div className="m2-hero-layout" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', justifyContent: 'space-between', gap: '24px' }}>
             <div>
               <p style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 16px', fontSize: '13px', fontWeight: '700', letterSpacing: '.3em', color: 'oklch(0.8 0.12 85)' }}>
