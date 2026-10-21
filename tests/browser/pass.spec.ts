@@ -18,6 +18,10 @@ async function backend(context: BrowserContext, initial = approved) {
   return state;
 }
 async function open(page: Page) { await page.goto('/'); await page.getByRole('button', { name: 'My pass', exact: true }).click(); }
+async function showDetails(page: Page) {
+  const toggle = page.getByRole('button', { name: /Your pass$/i });
+  if (await toggle.count()) await toggle.click();
+}
 
 test('pending/rejected never reveal; approved data is personalized and persists', async ({ page, context }) => {
   const state = await backend(context, { ...approved, registrationStatus: 'pending', token: '' });
@@ -31,6 +35,7 @@ test('pending/rejected never reveal; approved data is personalized and persists'
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.getByRole('heading', { name: 'You’re in, Ananya.' })).toBeVisible();
   await expect(page.locator('[data-pass-phase]')).toHaveAttribute('data-pass-phase', 'settled');
+  await showDetails(page);
   await expect(page.getByRole('heading', { name: approved.name })).toBeVisible();
   await expect(page.getByText(approved.college, { exact: true })).toBeVisible();
   await expect.poll(() => state.acks).toBe(1);
@@ -75,6 +80,7 @@ test('parallel tabs elect one reveal', async ({ page, context }) => {
   await backend(context); const second = await context.newPage();
   await Promise.all([open(page), open(second)]);
   await expect.poll(async () => (await page.getByRole('button', { name: 'SKIP', exact: true }).count()) + (await second.getByRole('button', { name: 'SKIP', exact: true }).count())).toBe(1);
+  await Promise.all([showDetails(page), showDetails(second)]);
   await expect(page.getByRole('heading', { name: approved.name })).toBeAttached();
   await expect(second.getByRole('heading', { name: approved.name })).toBeAttached();
 });
@@ -83,6 +89,7 @@ test('desktop stub detaches with the keyboard and retains the pass', async ({ pa
   test.skip((page.viewportSize()?.width ?? 0) <= 680, 'Phone pass is an immediately readable vertical card.');
   await backend(context); await open(page);
   await expect(page.locator('[data-pass-phase]')).toHaveAttribute('data-pass-phase', 'settled');
+  await showDetails(page);
   const stub = page.getByRole('button', { name: 'Tear off the stub' });
   await stub.focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Reattach the stub' })).toHaveAttribute('aria-pressed', 'true');
@@ -103,6 +110,7 @@ test('claim-service failure preserves a static pass and PDF without a fake QR', 
   await context.route('**/api/pass/experience', route => route.fulfill({ status: 503, json: { error: 'Unavailable' } }));
   await open(page);
   await expect(page.locator('[data-pass-phase]')).toHaveAttribute('data-pass-phase', 'settled');
+  await showDetails(page);
   await expect(page.getByRole('heading', { name: approved.name })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save PDF', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'View entry QR' })).toHaveCount(0);

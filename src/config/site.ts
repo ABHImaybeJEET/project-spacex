@@ -27,6 +27,7 @@ export const SITE_URL = siteOrigin(process.env.NEXT_PUBLIC_SITE_URL);
 
 /** The official brand name, exactly as it is written: og:site_name, the app name and the home page title. */
 export const SITE_NAME = 'INNOVISION 2026 | NIT ROURKELA';
+export const EVENT_DATE = { label: '13 NOV 2026', display: '13 November 2026' } as const;
 
 /** Rourkela city coordinates (22°12′ N, 84°54′ E), used as a venue-city imprint.
  * Source: https://nitrkl.ac.in/docs/PlacementBrochure/09082017164608850.pdf */

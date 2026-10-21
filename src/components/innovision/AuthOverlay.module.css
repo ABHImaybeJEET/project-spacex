@@ -2,8 +2,9 @@
 .intro { min-width:0; width:100%; text-align:center; --auth-title-size:clamp(32px,3.5vw,46px); }
 .intro p { margin-inline:auto!important; margin-top:12px!important; }
 .intro ol { text-align:left; }
-.previewNote { margin:0 auto 12px; padding:8px 16px; color:#e6c675; font:11px/1.5 var(--font-sans),sans-serif; text-align:center; }
-.previewApprove { padding:12px 18px; min-height:44px; border:1px dashed #c9a24a; border-radius:4px; color:#e6c675; background:#c9a24a14; cursor:pointer; }
+.panelBody :focus-visible { outline-color:#c8b17a; }
+.previewNote { margin:0 auto 12px; padding:8px 16px; color:#e4d3a4; font:11px/1.5 var(--font-sans),sans-serif; text-align:center; }
+.previewApprove { padding:12px 18px; min-height:44px; border:1px dashed #c8b17a; border-radius:4px; color:#e4d3a4; background:#c8b17a14; cursor:pointer; }
 
 /* When pass view is active — expand to full desktop proportions */
 .layout[data-pass-view="true"],
@@ -48,8 +49,8 @@
 /* Static orbital details give the centered form a setting without rendering work. */
 @media(min-width:1100px) {
   .layout:not([data-pass-view="true"])::before,
-  .layout:not([data-pass-view="true"])::after { content:''; position:absolute; width:210px; height:210px; border:1px solid rgba(201,162,74,.12); border-radius:50%; pointer-events:none; background:radial-gradient(circle at 50% 0,#c9a24a66 0 2px,transparent 3px); }
-  .layout:not([data-pass-view="true"])::before { left:-214px; top:170px; box-shadow:0 0 0 36px rgba(201,162,74,.025); }
+  .layout:not([data-pass-view="true"])::after { content:''; position:absolute; width:210px; height:210px; border:1px solid rgba(200,177,122,.12); border-radius:50%; pointer-events:none; background:radial-gradient(circle at 50% 0,#c8b17a66 0 2px,transparent 3px); }
+  .layout:not([data-pass-view="true"])::before { left:-214px; top:170px; box-shadow:0 0 0 36px rgba(200,177,122,.025); }
   .layout:not([data-pass-view="true"])::after { right:-214px; top:330px; width:140px; height:140px; border-style:dashed; }
 }
 @media(max-width:900px) {

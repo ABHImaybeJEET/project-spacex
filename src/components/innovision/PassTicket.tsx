@@ -3,13 +3,15 @@
 import { isApprovedPass, type ParticipantPass } from '@/lib/pass-experience';
 import ApprovedPassTicket from './ApprovedPassTicket';
 import styles from './PassIssued.module.css';
+import { EVENT_DATE } from '@/config/site';
 
-export default function PassTicket({ pass }: {
+export default function PassTicket({ pass, animate = false }: {
   pass: ParticipantPass;
   qr: string | null;
   onQrClick?: () => void;
+  animate?: boolean;
 }) {
-  if (isApprovedPass(pass)) return <ApprovedPassTicket pass={pass} />;
+  if (isApprovedPass(pass)) return <ApprovedPassTicket pass={pass} animate={animate} />;
   // Pending approval state
   return (
     <article className={styles.ticket} aria-label={`Innovision pass for ${pass.name || 'Participant'}`}>
@@ -40,7 +42,7 @@ export default function PassTicket({ pass }: {
           <div className={styles.metaRow2}>
             <div className={styles.metaCol}>
               <span className={styles.label}>DATE</span>
-              <span className={styles.value}>13-15 Nov 2026</span>
+              <span className={styles.value}>{EVENT_DATE.display}</span>
             </div>
             <div className={styles.metaCol}>
               <span className={styles.label}>REG ID</span>

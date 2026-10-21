@@ -171,7 +171,7 @@ export default function PassIssued({ pass, qr, preview = false }: PassIssuedProp
         <>
           <div className={styles.feed}>
             <div className={styles.paper}>
-              <PassTicket pass={pass} qr={qr} />
+              <PassTicket pass={pass} qr={qr} animate={phase === 'revealing'} />
             </div>
           </div>
 

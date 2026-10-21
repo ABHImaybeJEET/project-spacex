@@ -6,18 +6,19 @@ import { QRCodeSVG } from 'qrcode.react';
 import EventTicket from '@/components/ui/event-ticket';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { ParticipantPass } from '@/lib/pass-experience';
-import { VENUE_CITY } from '@/config/site';
+import { EVENT_DATE, VENUE_CITY } from '@/config/site';
 import PassKeepsake from './PassKeepsake';
 import styles from './ApprovedPassTicket.module.css';
 
-export default function ApprovedPassTicket({ pass }: { pass: ParticipantPass }) {
+export default function ApprovedPassTicket({ pass, animate = false }: { pass: ParticipantPass; animate?: boolean }) {
   const [compact, setCompact] = useState<boolean | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [infoOpened, setInfoOpened] = useState(false);
   const qrButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    const media = matchMedia('(max-width: 680px)');
+    const media = matchMedia('(max-width: 900px)');
     const update = () => setCompact(media.matches);
     update();
     media.addEventListener('change', update);
@@ -41,20 +42,20 @@ export default function ApprovedPassTicket({ pass }: { pass: ParticipantPass }) 
   return (
     <div className={styles.root}>
       {/* Only mount the illustrated canvas ticket on larger screens. */}
-      {compact !== false || (pass.name?.length ?? 0) > 70 || (pass.college?.length ?? 0) > 90 ? <PassKeepsake pass={pass} /> : (
+      {compact === null ? <div className={styles.preparing} aria-hidden="true" /> : compact || (pass.name?.length ?? 0) > 70 || (pass.college?.length ?? 0) > 90 ? <PassKeepsake pass={pass} animate={animate} /> : (
         <EventTicket
           title="INNOVISION 2026"
           tier="OFFICIAL PASS"
-          date="NIT ROURKELA"
-          welcome={'YOUR INNO\nPASS, ISSUED.'}
-          eyebrow={'NIT ROURKELA · INDIA\nPAYMENT VERIFIED'}
-          words={['Innovision', 'NIT Rourkela']}
-          notes={['NIT ROURKELA · TECHNO-MANAGEMENT FEST', 'YOUR INNOVISION PASS']}
+          date={EVENT_DATE.label}
+          welcome={'SEE YOU\nAT INNO.'}
+          eyebrow={'PAYMENT VERIFIED\nYOUR PASS IS READY'}
+          words={['Bound for Rourkela.', `${pass.name?.trim().split(/\s+/)[0] ?? ''}, you’re in.`]}
+          notes={[`REGISTRATION ${pass.registrationId}`, 'ISSUED TO YOU']}
           passenger={pass.name ?? ''}
           from={pass.college ?? ''}
           to="NIT"
           craft="PSLV"
-          dateCode="INNOVISION"
+          dateCode="13 NOV 2026"
           gate="—"
           group="INNO"
           seat={pass.registrationId ?? ''}
@@ -64,18 +65,20 @@ export default function ApprovedPassTicket({ pass }: { pass: ParticipantPass }) 
           lon={VENUE_CITY.longitude}
           showCoordinates
           registrationPass
+          animateInfo={infoOpened}
           seq={`REGISTRATION ${pass.registrationId}`}
-          featuring="NIT ROURKELA · TECHNO-MANAGEMENT FEST"
-          headline="Innovision 2026"
+          featuring="Your payment is verified."
+          headline="See you at INNO."
           stamp="Verified"
-          sideLabels={['INNOVISION PASS', 'REGISTRATION DETAILS']}
-          defaultSide="back"
+          sideLabels={['Artwork', 'Your pass']}
+          defaultSide="front"
+          onSideChange={(side) => { if (side === 'back') setInfoOpened(true); }}
           fontDisplay="var(--font-display), Georgia, serif"
           fontCondensed="var(--font-sans), 'Segoe UI', sans-serif"
           fontMono="ui-monospace, 'Courier New', monospace"
           qr={pass.token ? <QRCodeSVG value={pass.token} size={256} level="M" marginSize={3} /> : undefined}
           qrLabel={pass.token ? 'Your entry QR' : 'Registration ID'}
-          night="#08070d" starInk="#f6f2e8" paper="#eee9dc" paperInk="#141312" stampColor="#89672b"
+          night="#08070d" starInk="#f6f2e8" paper="#eeede7" paperInk="#141312" stampColor="#786343"
           tilt={2.5} maxWidth="100%"
         />
       )}

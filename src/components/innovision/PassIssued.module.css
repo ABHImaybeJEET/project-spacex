@@ -4,8 +4,8 @@
 .experience {
   --paper: #ece8df;
   --ink: #141312;
-  --gold: #c9a24a;
-  --gold2: #f0d07a;
+  --gold: #c8b17a;
+  --gold2: #e4d3a4;
   --muted: rgba(236,232,223,.5);
   --surround: #0a0908;
   color: var(--paper);
@@ -64,7 +64,7 @@
   overflow: hidden;
   color: var(--paper);
   box-shadow:
-    inset 0 0 0 1px rgba(201,162,74,0.22),
+    inset 0 0 0 1px rgba(200,177,122,0.22),
     inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
@@ -75,13 +75,13 @@
   background-image:
     radial-gradient(1px 1px at 18% 22%, rgba(236,232,223,0.45) 0%, transparent 100%),
     radial-gradient(1px 1px at 55% 8%,  rgba(236,232,223,0.3)  0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 82% 15%, rgba(201,162,74,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 82% 15%, rgba(200,177,122,0.4) 0%, transparent 100%),
     radial-gradient(1px 1px at 7% 55%,  rgba(236,232,223,0.25) 0%, transparent 100%),
     radial-gradient(1px 1px at 92% 48%, rgba(236,232,223,0.3)  0%, transparent 100%),
     radial-gradient(1px 1px at 33% 72%, rgba(236,232,223,0.2)  0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 68% 80%, rgba(201,162,74,0.25) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 68% 80%, rgba(200,177,122,0.25) 0%, transparent 100%),
     radial-gradient(1px 1px at 45% 40%, rgba(236,232,223,0.15) 0%, transparent 100%),
-    linear-gradient(135deg, rgba(201,162,74,0.06) 0%, transparent 50%, rgba(30,20,10,0.4) 100%);
+    linear-gradient(135deg, rgba(200,177,122,0.06) 0%, transparent 50%, rgba(30,20,10,0.4) 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -95,9 +95,9 @@
   height: 3px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(201,162,74,0.6) 20%,
-    rgba(240,208,122,0.95) 50%,
-    rgba(201,162,74,0.6) 80%,
+    rgba(200,177,122,0.6) 20%,
+    rgba(228,211,164,0.95) 50%,
+    rgba(200,177,122,0.6) 80%,
     transparent 100%
   );
   z-index: 2;
@@ -112,8 +112,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 16px 20px 12px;
-  border-bottom: 1px solid rgba(201,162,74,0.18);
-  background: rgba(201,162,74,0.04);
+  border-bottom: 1px solid rgba(200,177,122,0.18);
+  background: rgba(200,177,122,0.04);
 }
 
 .brandGroup {
@@ -126,13 +126,13 @@
   font: 700 14px/1.2 monospace;
   letter-spacing: .18em;
   color: var(--gold2);
-  text-shadow: 0 0 20px rgba(201,162,74,0.4);
+  text-shadow: 0 0 20px rgba(200,177,122,0.4);
 }
 
 .brandSub {
   font: 700 8px/1.3 monospace;
   letter-spacing: .14em;
-  color: rgba(201,162,74,0.6);
+  color: rgba(200,177,122,0.6);
   text-transform: uppercase;
 }
 
@@ -178,7 +178,7 @@
   font: 600 clamp(26px, 3vw, 34px)/1.1 var(--font-display);
   letter-spacing: -.01em;
   color: #fff;
-  text-shadow: 0 2px 20px rgba(201,162,74,0.18);
+  text-shadow: 0 2px 20px rgba(200,177,122,0.18);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -204,7 +204,7 @@
 .label {
   font: 700 8.5px/1 monospace;
   letter-spacing: .16em;
-  color: rgba(201,162,74,0.55);
+  color: rgba(200,177,122,0.55);
   text-transform: uppercase;
   margin: 0;
 }
@@ -248,7 +248,7 @@
   height: 18px;
   border-radius: 50%;
   background: var(--surround);
-  box-shadow: 0 0 0 1px rgba(201,162,74,0.15);
+  box-shadow: 0 0 0 1px rgba(200,177,122,0.15);
   z-index: 1;
 }
 
@@ -257,7 +257,7 @@
 
 .perforationLine {
   width: calc(100% - 24px);
-  border-top: 1px dashed rgba(201, 162, 74, 0.3);
+  border-top: 1px dashed rgba(200, 177, 122, 0.3);
 }
 
 /* ─── Stub ─── */
@@ -269,7 +269,7 @@
   justify-content: space-between;
   gap: 14px;
   padding: 12px 20px 16px;
-  background: rgba(201,162,74,0.03);
+  background: rgba(200,177,122,0.03);
   border-top: 0;
 }
 
@@ -302,7 +302,7 @@
   align-items: center;
   gap: 4px;
   padding: 5px;
-  border: 1px solid rgba(201,162,74,0.4);
+  border: 1px solid rgba(200,177,122,0.4);
   border-radius: 4px;
   background: #fff;
   cursor: pointer;
@@ -313,7 +313,7 @@
 .qrThumb:hover {
   transform: scale(1.08);
   border-color: var(--gold2);
-  box-shadow: 0 4px 16px rgba(201,162,74,0.35);
+  box-shadow: 0 4px 16px rgba(200,177,122,0.35);
 }
 
 .qrThumb img {
@@ -339,9 +339,9 @@
   justify-content: center;
   width: 70px;
   height: 70px;
-  border: 1px dashed rgba(201,162,74,0.3);
+  border: 1px dashed rgba(200,177,122,0.3);
   border-radius: 4px;
-  color: rgba(201,162,74,0.4);
+  color: rgba(200,177,122,0.4);
 }
 
 /* ═══════════════════════════════════════════
@@ -371,7 +371,7 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow:
-    0 0 0 1px rgba(201,162,74,0.5),
+    0 0 0 1px rgba(200,177,122,0.5),
     0 40px 100px rgba(0,0,0,0.7);
   animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
   cursor: default;
@@ -423,7 +423,7 @@
   min-height: 48px;
   padding: 12px 20px;
   border: 1px solid var(--gold);
-  background: rgba(201,162,74,0.1);
+  background: rgba(200,177,122,0.1);
   color: var(--gold2);
   font-size: 13px;
   font-weight: 700;
@@ -436,7 +436,7 @@
   text-align: center;
   border-radius: 3px;
 }
-.primaryBtn:hover { background: rgba(201,162,74,0.2); }
+.primaryBtn:hover { background: rgba(200,177,122,0.2); }
 
 .secondaryBtn {
   min-height: 48px;
@@ -455,7 +455,7 @@
   text-align: center;
   border-radius: 3px;
 }
-.secondaryBtn:hover { border-color: var(--gold); background: rgba(201,162,74,0.05); }
+.secondaryBtn:hover { border-color: var(--gold); background: rgba(200,177,122,0.05); }
 .secondaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* WhatsApp */
@@ -551,9 +551,9 @@
   z-index: 20;
   padding: 5px 10px;
   background: rgba(14,12,11,0.8);
-  border: 1px solid rgba(201,162,74,0.3);
+  border: 1px solid rgba(200,177,122,0.3);
   border-radius: 3px;
-  color: rgba(201,162,74,0.9);
+  color: rgba(200,177,122,0.9);
   font: 700 10px/1 monospace;
   letter-spacing: .12em;
   cursor: pointer;
@@ -604,8 +604,8 @@
 .statusBadgePending {
   display: inline-flex; align-items: center; gap: 5px;
   font: 700 10.5px monospace; letter-spacing: .12em;
-  color: #facc15; background: rgba(250,204,21,0.08);
-  padding: 4px 8px; border-radius: 3px; border: 1px solid rgba(250,204,21,0.25);
+  color: #c8b17a; background: rgba(200,177,122,0.08);
+  padding: 4px 8px; border-radius: 3px; border: 1px solid rgba(200,177,122,0.25);
 }
 .statusBadgeDeclined {
   display: inline-flex; align-items: center; gap: 5px;
@@ -631,8 +631,8 @@
 @media(min-width:681px) {
   .whatsappCard { max-width:920px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px 24px; padding:18px 22px; margin-top:24px; background:rgba(236,232,223,.025); border-color:rgba(236,232,223,.13); box-shadow:none; }
   .whatsappHeader { grid-column:1/-1; }
-  .whatsappBtn { align-self:center; white-space:nowrap; background:#c9a24a; border:1px solid #e6c675; color:#141312; box-shadow:none; font-size:13px; letter-spacing:.02em; }
-  .whatsappBtn:hover { background:#e6c675; transform:none; }
+  .whatsappBtn { align-self:center; white-space:nowrap; background:#c8b17a; border:1px solid #e4d3a4; color:#141312; box-shadow:none; font-size:13px; letter-spacing:.02em; }
+  .whatsappBtn:hover { background:#e4d3a4; transform:none; }
 }
 @media(max-width:680px) {
   .issueHeader { max-width:440px; margin-bottom:20px; text-align:left; }
@@ -641,8 +641,8 @@
   .whatsappCard { max-width:440px; margin-top:20px; padding:18px; border-color:rgba(236,232,223,.14); background:rgba(236,232,223,.025); box-shadow:none; }
   .whatsappHeader { flex-wrap:wrap; }.whatsappVenue { display:none; }
   .whatsappBadge { font-size:9px; letter-spacing:.08em; }
-  .whatsappBtn { background:#c9a24a; border:1px solid #e6c675; color:#141312; box-shadow:none; letter-spacing:.02em; }
-  .whatsappBtn:hover { background:#e6c675; }
+  .whatsappBtn { background:#c8b17a; border:1px solid #e4d3a4; color:#141312; box-shadow:none; letter-spacing:.02em; }
+  .whatsappBtn:hover { background:#e4d3a4; }
 }
 @media (max-width: 420px) {
   .metaRow2 { grid-template-columns: 1fr; gap: 10px; }

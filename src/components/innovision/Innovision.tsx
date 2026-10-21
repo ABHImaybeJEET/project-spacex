@@ -2549,50 +2549,6 @@ export class Innovision extends Component<Props, State> {
     this.animPane(1, true);
   }
   // @ts-ignore
-  devSkipToTicket = () => {
-    if (!REGISTRATION_PREVIEW_ENABLED || this.state.user?.id !== 'dev-preview-user') return;
-    const r = this.reg || {};
-    const regId = 'IV26-' + Math.floor(1000 + Math.random() * 9000);
-    this.pass = {
-      name: r.name || 'Alex Explorer',
-      college: r.college || '',
-      id: regId,
-      email: (this.state.user as any)?.email || 'alex@nitrkl.ac.in',
-      status: 'CONFIRMED',
-      utr: '987654321098',
-    };
-    const mockReg = {
-      id: 'dev-reg-temp',
-      registration_id: regId,
-      user_id: 'dev-preview-user',
-      name: this.pass!.name,
-      email: this.pass!.email,
-      college: this.pass!.college,
-      phone: r.phone || '9876543210',
-      enrollment_no: r.enrollment_no || '122MN0999',
-      gender: r.gender || 'Male',
-      student_type: 'internal' as const,
-      payment_proof_path: 'mock/proof.png',
-      utr: '987654321098',
-      amount: 999,
-      status: 'confirmed' as const,
-      referral_code: 'INNO-' + Math.floor(1000 + Math.random() * 9000),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    this.wait('SUBMITTING', 800).then(() => {
-      this.setState(
-        {
-          authMode: 'pass',
-          step: 4,
-          registration: mockReg as Registration,
-          busyLbl: '',
-        },
-        () => this.passReveal()
-      );
-    });
-  };
-  // @ts-ignore
   devOpenPass = async () => {
     if (!REGISTRATION_PREVIEW_ENABLED) return;
     const mockUser: any = {
@@ -2698,7 +2654,7 @@ export class Innovision extends Component<Props, State> {
   // @ts-ignore
   authVals(s) {
   // @ts-ignore
-    const am = s.authMode, st = s.step, reg = am === 'register', show = (b) => (b ? 'flex' : 'none'), gold = 'oklch(0.8 0.12 85)', cream = '#ECE8DF', bad = 'oklch(0.74 0.15 35)';
+    const am = s.authMode, st = s.step, reg = am === 'register', show = (b) => (b ? 'flex' : 'none'), gold = 'oklch(0.78 0.075 85)', cream = '#ECE8DF', bad = 'oklch(0.74 0.15 35)';
     const E = Object.assign({ name: '', gender: '', college: '', email: '', phone: '', enrollment_no: '', referred_by_code: '', payfile: '', utr: '', lemail: '', lid: '', form: '' }, s.err);
     const bc = {}, inv = {};
   // @ts-ignore
@@ -2797,7 +2753,6 @@ export class Innovision extends Component<Props, State> {
       devApproveRegistration: this.devApproveRegistration,
       devOpenPass: this.devOpenPass,
       devOpenRegister: this.devOpenRegister,
-      devSkipToTicket: this.devSkipToTicket,
     };
   }
   linkGo = (e: MouseEvent<HTMLAnchorElement>) => {

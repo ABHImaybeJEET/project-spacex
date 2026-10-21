@@ -27,7 +27,7 @@ export default function AuthOverlay({ v }: { v: V }) {
       <div data-a-planet-wrap="" aria-hidden="true" style={{ position: "absolute", right: "calc(min(92vh, 64vw) * -.3)", bottom: "calc(min(92vh, 64vw) * -.34)", width: "min(92vh, 64vw)", aspectRatio: "1", pointerEvents: "none" }}>
         <span style={{ position: "absolute", inset: "-16%", border: "1px solid rgba(236,232,223,.12)", borderRadius: "50%" }}></span>
         <span style={{ position: "absolute", inset: "-34%", border: "1px dashed rgba(236,232,223,.08)", borderRadius: "50%" }}></span>
-        <div data-a-orbit="" style={{ position: "absolute", inset: "-16%" }}><span style={{ position: "absolute", left: "50%", top: "0", width: "10px", height: "10px", margin: "-5px 0 0 -5px", borderRadius: "50%", background: "oklch(0.8 0.12 85)" }}></span></div>
+        <div data-a-orbit="" style={{ position: "absolute", inset: "-16%" }}><span style={{ position: "absolute", left: "50%", top: "0", width: "10px", height: "10px", margin: "-5px 0 0 -5px", borderRadius: "50%", background: "oklch(0.78 0.075 85)" }}></span></div>
         <img decoding="async" data-a-planet="" src="assets/planet-crescent.webp" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "contain" }} />
       </div>
       <div data-auth-scroll="" data-noscroll="" style={{ position: "absolute", inset: "0", overflowX: "hidden", overflowY: "auto", scrollbarWidth: "none", overscrollBehavior: "contain" }}>
@@ -41,7 +41,7 @@ export default function AuthOverlay({ v }: { v: V }) {
               {v.showSwitch ? (
                 <span style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                   <span style={{ display: v.switchQD, color: "rgba(236,232,223,.72)" }}>{v.switchQ}</span>
-                  <button type="button" onClick={v.switchMode} style={{ padding: "6px 0 4px", border: "0", borderBottom: "1.5px solid oklch(0.8 0.12 85)", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "#ECE8DF" }}>{v.switchLbl}</button>
+                  <button type="button" onClick={v.switchMode} style={{ padding: "6px 0 4px", border: "0", borderBottom: "1.5px solid oklch(0.78 0.075 85)", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "#ECE8DF" }}>{v.switchLbl}</button>
                 </span>
               ) : null}
               <button type="button" onClick={v.closeAuthH} onMouseEnter={v.hover} style={{ display: "inline-flex", alignItems: "center", gap: "10px", padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "500", fontSize: "13px", letterSpacing: ".14em", color: "#ECE8DF" }}><span data-scr="">CLOSE</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1 1 11" fill="none" stroke="currentColor" strokeWidth="1.5"></path></svg></button>
@@ -61,9 +61,9 @@ export default function AuthOverlay({ v }: { v: V }) {
                     <span style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <button data-rail-node="" type="button" onClick={p.go} disabled={p.lock} aria-label={p.aria} style={{ position: "relative", flex: "none", display: "grid", placeItems: "center", width: "28px", height: "28px", padding: "0", border: `1.5px solid ${p.bc}`, borderRadius: "50%", background: p.fill, color: "#141312", cursor: p.cursor, transition: "background-color .4s,border-color .4s" }}>
                         <svg viewBox="0 0 16 16" aria-hidden="true" style={{ width: "12px", height: "12px", opacity: p.chk, transition: "opacity .3s" }}><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2.4"></path></svg>
-                        <span style={{ position: "absolute", inset: "6px", borderRadius: "50%", background: "oklch(0.8 0.12 85)", opacity: p.dot, transform: `scale(${p.dotS})`, transition: "opacity .4s,transform .5s cubic-bezier(.34,1.56,.64,1)" }}></span>
+                        <span style={{ position: "absolute", inset: "6px", borderRadius: "50%", background: "oklch(0.78 0.075 85)", opacity: p.dot, transform: `scale(${p.dotS})`, transition: "opacity .4s,transform .5s cubic-bezier(.34,1.56,.64,1)" }}></span>
                       </button>
-                      <span style={{ display: p.lineD, position: "relative", flex: "1", width: "1.5px", minHeight: "30px", margin: "6px 0", background: "rgba(236,232,223,.16)" }}><span style={{ position: "absolute", inset: "0", background: "oklch(0.8 0.12 85)", transform: `scaleY(${p.lineS})`, transformOrigin: "top", transition: "transform .8s cubic-bezier(.25,1,.1,1)" }}></span></span>
+                      <span style={{ display: p.lineD, position: "relative", flex: "1", width: "1.5px", minHeight: "30px", margin: "6px 0", background: "rgba(236,232,223,.16)" }}><span style={{ position: "absolute", inset: "0", background: "oklch(0.78 0.075 85)", transform: `scaleY(${p.lineS})`, transformOrigin: "top", transition: "transform .8s cubic-bezier(.25,1,.1,1)" }}></span></span>
                     </span>
                     <span style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "0", padding: "4px 0 22px" }}>
                       <span style={{ fontSize: "13px", fontWeight: "700", letterSpacing: ".16em", color: p.c, transition: "color .4s" }}>{p.label}</span>
@@ -75,7 +75,7 @@ export default function AuthOverlay({ v }: { v: V }) {
               <ol data-a-in="" aria-label="Registration progress" style={{ display: v.railD === "flex" || v.hprogD === "grid" ? "grid" : "none", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "6px", margin: "0", padding: "0", listStyle: "none" }}>
                 {v.prog.map((p, pI) => (
                   <li key={pI} aria-current={p.cur} style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "11px", fontWeight: "700", letterSpacing: ".12em", color: p.c }}>
-                    <span style={{ position: "relative", height: "3px", background: "rgba(236,232,223,.16)" }}><span style={{ position: "absolute", inset: "0", background: "oklch(0.8 0.12 85)", transform: `scaleX(${p.segS})`, transformOrigin: "left", transition: "transform .7s cubic-bezier(.25,1,.1,1)" }}></span></span>
+                    <span style={{ position: "relative", height: "3px", background: "rgba(236,232,223,.16)" }}><span style={{ position: "absolute", inset: "0", background: "oklch(0.78 0.075 85)", transform: `scaleX(${p.segS})`, transformOrigin: "left", transition: "transform .7s cubic-bezier(.25,1,.1,1)" }}></span></span>
                     <span>{p.short}</span>
                   </li>
                 ))}
@@ -91,21 +91,21 @@ export default function AuthOverlay({ v }: { v: V }) {
                       <h3 data-s-in="" style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(24px,2.2vw,32px)", lineHeight: "1.1" }}>Your details</h3>
                       {v.gNote ? (
                         <p data-s-in="" role="status" style={{ display: "flex", alignItems: "flex-start", gap: "10px", margin: "-4px 0 0", padding: "12px 14px", border: "1px solid rgba(236,232,223,.18)", background: "rgba(236,232,223,.04)", fontSize: "14px", lineHeight: "1.45", color: "rgba(236,232,223,.86)", overflowWrap: "anywhere" }}>
-                          <svg viewBox="0 0 16 16" aria-hidden="true" style={{ flex: "none", width: "16px", height: "16px", marginTop: "1px", color: "oklch(0.8 0.12 85)" }}><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2"></path></svg>
+                          <svg viewBox="0 0 16 16" aria-hidden="true" style={{ flex: "none", width: "16px", height: "16px", marginTop: "1px", color: "oklch(0.78 0.075 85)" }}><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2"></path></svg>
                           <span>{v.gNote}</span>
                         </p>
                       ) : null}
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>FULL NAME</span>
-                        <input name="name" defaultValue={v.regVals.name} autoComplete="name" placeholder="As on your college ID" aria-invalid={v.inv.name} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.name}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+                        <input name="name" defaultValue={v.regVals.name} autoComplete="name" placeholder="As on your college ID" aria-invalid={v.inv.name} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.name}` }} style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)" />
                         {v.err.name ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.name}</span>) : null}
                       </label>
                       <fieldset data-s-in="" aria-invalid={v.inv.gender} style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "0", padding: "0", border: "0", minWidth: "0" }}>
                         <legend style={{ padding: "0", marginBottom: "8px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>GENDER</legend>
                         <span role="radiogroup" aria-label="Gender" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "8px" }}>
                           {v.genderOptions.map((g) => (
-                            <label key={g.value} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", minHeight: "54px", padding: "0 12px", border: `1.5px solid ${v.bc.gender}`, background: "rgba(236,232,223,.04)", fontSize: "15px", fontWeight: "500", color: "#ECE8DF", cursor: "pointer", transition: "border-color .3s,background-color .3s" }} style-hover="border-color:oklch(0.8 0.12 85)">
-                              <input type="radio" name="gender" value={g.value} defaultChecked={v.regVals.gender === g.value} style={{ width: "16px", height: "16px", margin: "0", accentColor: "oklch(0.8 0.12 85)", cursor: "pointer" }} />
+                            <label key={g.value} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", minHeight: "54px", padding: "0 12px", border: `1.5px solid ${v.bc.gender}`, background: "rgba(236,232,223,.04)", fontSize: "15px", fontWeight: "500", color: "#ECE8DF", cursor: "pointer", transition: "border-color .3s,background-color .3s" }} style-hover="border-color:oklch(0.78 0.075 85)">
+                              <input type="radio" name="gender" value={g.value} defaultChecked={v.regVals.gender === g.value} style={{ width: "16px", height: "16px", margin: "0", accentColor: "oklch(0.78 0.075 85)", cursor: "pointer" }} />
                               {g.label}
                             </label>
                           ))}
@@ -139,7 +139,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                             border: `1.5px solid ${v.bc.college}`,
                             cursor: "text",
                           }}
-                          style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)"
+                          style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)"
                         />
                         {v.err.college ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.college}</span>) : null}
                       </label>
@@ -153,17 +153,17 @@ export default function AuthOverlay({ v }: { v: V }) {
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>
                           COLLEGE ROLL / ENROLLMENT NUMBER
                         </span>
-                        <input name="enrollment_no" defaultValue={v.regVals.enrollment_no} autoComplete="off" required placeholder="Your college roll / enrollment number" aria-invalid={v.inv.enrollment_no} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.enrollment_no}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+                        <input name="enrollment_no" defaultValue={v.regVals.enrollment_no} autoComplete="off" required placeholder="Your college roll / enrollment number" aria-invalid={v.inv.enrollment_no} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.enrollment_no}` }} style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)" />
                         {v.err.enrollment_no ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.enrollment_no}</span>) : null}
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>PHONE</span>
-                        <span style={{ display: "flex", gap: "8px" }}><span style={{ display: "flex", alignItems: "center", padding: "0 14px", border: "1.5px solid rgba(236,232,223,.28)", fontSize: "16px", fontWeight: "500" }}>+91</span><input name="phone" defaultValue={v.regVals.phone} type="tel" autoComplete="tel-national" inputMode="numeric" placeholder="98765 43210" aria-invalid={v.inv.phone} style={{ flex: "1", minWidth: "0", height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.phone}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" /></span>
+                        <span style={{ display: "flex", gap: "8px" }}><span style={{ display: "flex", alignItems: "center", padding: "0 14px", border: "1.5px solid rgba(236,232,223,.28)", fontSize: "16px", fontWeight: "500" }}>+91</span><input name="phone" defaultValue={v.regVals.phone} type="tel" autoComplete="tel-national" inputMode="numeric" placeholder="98765 43210" aria-invalid={v.inv.phone} style={{ flex: "1", minWidth: "0", height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.phone}` }} style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)" /></span>
                         {v.err.phone ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.phone}</span>) : null}
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>REFERRAL CODE <span style={{ fontWeight: "500", color: "rgba(236,232,223,.55)" }}>(OPTIONAL)</span></span>
-                        <input name="referred_by_code" defaultValue={v.regVals.referred_by_code} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength="12" placeholder="e.g. K7QM2X" aria-invalid={v.inv.referred_by_code} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.referred_by_code}`, letterSpacing: ".12em", textTransform: "uppercase" }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+                        <input name="referred_by_code" defaultValue={v.regVals.referred_by_code} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength="12" placeholder="e.g. K7QM2X" aria-invalid={v.inv.referred_by_code} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.referred_by_code}`, letterSpacing: ".12em", textTransform: "uppercase" }} style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)" />
                         <span style={{ fontSize: "13px", lineHeight: "1.4", color: "rgba(236,232,223,.62)" }}>Got a code from a friend who registered? Enter it here.</span>
                         {v.err.referred_by_code ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.referred_by_code}</span>) : null}
                       </label>
@@ -179,19 +179,19 @@ export default function AuthOverlay({ v }: { v: V }) {
                             onClick={() => setPayQrOpen(true)}
                             style={{
                               position: "relative", padding: "8px", background: "#ECE8DF",
-                              border: "2px solid oklch(0.8 0.12 85)", borderRadius: "6px",
+                              border: "2px solid oklch(0.78 0.075 85)", borderRadius: "6px",
                               cursor: "pointer", transition: "transform .2s, box-shadow .2s",
                               boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(220,183,106,.3)",
                             }}
-                            style-hover="transform:scale(1.03);box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 0 2px oklch(0.8 0.12 85)"
+                            style-hover="transform:scale(1.03);box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 0 2px oklch(0.78 0.075 85)"
                             aria-label="Tap to enlarge payment QR code"
                           >
                             <img src={v.upiQr} alt={`Pay ₹${v.fee} via UPI`} width={200} height={280} decoding="async" draggable={false} style={{ display: "block", width: "min(200px, 50vw)", height: "auto", objectFit: "contain" }} />
                             {/* corner brackets */}
-                            <span style={{ position:"absolute", left:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.8 0.12 85)", borderLeft:"2.5px solid oklch(0.8 0.12 85)" }} />
-                            <span style={{ position:"absolute", right:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.8 0.12 85)", borderRight:"2.5px solid oklch(0.8 0.12 85)" }} />
-                            <span style={{ position:"absolute", left:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.8 0.12 85)", borderLeft:"2.5px solid oklch(0.8 0.12 85)" }} />
-                            <span style={{ position:"absolute", right:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.8 0.12 85)", borderRight:"2.5px solid oklch(0.8 0.12 85)" }} />
+                            <span style={{ position:"absolute", left:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.78 0.075 85)", borderLeft:"2.5px solid oklch(0.78 0.075 85)" }} />
+                            <span style={{ position:"absolute", right:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.78 0.075 85)", borderRight:"2.5px solid oklch(0.78 0.075 85)" }} />
+                            <span style={{ position:"absolute", left:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.78 0.075 85)", borderLeft:"2.5px solid oklch(0.78 0.075 85)" }} />
+                            <span style={{ position:"absolute", right:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.78 0.075 85)", borderRight:"2.5px solid oklch(0.78 0.075 85)" }} />
                           </button>
                           <span style={{ fontSize:"11px", fontWeight:"700", letterSpacing:".14em", color:"rgba(220,183,106,.7)", textTransform:"uppercase" }}>TAP TO ENLARGE</span>
                         </div>
@@ -204,16 +204,16 @@ export default function AuthOverlay({ v }: { v: V }) {
                             <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>UPI ID</span>
                             <span style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
                               <span style={{ fontSize: "17px", fontWeight: "500", overflowWrap: "anywhere" }}>{v.upi}</span>
-                              <button type="button" onClick={v.copyUpi} style={{ padding: "7px 12px", border: "1.5px solid rgba(236,232,223,.5)", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", transition: "border-color .3s,color .3s" }} style-hover="border-color:oklch(0.8 0.12 85);color:oklch(0.8 0.12 85)">{v.copyLbl}</button>
+                              <button type="button" onClick={v.copyUpi} style={{ padding: "7px 12px", border: "1.5px solid rgba(236,232,223,.5)", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", transition: "border-color .3s,color .3s" }} style-hover="border-color:oklch(0.78 0.075 85);color:oklch(0.78 0.075 85)">{v.copyLbl}</button>
                             </span>
                           </div>
-                          <a href={v.upiLink} style={{ display: v.isPreviewUser ? "none" : v.upiAppD, alignItems: "center", justifyContent: "center", minHeight: "50px", padding: "0 20px", border: "1.5px solid oklch(0.8 0.12 85)", textDecoration: "none", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "oklch(0.8 0.12 85)" }}>OPEN UPI APP</a>
+                          <a href={v.upiLink} style={{ display: v.isPreviewUser ? "none" : v.upiAppD, alignItems: "center", justifyContent: "center", minHeight: "50px", padding: "0 20px", border: "1.5px solid oklch(0.78 0.075 85)", textDecoration: "none", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "oklch(0.78 0.075 85)" }}>OPEN UPI APP</a>
                         </div>
                       </div>
                       <ol data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "0", padding: "18px 0 0", borderTop: "1px solid rgba(236,232,223,.14)", listStyle: "none", fontSize: "15px", lineHeight: "1.5", color: "rgba(236,232,223,.82)" }}>
-                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.8 0.12 85)" }}>1</span><span>Scan the code with any UPI app.</span></li>
-                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.8 0.12 85)" }}>2</span><span>Pay exactly ₹{v.fee}.</span></li>
-                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.8 0.12 85)" }}>3</span><span>Screenshot the success screen. You&apos;ll upload it next.</span></li>
+                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.78 0.075 85)" }}>1</span><span>Scan the code with any UPI app.</span></li>
+                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.78 0.075 85)" }}>2</span><span>Pay exactly ₹{v.fee}.</span></li>
+                        <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.78 0.075 85)" }}>3</span><span>Screenshot the success screen. You&apos;ll upload it next.</span></li>
                       </ol>
                       {v.isPreviewUser && <p className={styles.previewNote}>Preview only: don’t make a payment. Continue to try the screenshot upload and 12-digit UTR fields.</p>}
                     </div>
@@ -223,19 +223,19 @@ export default function AuthOverlay({ v }: { v: V }) {
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         <span data-s-in="" style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>PAYMENT SCREENSHOT</span>
                         
-<label data-s-in="" onDragEnter={v.upPay.over} onDragOver={v.upPay.over} onDragLeave={v.upPay.leave} onDrop={v.upPay.drop} style={{ position: "relative", display: "block", aspectRatio: "16 / 9", border: `1.5px dashed ${v.upPay.bc}`, background: v.upPay.bg, overflow: "hidden", cursor: "pointer", transition: "border-color .3s,background-color .3s" }} style-hover="border-color:oklch(0.8 0.12 85)">
+<label data-s-in="" onDragEnter={v.upPay.over} onDragOver={v.upPay.over} onDragLeave={v.upPay.leave} onDrop={v.upPay.drop} style={{ position: "relative", display: "block", aspectRatio: "16 / 9", border: `1.5px dashed ${v.upPay.bc}`, background: v.upPay.bg, overflow: "hidden", cursor: "pointer", transition: "border-color .3s,background-color .3s" }} style-hover="border-color:oklch(0.78 0.075 85)">
 <span style={{ display: v.upPay.emptyD, position: "absolute", inset: "0", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", padding: "20px", textAlign: "center" }}>
-<span style={{ display: "grid", placeItems: "center", width: "52px", height: "52px", border: "1.5px solid rgba(236,232,223,.4)", borderRadius: "50%", color: "oklch(0.8 0.12 85)" }}><svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: "22px", height: "22px" }}><path d="M12 15V4M7 9l5-5 5 5M4 14v6h16v-6" fill="none" stroke="currentColor" strokeWidth="1.6"></path></svg></span>
+<span style={{ display: "grid", placeItems: "center", width: "52px", height: "52px", border: "1.5px solid rgba(236,232,223,.4)", borderRadius: "50%", color: "oklch(0.78 0.075 85)" }}><svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: "22px", height: "22px" }}><path d="M12 15V4M7 9l5-5 5 5M4 14v6h16v-6" fill="none" stroke="currentColor" strokeWidth="1.6"></path></svg></span>
 <span style={{ fontSize: "16px", fontWeight: "500" }}>{v.upPay.prompt}</span>
 <span style={{ fontSize: "13px", color: "rgba(236,232,223,.62)" }}>JPG or PNG up to 1 MB</span>
 </span>
 <span style={{ display: v.upPay.prevD, position: "absolute", inset: "0", background: "#0c0b0a" }}>
 {v.upPay.hasImg ? (<img decoding="async" src={v.upPay.url} alt="Your payment screenshot" style={{ width: "100%", height: "100%", objectFit: "contain" }} />) : null}
-<span style={{ display: v.upPay.pdfD, position: "absolute", inset: "0", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", background: "rgba(236,232,223,.05)" }}><svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: "40px", height: "40px", color: "oklch(0.8 0.12 85)" }}><path d="M6 2h9l5 5v15H6zM15 2v5h5" fill="none" stroke="currentColor" strokeWidth="1.4"></path></svg><span style={{ fontSize: "13px", fontWeight: "700", letterSpacing: ".2em" }}>PDF</span></span>
+<span style={{ display: v.upPay.pdfD, position: "absolute", inset: "0", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", background: "rgba(236,232,223,.05)" }}><svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: "40px", height: "40px", color: "oklch(0.78 0.075 85)" }}><path d="M6 2h9l5 5v15H6zM15 2v5h5" fill="none" stroke="currentColor" strokeWidth="1.4"></path></svg><span style={{ fontSize: "13px", fontWeight: "700", letterSpacing: ".2em" }}>PDF</span></span>
 <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="pay" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
 <span style={{ display: v.upPay.busyD, position: "absolute", inset: "0", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", background: "rgba(12,11,10,.66)" }}>
 <span data-up-pct="pay" style={{ fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "34px", lineHeight: "1" }}>0%</span>
-<span style={{ position: "relative", width: "56%", height: "2px", background: "rgba(236,232,223,.2)" }}><span data-up-bar="pay" style={{ position: "absolute", inset: "0", background: "oklch(0.8 0.12 85)", transform: "scaleX(0)", transformOrigin: "left" }}></span></span>
+<span style={{ position: "relative", width: "56%", height: "2px", background: "rgba(236,232,223,.2)" }}><span data-up-bar="pay" style={{ position: "absolute", inset: "0", background: "oklch(0.78 0.075 85)", transform: "scaleX(0)", transformOrigin: "left" }}></span></span>
 <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".22em" }}>UPLOADING</span>
 </span>
 </span>
@@ -243,27 +243,27 @@ export default function AuthOverlay({ v }: { v: V }) {
 </label>
 <div data-s-in="" style={{ display: v.upPay.rowD, alignItems: "center", justifyContent: "space-between", gap: "10px 16px", flexWrap: "wrap" }}>
 <span style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "0", flex: "1" }}>
-<svg viewBox="0 0 16 16" aria-hidden="true" style={{ flex: "none", width: "16px", height: "16px", color: "oklch(0.8 0.12 85)" }}><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2"></path></svg>
+<svg viewBox="0 0 16 16" aria-hidden="true" style={{ flex: "none", width: "16px", height: "16px", color: "oklch(0.78 0.075 85)" }}><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2"></path></svg>
 <span style={{ minWidth: "0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "15px" }}>{v.upPay.name}</span>
 <span style={{ flex: "none", fontSize: "13px", color: "rgba(236,232,223,.62)" }}>{v.upPay.size}</span>
 </span>
 <span style={{ display: "flex", gap: "18px" }}>
-<button type="button" onClick={v.upPay.replace} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">REPLACE</button>
-<button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">REMOVE</button>
+<button type="button" onClick={v.upPay.replace} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.78 0.075 85)">REPLACE</button>
+<button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.78 0.075 85)">REMOVE</button>
 </span>
 </div>
 <div data-s-in="" style={{ display: v.upPay.failD, alignItems: "center", justifyContent: "space-between", gap: "10px 16px", flexWrap: "wrap" }}>
 <span style={{ minWidth: "0", flex: "1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "15px" }}>{v.upPay.name}</span>
 <span style={{ display: "flex", gap: "18px" }}>
-<button type="button" onClick={v.upPay.retry} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">RETRY UPLOAD</button>
-<button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">REMOVE</button>
+<button type="button" onClick={v.upPay.retry} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.78 0.075 85)">RETRY UPLOAD</button>
+<button type="button" onClick={v.upPay.remove} style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.78 0.075 85)">REMOVE</button>
 </span>
 </div>
 {v.err.payfile ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.payfile}</span>) : null}
                       </div>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
 <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>UPI TRANSACTION ID (UTR)</span>
-<input name="utr" inputMode="numeric" autoComplete="off" maxLength="16" placeholder="12-digit number" aria-invalid={v.inv.utr} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.utr}`, letterSpacing: ".08em" }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+<input name="utr" inputMode="numeric" autoComplete="off" maxLength="16" placeholder="12-digit number" aria-invalid={v.inv.utr} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.utr}`, letterSpacing: ".08em" }} style-focus="border-color:oklch(0.78 0.075 85);background:rgba(236,232,223,.08)" />
 <span style={{ fontSize: "13px", lineHeight: "1.4", color: "rgba(236,232,223,.62)" }}>Find it under payment details in your UPI app.</span>
 {v.err.utr ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.utr}</span>) : null}
 </label>
@@ -285,7 +285,7 @@ export default function AuthOverlay({ v }: { v: V }) {
 
                       {v.isDev ? (
                         <div data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "14px", padding: "14px", border: "1px dashed rgba(236,232,223,.22)", background: "rgba(236,232,223,.03)" }}>
-                          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".16em", color: "oklch(0.8 0.12 85)" }}>REGISTRATION PREVIEW</span>
+                          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".16em", color: "oklch(0.78 0.075 85)" }}>REGISTRATION PREVIEW</span>
                           <button
                             type="button"
                             onClick={v.devOpenRegister}
@@ -323,8 +323,8 @@ export default function AuthOverlay({ v }: { v: V }) {
                         {v.refCode ? (
                           <div className="flex items-center gap-3 text-xs font-mono text-[#ECE8DF]/70">
                             <span className="text-[#ECE8DF]/40 uppercase tracking-widest text-[10px]">Your Referral Code:</span>
-                            <span className="font-bold text-[#c9a24a] tracking-wider text-sm">{v.refCode}</span>
-                            <button type="button" onClick={v.copyRefCode} className="underline hover:text-[#c9a24a] text-[11px] uppercase tracking-wider">
+                            <span className="font-bold text-[#c8b17a] tracking-wider text-sm">{v.refCode}</span>
+                            <button type="button" onClick={v.copyRefCode} className="underline hover:text-[#c8b17a] text-[11px] uppercase tracking-wider">
                               {v.refCodeLbl}
                             </button>
                           </div>
@@ -369,7 +369,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                           clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)",
                           transition: "background-color .4s,opacity .3s,color .3s",
                         }}
-                        style-hover="background:oklch(0.8 0.12 85)"
+                        style-hover="background:oklch(0.78 0.075 85)"
                         style-active="transform:scale(.98)"
                       >
                         <span>{v.submitLbl}</span>
@@ -407,7 +407,7 @@ export default function AuthOverlay({ v }: { v: V }) {
         style={{
           position: "relative", padding: "16px", background: "#ECE8DF",
           borderRadius: "10px", cursor: "default",
-          boxShadow: "0 0 0 2px oklch(0.8 0.12 85), 0 40px 100px rgba(0,0,0,0.7)",
+          boxShadow: "0 0 0 2px oklch(0.78 0.075 85), 0 40px 100px rgba(0,0,0,0.7)",
           animation: "popInLb .22s cubic-bezier(.34,1.56,.64,1)",
           display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
         }}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import DecryptText from "@/components/ui/decrypt-text"
 
 /**
  * Event ticket — a two-sided pass.
@@ -230,6 +231,7 @@ export type EventTicketProps = {
   showCoordinates?: boolean
   /** Use actual participant/registration fields instead of the reference's flight fields. */
   registrationPass?: boolean
+  animateInfo?: boolean
   seq?: string
   featuring?: string
   /** The big thin line on the back. */
@@ -325,18 +327,23 @@ const CSS = [
   ".lbp-qrbox>svg,.lbp-qrbox>img,.lbp-qrbox>canvas{display:block;width:100%;height:100%;max-width:none}",
   ".lbp-qrbox.is-empty{background:transparent;border:1px dashed var(--lbp-rule);font-family:var(--lbp-cond);font-size:1.4cqw;letter-spacing:.2em;opacity:.7}",
   ".lbp-sf{margin-top:1.45cqw;min-width:0}",
-  ".lbp-details{display:grid;grid-template-columns:1.5fr 1fr;gap:1.3cqw 2cqw;padding:1.6cqw 0;border-bottom:1px solid var(--lbp-rule)}",
-  ".lbp-details>div{min-width:0}.lbp-details>div:first-child{grid-column:1/-1}",
-  ".lbp-details .lbp-m{white-space:normal;overflow:visible;overflow-wrap:anywhere;font-size:1.4cqw;line-height:1.35}",
-  ".lbp-person{margin:0;font-family:var(--lbp-disp);font-weight:400;font-size:3cqw;line-height:1.1;overflow-wrap:anywhere}",
-  ".lbp-registration .lbp-details>div:nth-child(2) .lbp-m{font-family:var(--lbp-cond);text-transform:none;letter-spacing:0;font-weight:500}",
-  ".lbp-registration .lbp-main::after{content:'';position:absolute;right:13%;bottom:-8cqw;width:18cqw;height:18cqw;border:1px solid #89672b18;border-radius:50%;box-shadow:0 0 0 1.2cqw #89672b06;pointer-events:none}",
-  ".lbp-registration-grid .lbp-traveler{grid-column:span 2}.lbp-registration-grid .lbp-person{font-size:2.5cqw}",
-  ".lbp-registration-grid .lbp-m{line-height:1.3}.lbp-registration-grid .lbp-origin{font-family:var(--lbp-cond);font-size:1.3cqw;text-transform:none;letter-spacing:0}",
+  ".lbp-person{margin:0;font-family:var(--lbp-cond);font-weight:700;font-size:3cqw;line-height:1.15;letter-spacing:-.045em;overflow-wrap:anywhere}",
+  ".lbp-registration .lbp-main::after{content:'';position:absolute;right:13%;bottom:-8cqw;width:18cqw;height:18cqw;border:1px solid #78634318;border-radius:50%;box-shadow:0 0 0 1.2cqw #78634306;pointer-events:none}",
+  ".lbp-registration-grid .lbp-traveler{grid-column:span 2}.lbp-registration-grid .lbp-person{font-size:2.9cqw;animation:none!important}",
+  ".lbp-registration-grid .lbp-m{font-family:var(--lbp-cond);line-height:1.4;letter-spacing:0;text-transform:none;font-weight:600}.lbp-registration-grid .lbp-origin{font-size:1.4cqw;font-weight:500}",
+  ".lbp-registration-grid>.lbp-cell:nth-child(2) .lbp-m{font-family:var(--lbp-mono);font-weight:500}",
+  ".lbp-registration .lbp-stub .lbp-m{font-family:var(--lbp-cond);text-transform:none;letter-spacing:0;font-weight:600;line-height:1.3}",
   ".lbp-registration-grid>:nth-child(4){border-left:1px solid var(--lbp-rule);padding-left:1.2cqw}",
   ".lbp-registration-grid>:nth-child(3){border-left:0;padding-left:0}",
   ".lbp-registration-grid>:nth-child(n+3){border-top:1px solid var(--lbp-rule)}",
   ".lbp-registration .lbp-m{white-space:normal;overflow:visible;overflow-wrap:anywhere}.lbp-registration .lbp-tw{animation:none}",
+  ".lbp-registration .lbp-l{font-family:var(--lbp-mono);font-size:max(.76cqw,8px);line-height:1.2;letter-spacing:.1em;opacity:.65}",
+  ".lbp-registration .lbp-title,.lbp-registration .lbp-d{font-family:var(--lbp-cond);font-weight:650;text-transform:none;letter-spacing:-.025em;line-height:1.15}",
+  ".lbp-registration .lbp-night .lbp-at.lbp-d{max-width:38%;white-space:normal}.lbp-registration .lbp-night .lbp-title{white-space:nowrap;font-weight:700;letter-spacing:.04em;font-size:2.35cqw!important}",
+  ".lbp-registration .lbp-head{align-items:center;padding-bottom:1.1cqw}.lbp-back-brand strong{display:block;font-family:var(--lbp-cond);font-size:2.25cqw;letter-spacing:.04em;line-height:1.1;font-weight:800}.lbp-back-brand small{display:block;font-family:var(--lbp-mono);font-size:.65cqw;letter-spacing:.12em;margin-top:.5cqw;opacity:.65}",
+  ".lbp-date{text-align:right}.lbp-date strong{font:600 1.4cqw/1.2 var(--lbp-cond)}",
+  ".lbp-registration .lbp-foot .lbp-d{font-size:2.1cqw!important}.lbp-registration .lbp-foot>.lbp-qr{margin-left:auto}",
+  ".lbp-registration.lbp-info-static .lbp-v{animation:none!important}",
   ".lbp-stamp{position:absolute;left:33%;top:52%;padding:.35cqw;border:.2cqw solid var(--lbp-stamp);border-radius:.45cqw;color:var(--lbp-stamp);",
   "opacity:0;transform:rotate(-9deg);pointer-events:none;mix-blend-mode:multiply}",
   ".lbp-stamp>span{display:block;padding:.45cqw 1.1cqw;border:.08cqw solid var(--lbp-stamp);border-radius:.25cqw;text-align:center}",
@@ -347,9 +354,8 @@ const CSS = [
   ".lbp-back.is-torn .lbp-hint{opacity:0}",
   ".lbp-printed .lbp-v{animation:lbp-type .8s steps(14,end) both}",
   "@keyframes lbp-type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}",
-  ".lbp-registration .lbp-printed .lbp-v,.lbp-registration .lbp-person,.lbp-registration .lbp-details .lbp-m{animation:lbp-ink-write 1.7s steps(24,end) both;animation-delay:.55s!important}",
-  ".lbp-registration .lbp-person{animation-delay:.35s!important}",
-  "@keyframes lbp-ink-write{0%{clip-path:inset(0 100% 0 0);transform:translateX(0);text-shadow:none}25%{clip-path:inset(0 76% 0 0);transform:translateX(-1px);text-shadow:1px 0 #b6955866}29%{transform:translateX(1px)}50%{clip-path:inset(0 48% 0 0);transform:translateX(0);text-shadow:none}70%{clip-path:inset(0 24% 0 0);transform:translateX(-.5px);text-shadow:.5px 0 #b6955866}92%,100%{clip-path:inset(0);transform:none;text-shadow:none}}",
+  ".lbp-registration .lbp-printed .lbp-v{animation:lbp-ink-write 1.7s steps(24,end) both;animation-delay:.55s!important}",
+  "@keyframes lbp-ink-write{0%{clip-path:inset(0 100% 0 0);transform:translateX(0);text-shadow:none}25%{clip-path:inset(0 76% 0 0);transform:translateX(-1px);text-shadow:1px 0 #c8b17a55}29%{transform:translateX(1px)}50%{clip-path:inset(0 48% 0 0);transform:translateX(0);text-shadow:none}70%{clip-path:inset(0 24% 0 0);transform:translateX(-.5px);text-shadow:.5px 0 #c8b17a55}92%,100%{clip-path:inset(0);transform:none;text-shadow:none}}",
   ".lbp-tw{animation:lbp-tw 3.4s ease-in-out infinite}",
   "@keyframes lbp-tw{0%,100%{opacity:1}50%{opacity:.2}}",
   ".lbp-ship{transition:transform .9s cubic-bezier(.2,.8,.2,1)}",
@@ -363,7 +369,7 @@ const CSS = [
   ".lbp-body{transform-box:fill-box;transform-origin:85% 50%;transition:transform .5s}",
   ".lbp-clarinet:hover .lbp-body{transform:rotate(-1.2deg)}",
   "@media (prefers-reduced-motion: reduce){.lbp-tilt,.lbp-flip,.lbp-stub,.lbp-ship,.lbp-body{transition-duration:.01ms}",
-  ".lbp-tw,.lbp-flame,.lbp-v,.lbp-stamp,.lbp-note,.lbp-person,.lbp-details .lbp-m{animation:none!important}.lbp-rocket:hover .lbp-flame{transform:none}}",
+  ".lbp-tw,.lbp-flame,.lbp-v,.lbp-stamp,.lbp-note,.lbp-person{animation:none!important}.lbp-rocket:hover .lbp-flame{transform:none}}",
 ].join("")
 
 function Star({ size }: { size: string }) {
@@ -550,6 +556,7 @@ export default function EventTicket({
   lon = 23.47314,
   showCoordinates = true,
   registrationPass = false,
+  animateInfo = true,
   seq = "SEQ 060 MFDBAN  974294U89",
   featuring = "Featuring all stars crew",
   headline = "Space Jazz",
@@ -832,7 +839,7 @@ export default function EventTicket({
   const at = (x: number, y: number): React.CSSProperties => ({ left: x / 10 + "%", top: (y / VIEW_H) * 100 + "%" })
 
   return (
-    <div className={("lbp " + (registrationPass ? "lbp-registration " : "") + className).trim()} style={{ ...vars, maxWidth }}>
+    <div className={("lbp " + (registrationPass ? "lbp-registration " : "") + (!animateInfo ? "lbp-info-static " : "") + className).trim()} style={{ ...vars, maxWidth }}>
       <style>{CSS}</style>
       <div
         ref={stageRef}
@@ -873,7 +880,7 @@ export default function EventTicket({
                 <div className="lbp-at lbp-title" style={{ ...at(590, 22), transform: "translateX(-50%)", fontSize: "2.75cqw" }}>
                   {title}
                 </div>
-                <div className="lbp-at lbp-c" style={{ right: "2.8%", top: (22 / VIEW_H) * 100 + "%", fontSize: "2.75cqw" }}>
+                <div className="lbp-at lbp-c" style={{ right: "2.8%", top: (22 / VIEW_H) * 100 + "%", fontSize: registrationPass ? "1.9cqw" : "2.75cqw" }}>
                   {date}
                 </div>
                 <div className="lbp-at lbp-d" style={{ right: "6%", top: "33%", fontSize: "2.35cqw", fontWeight: 400 }}>
@@ -903,15 +910,20 @@ export default function EventTicket({
                 <Grain id={uid + "gm"} />
                 <div className="lbp-layer lbp-foil" />
                 <div className="lbp-head">
+                  {registrationPass ? <>
+                    <div className="lbp-back-brand"><strong>{title}</strong><small>PERSONAL EVENT PASS</small></div>
+                    <div className="lbp-date"><span className="lbp-l">Event date</span><strong>{date}</strong></div>
+                  </> : <>
                   <span className="lbp-c" style={{ fontSize: "1.65cqw" }}>{registrationPass ? "INNO PASS" : "Boarding pass"}</span>
                   <span className="lbp-title" style={{ fontSize: "2.85cqw", letterSpacing: ".04em" }}>{title}</span>
                   <span className="lbp-c" style={{ fontSize: "2.3cqw" }}>{tier}</span>
+                  </>}
                 </div>
                 {registrationPass ? <div className="lbp-grid lbp-registration-grid">
-                  <div className="lbp-cell lbp-traveler"><span className="lbp-l">Passenger / Participant</span><h3 className="lbp-person">{passenger}</h3></div>
+                  <div className="lbp-cell lbp-traveler"><span className="lbp-l">Issued to</span><h3 className="lbp-person"><DecryptText text={passenger} animate={animateInfo} /></h3></div>
                   <div className="lbp-cell"><Field label="Registration ID" value={seat} size={1.45} /></div>
-                  <div className="lbp-cell"><span className="lbp-l">From / College</span><div className="lbp-m lbp-v lbp-origin">{from}</div></div>
-                  <div className="lbp-cell"><Field label="To / Venue" value={to} size={2.4} /></div>
+                  <div className="lbp-cell"><span className="lbp-l">From · College</span><div className="lbp-m lbp-v lbp-origin">{from}</div></div>
+                  <div className="lbp-cell"><Field label="To · Venue" value={to} size={2.2} /></div>
                   <div className="lbp-cell"><Field label="Gate" value={gate} size={2.4} /></div>
                 </div> : <div className="lbp-grid">
                   <div className="lbp-cell">
@@ -938,7 +950,7 @@ export default function EventTicket({
                 </div>}
                 <div className="lbp-foot">
                   <div style={{ minWidth: 0, flex: "0 0 34%" }}>
-                    <span className="lbp-l">{registrationPass ? "Arrival / Venue" : "Landing site"}</span>
+                    <span className="lbp-l">{registrationPass ? "Destination" : "Landing site"}</span>
                     <div className="lbp-m lbp-v" style={{ fontSize: "1.4cqw", animationDelay: "1.15s" }}>{site}</div>
                     {showCoordinates && <div className="lbp-m lbp-v" style={{ fontSize: "1.4cqw", marginTop: ".3cqw", animationDelay: "1.25s" }}>{dec}</div>}
                     <span className="lbp-l" style={{ marginTop: ".7cqw", marginBottom: 0, letterSpacing: ".04em" }}>{seq}</span>
@@ -978,11 +990,11 @@ export default function EventTicket({
                 <Grain id={uid + "gs"} />
                 <span className="lbp-layer lbp-foil" />
                 <span className="lbp-c" style={{ display: "block", fontSize: "1.65cqw", paddingBottom: "1cqw", borderBottom: "1px solid var(--lbp-rule)" }}>
-                  {registrationPass ? "YOUR INNO PASS" : "Boarding pass"}
+                  {registrationPass ? "INNOVISION 2026" : "Boarding pass"}
                 </span>
                 {registrationPass ? <>
-                  <span className="lbp-sf"><Field label="Participant" value={passenger} size={1.45} /></span>
-                  <span className="lbp-sf"><Field label="From / College" value={from} size={1.05} /></span>
+                  <span className="lbp-sf"><Field label="Issued to" value={passenger} size={1.45} /></span>
+                  <span className="lbp-sf"><Field label="From · College" value={from} size={1.05} /></span>
                   <span className="lbp-sf lbp-row"><Field label="To" value={to} size={1.85} /><Field label="Gate" value={gate} size={1.85} /></span>
                   <span className="lbp-sf"><Field label="Registration ID" value={seat} size={1.4} /></span>
                   <span className="lbp-sf"><Field label="Status" value="Payment verified" size={1.2} /></span>
