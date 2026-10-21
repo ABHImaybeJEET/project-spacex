@@ -2,18 +2,26 @@
 // @ts-nocheck
 "use client";
 /* eslint-disable @next/next/no-img-element -- decorative/user-uploaded images not suited for next/image */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useDialogFocus } from './useDialogFocus';
 import type { V } from './types';
 import { Logo } from './icons';
 import EntryPassCard from './EntryPassCard';
+import styles from './AuthOverlay.module.css';
+
+/* ── Payment QR lightbox state lives here, outside JSX ── */
 
 export default function AuthOverlay({ v }: { v: V }) {
+  const dialog = useRef<HTMLElement>(null);
+  useDialogFocus(v.authHidden === 'false', dialog, v.closeAuthH);
   const [userCollege, setUserCollege] = useState<string | null>(null);
   const collegeValue = userCollege !== null ? userCollege : (v.regVals?.college || '');
+  const [payQrOpen, setPayQrOpen] = useState(false);
   return (
-  <div data-auth-root="" aria-hidden={v.authHidden} style={{ position: "fixed", inset: "0", zIndex: "62", visibility: "hidden", pointerEvents: "none" }}>
+    <>
+      <div data-auth-root="" aria-hidden={v.authHidden} style={{ position: "fixed", inset: "0", zIndex: "62", visibility: "hidden", pointerEvents: "none" }}>
     <div data-rift-veil="" style={{ position: "absolute", inset: "0", background: "#070605", opacity: "0" }}></div>
-    <section data-auth="" data-screen-label="Register" role="dialog" aria-modal="true" aria-label={v.authAria} onDragOver={v.noDrop} onDrop={v.noDrop} style={{ position: "absolute", inset: "0", overflow: "hidden", background: "#0c0b0a", color: "#ECE8DF" }}>
+    <section ref={dialog} tabIndex={-1} data-auth="" data-screen-label="Register" role="dialog" aria-modal="true" aria-label={v.authAria} onDragOver={v.noDrop} onDrop={v.noDrop} style={{ position: "absolute", inset: "0", overflow: "hidden", background: "#0c0b0a", color: "#ECE8DF" }}>
       <img decoding="async" src="assets/starfield.svg" alt="" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", opacity: ".3", pointerEvents: "none" }} />
       <canvas data-warp="" aria-hidden="true" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", pointerEvents: "none" }}></canvas>
       <div data-a-planet-wrap="" aria-hidden="true" style={{ position: "absolute", right: "calc(min(92vh, 64vw) * -.3)", bottom: "calc(min(92vh, 64vw) * -.34)", width: "min(92vh, 64vw)", aspectRatio: "1", pointerEvents: "none" }}>
@@ -40,13 +48,14 @@ export default function AuthOverlay({ v }: { v: V }) {
             </div>
           </div>
 
-          <div style={{ flex: "1", display: "grid", gridTemplateColumns: v.authCols, alignItems: "center", gap: "clamp(28px,6vw,120px)", width: "100%", maxWidth: "1360px", margin: "0 auto", padding: "clamp(8px,2vh,24px) clamp(16px,4vw,72px) clamp(36px,7vh,80px)" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(24px,4.5vh,48px)", minWidth: "0" }}>
+          {v.isPreviewUser && <p className={styles.previewNote}>Registration preview · No payment or registration is sent to the server.</p>}
+          <div className={styles.layout} data-approved={v.d.pass === "flex" ? "true" : undefined} data-pass-view={v.d.pass === "flex" ? "true" : undefined}>
+            <div className={styles.intro} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               <div data-a-in="">
-                <h2 data-m-in="" style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(36px,5.2vw,88px)", lineHeight: ".98", letterSpacing: ".01em", textWrap: "balance" }}>{v.authTitle}</h2>
+                <h2 data-m-in="" style={{ margin: "0", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "var(--auth-title-size)", lineHeight: ".98", letterSpacing: ".01em", textWrap: "balance" }}>{v.authTitle}</h2>
                 <p data-m-in="" style={{ margin: "18px 0 0", maxWidth: "34ch", fontSize: "clamp(15px,1.2vw,18px)", lineHeight: "1.55", color: "rgba(236,232,223,.78)", textWrap: "pretty" }}>{v.authSub}</p>
               </div>
-              <ol data-a-in="" aria-label="Registration progress" style={{ display: v.railD, flexDirection: "column", margin: "0", padding: "0", listStyle: "none" }}>
+              <ol data-a-in="" aria-label="Registration progress" style={{ display: "none", flexDirection: "column", margin: "0", padding: "0", listStyle: "none" }}>
                 {v.prog.map((p, pI) => (
                   <li key={pI} aria-current={p.cur} style={{ display: "grid", gridTemplateColumns: "28px minmax(0,1fr)", columnGap: "18px" }}>
                     <span style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -63,7 +72,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                   </li>
                 ))}
               </ol>
-              <ol data-a-in="" aria-label="Registration progress" style={{ display: v.hprogD, gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: "6px", margin: "0", padding: "0", listStyle: "none" }}>
+              <ol data-a-in="" aria-label="Registration progress" style={{ display: v.railD === "flex" || v.hprogD === "grid" ? "grid" : "none", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "6px", margin: "0", padding: "0", listStyle: "none" }}>
                 {v.prog.map((p, pI) => (
                   <li key={pI} aria-current={p.cur} style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "11px", fontWeight: "700", letterSpacing: ".12em", color: p.c }}>
                     <span style={{ position: "relative", height: "3px", background: "rgba(236,232,223,.16)" }}><span style={{ position: "absolute", inset: "0", background: "oklch(0.8 0.12 85)", transform: `scaleX(${p.segS})`, transformOrigin: "left", transition: "transform .7s cubic-bezier(.25,1,.1,1)" }}></span></span>
@@ -73,9 +82,9 @@ export default function AuthOverlay({ v }: { v: V }) {
               </ol>
             </div>
 
-            <div data-a-in="" style={{ position: "relative", width: "100%", maxWidth: "540px", justifySelf: "end" }}>
-              <div style={{ position: "relative", padding: "1px", background: "rgba(236,232,223,.22)", clipPath: "polygon(20px 0,100% 0,100% calc(100% - 20px),calc(100% - 20px) 100%,0 100%,0 20px)" }}>
-                <div style={{ position: "relative", padding: "clamp(22px,3vw,40px)", background: "rgba(16,15,14,.9)", WebkitBackdropFilter: "blur(10px)", backdropFilter: "blur(10px)", clipPath: "polygon(19.5px 0,100% 0,100% calc(100% - 19.5px),calc(100% - 19.5px) 100%,0 100%,0 19.5px)" }}>
+            <div data-a-in="" className={styles.panel} data-pass-panel={v.d.pass === "flex" ? "true" : undefined}>
+              <div className={styles.panelBorder} data-pass-border={v.d.pass === "flex" ? "true" : undefined} style={{ position: "relative", padding: "1px", background: "rgba(236,232,223,.22)", clipPath: "polygon(20px 0,100% 0,100% calc(100% - 20px),calc(100% - 20px) 100%,0 100%,0 20px)" }}>
+                <div className={styles.panelBody} data-pass-panel={v.d.pass === "flex"}>
                   <form data-auth-form="" noValidate={v.true} onSubmit={v.authSubmit} onInput={v.clearErr} style={{ display: "flex", flexDirection: "column" }}>
 
                     <div style={{ display: v.d.s0, flexDirection: "column", gap: "20px" }}>
@@ -107,7 +116,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>COLLEGE NAME</span>
                         <input
                           name="college"
-                          value={v.isInternal ? v.regVals.college : collegeValue}
+                          value={collegeValue}
                           onChange={(e) => {
                             setUserCollege(e.target.value);
                             if (v.clearErr) v.clearErr({ target: { name: 'college' } });
@@ -115,7 +124,6 @@ export default function AuthOverlay({ v }: { v: V }) {
                           onInput={(e: React.FormEvent<HTMLInputElement>) => {
                             setUserCollege(e.currentTarget.value);
                           }}
-                          readOnly={v.isInternal}
                           autoComplete="organization"
                           placeholder="Full name of your institute"
                           aria-invalid={!!v.err.college}
@@ -123,17 +131,16 @@ export default function AuthOverlay({ v }: { v: V }) {
                             height: "54px",
                             padding: "0 16px",
                             borderRadius: "0",
-                            background: v.isInternal ? "rgba(236,232,223,.08)" : "rgba(236,232,223,.04)",
+                            background: "rgba(236,232,223,.04)",
                             fontSize: "16px",
                             color: "#ECE8DF",
                             outline: "none",
                             transition: "border-color .3s,background-color .3s",
                             border: `1.5px solid ${v.bc.college}`,
-                            cursor: v.isInternal ? "not-allowed" : "text",
+                            cursor: "text",
                           }}
                           style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)"
                         />
-                        {v.isInternal && <span style={{ fontSize: "12px", color: "oklch(0.8 0.12 85)" }}>Verified NIT Rourkela student.</span>}
                         {v.err.college ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.college}</span>) : null}
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -144,9 +151,9 @@ export default function AuthOverlay({ v }: { v: V }) {
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>
-                          {v.isInternal ? "NIT RKL ROLL NO. / ENROLLMENT NO." : "COLLEGE ENROLLMENT NO. / ROLL NO."}
+                          COLLEGE ROLL / ENROLLMENT NUMBER
                         </span>
-                        <input name="enrollment_no" defaultValue={v.regVals.enrollment_no} autoComplete="off" placeholder={v.isInternal ? "e.g. 122CS0123" : "Your college roll / student ID number"} aria-invalid={v.inv.enrollment_no} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.enrollment_no}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
+                        <input name="enrollment_no" defaultValue={v.regVals.enrollment_no} autoComplete="off" required placeholder="Your college roll / enrollment number" aria-invalid={v.inv.enrollment_no} style={{ height: "54px", padding: "0 16px", borderRadius: "0", background: "rgba(236,232,223,.04)", fontSize: "16px", color: "#ECE8DF", outline: "none", transition: "border-color .3s,background-color .3s", border: `1.5px solid ${v.bc.enrollment_no}` }} style-focus="border-color:oklch(0.8 0.12 85);background:rgba(236,232,223,.08)" />
                         {v.err.enrollment_no ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.4", color: "oklch(0.76 0.14 35)" }}>{v.err.enrollment_no}</span>) : null}
                       </label>
                       <label data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -165,13 +172,28 @@ export default function AuthOverlay({ v }: { v: V }) {
                     <div style={{ display: v.d.s2, flexDirection: "column", gap: "22px" }}>
                       <h3 data-s-in="" style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(24px,2.2vw,32px)", lineHeight: "1.1" }}>Pay the fee</h3>
                       <div data-s-in="" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,200px),1fr))", gap: "28px", alignItems: "center" }}>
-                        <div style={{ position: "relative", width: "100%", maxWidth: "240px", justifySelf: "center", aspectRatio: "1", padding: "12px", background: "#ECE8DF" }}>
-                          <img src={v.upiQr} alt={`UPI QR code: pay ₹${v.fee} to ${v.upi}`} width={240} height={240} decoding="async" draggable={false} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", imageRendering: "pixelated" }} />
-                          <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="qr" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
-                          <span style={{ position: "absolute", left: "-9px", top: "-9px", borderLeftWidth: "2px", borderTopWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
-                          <span style={{ position: "absolute", right: "-9px", top: "-9px", borderRightWidth: "2px", borderTopWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
-                          <span style={{ position: "absolute", left: "-9px", bottom: "-9px", borderLeftWidth: "2px", borderBottomWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
-                          <span style={{ position: "absolute", right: "-9px", bottom: "-9px", borderRightWidth: "2px", borderBottomWidth: "2px", width: "22px", height: "22px", borderColor: "oklch(0.8 0.12 85)", borderStyle: "solid", borderWidth: "0" }}></span>
+                        {/* Payment QR — prominent, click to enlarge */}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", justifySelf: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => setPayQrOpen(true)}
+                            style={{
+                              position: "relative", padding: "8px", background: "#ECE8DF",
+                              border: "2px solid oklch(0.8 0.12 85)", borderRadius: "6px",
+                              cursor: "pointer", transition: "transform .2s, box-shadow .2s",
+                              boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(220,183,106,.3)",
+                            }}
+                            style-hover="transform:scale(1.03);box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 0 2px oklch(0.8 0.12 85)"
+                            aria-label="Tap to enlarge payment QR code"
+                          >
+                            <img src={v.upiQr} alt={`Pay ₹${v.fee} via UPI`} width={200} height={280} decoding="async" draggable={false} style={{ display: "block", width: "min(200px, 50vw)", height: "auto", objectFit: "contain" }} />
+                            {/* corner brackets */}
+                            <span style={{ position:"absolute", left:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.8 0.12 85)", borderLeft:"2.5px solid oklch(0.8 0.12 85)" }} />
+                            <span style={{ position:"absolute", right:"-6px", top:"-6px", width:"18px", height:"18px", borderTop:"2.5px solid oklch(0.8 0.12 85)", borderRight:"2.5px solid oklch(0.8 0.12 85)" }} />
+                            <span style={{ position:"absolute", left:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.8 0.12 85)", borderLeft:"2.5px solid oklch(0.8 0.12 85)" }} />
+                            <span style={{ position:"absolute", right:"-6px", bottom:"-6px", width:"18px", height:"18px", borderBottom:"2.5px solid oklch(0.8 0.12 85)", borderRight:"2.5px solid oklch(0.8 0.12 85)" }} />
+                          </button>
+                          <span style={{ fontSize:"11px", fontWeight:"700", letterSpacing:".14em", color:"rgba(220,183,106,.7)", textTransform:"uppercase" }}>TAP TO ENLARGE</span>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "20px", minWidth: "0" }}>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -185,7 +207,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                               <button type="button" onClick={v.copyUpi} style={{ padding: "7px 12px", border: "1.5px solid rgba(236,232,223,.5)", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", transition: "border-color .3s,color .3s" }} style-hover="border-color:oklch(0.8 0.12 85);color:oklch(0.8 0.12 85)">{v.copyLbl}</button>
                             </span>
                           </div>
-                          <a href={v.upiLink} style={{ display: v.upiAppD, alignItems: "center", justifyContent: "center", minHeight: "50px", padding: "0 20px", border: "1.5px solid oklch(0.8 0.12 85)", textDecoration: "none", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "oklch(0.8 0.12 85)" }}>OPEN UPI APP</a>
+                          <a href={v.upiLink} style={{ display: v.isPreviewUser ? "none" : v.upiAppD, alignItems: "center", justifyContent: "center", minHeight: "50px", padding: "0 20px", border: "1.5px solid oklch(0.8 0.12 85)", textDecoration: "none", fontWeight: "700", fontSize: "13px", letterSpacing: ".12em", color: "oklch(0.8 0.12 85)" }}>OPEN UPI APP</a>
                         </div>
                       </div>
                       <ol data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "0", padding: "18px 0 0", borderTop: "1px solid rgba(236,232,223,.14)", listStyle: "none", fontSize: "15px", lineHeight: "1.5", color: "rgba(236,232,223,.82)" }}>
@@ -193,6 +215,7 @@ export default function AuthOverlay({ v }: { v: V }) {
                         <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.8 0.12 85)" }}>2</span><span>Pay exactly ₹{v.fee}.</span></li>
                         <li style={{ display: "grid", gridTemplateColumns: "22px minmax(0,1fr)", gap: "10px" }}><span style={{ fontWeight: "700", color: "oklch(0.8 0.12 85)" }}>3</span><span>Screenshot the success screen. You&apos;ll upload it next.</span></li>
                       </ol>
+                      {v.isPreviewUser && <p className={styles.previewNote}>Preview only: don’t make a payment. Continue to try the screenshot upload and 12-digit UTR fields.</p>}
                     </div>
 
                     <div style={{ display: v.d.s3, flexDirection: "column", gap: "22px" }}>
@@ -260,48 +283,60 @@ export default function AuthOverlay({ v }: { v: V }) {
                         </button>
                       </div>
 
+                      {v.isDev ? (
+                        <div data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "14px", padding: "14px", border: "1px dashed rgba(236,232,223,.22)", background: "rgba(236,232,223,.03)" }}>
+                          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".16em", color: "oklch(0.8 0.12 85)" }}>REGISTRATION PREVIEW</span>
+                          <button
+                            type="button"
+                            onClick={v.devOpenRegister}
+                            style={{
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "44px",
+                              padding: "0 14px", border: "1px solid rgba(236,232,223,.3)", background: "rgba(236,232,223,.08)",
+                              color: "#ECE8DF", fontSize: "13px", fontWeight: "700", letterSpacing: ".06em", cursor: "pointer",
+                            }}
+                          >
+                            Review full registration flow
+                          </button>
+                          <button
+                            type="button"
+                            onClick={v.devOpenPass}
+                            style={{
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "44px",
+                              padding: "0 14px", border: "1px solid rgba(236,232,223,.3)", background: "rgba(236,232,223,.08)",
+                              color: "#ECE8DF", fontSize: "13px", fontWeight: "700", letterSpacing: ".06em", cursor: "pointer",
+                            }}
+                          >
+                            Preview approved pass
+                          </button>
+                        </div>
+                      ) : null}
+
                       {v.gErr ? (<span role="alert" style={{ fontSize: "14px", lineHeight: "1.45", color: "oklch(0.76 0.14 35)", padding: "10px 12px", background: "rgba(239,68,68,0.1)", border: "1px solid oklch(0.76 0.14 35)" }}>{v.gErr}</span>) : null}
                     </div>
 
-                    <div style={{ display: v.d.pass, flexDirection: "column", gap: "22px" }}>
-                      <div data-pass-wrap="">
-                        <div style={{ position: "relative", overflow: "hidden", color: "#141312", background: "#ECE8DF", clipPath: "polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)" }}>
-                          <img decoding="async" src="assets/planet-mars.webp" alt="" style={{ position: "absolute", right: "-58px", top: "-58px", width: "140px", height: "auto", pointerEvents: "none" }} />
-                          <div style={{ position: "relative", padding: "26px 26px 22px" }}>
-                            <p style={{ margin: "0", fontSize: "12px", fontWeight: "700", letterSpacing: ".26em", color: "#7a5c20" }}>BOARDING PASS</p>
-                            <p style={{ margin: "24px 0 6px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "#5c574f" }}>PASSENGER</p>
-                            <p style={{ margin: "0", maxWidth: "62%", fontFamily: "var(--font-display)", fontWeight: "400", fontSize: "clamp(26px,2.6vw,34px)", lineHeight: "1.05", overflowWrap: "anywhere" }}>{v.passName}</p>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "18px 16px", marginTop: "24px" }}>
-                              <div style={{ display: v.passCollegeD, gridColumn: "1 / -1" }}><p style={{ margin: "0 0 6px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "#5c574f" }}>COLLEGE</p><p style={{ margin: "0", fontSize: "16px", lineHeight: "1.4" }}>{v.passCollege}</p></div>
-                              <div><p style={{ margin: "0 0 6px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "#5c574f" }}>GATE</p><p style={{ margin: "0", fontSize: "16px", lineHeight: "1.4" }}>NIT Rourkela</p></div>
-                              <div><p style={{ margin: "0 0 6px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "#5c574f" }}>FEST</p><p style={{ margin: "0", fontSize: "16px", lineHeight: "1.4" }}>Innovision 2026</p></div>
-                            </div>
+                    <div style={{ display: v.d.pass, flexDirection: "column", gap: "16px", width: "100%", alignItems: "center" }}>
+                      {(v.passQr || v.isDev) ? <EntryPassCard key={v.passUserId || 'dev'} previewPass={v.previewPass} onContinue={v.exploreFromPass} /> : null}
+                      {v.previewPending && <button type="button" className={styles.previewApprove} onClick={v.devApproveRegistration}>Simulate team approval</button>}
+
+                      {/* Clean minimal footer underneath the ticket */}
+                      <div data-s-in="" className="no-print flex flex-col items-center justify-center gap-2 mt-2">
+                        {v.refCode ? (
+                          <div className="flex items-center gap-3 text-xs font-mono text-[#ECE8DF]/70">
+                            <span className="text-[#ECE8DF]/40 uppercase tracking-widest text-[10px]">Your Referral Code:</span>
+                            <span className="font-bold text-[#c9a24a] tracking-wider text-sm">{v.refCode}</span>
+                            <button type="button" onClick={v.copyRefCode} className="underline hover:text-[#c9a24a] text-[11px] uppercase tracking-wider">
+                              {v.refCodeLbl}
+                            </button>
                           </div>
-                          <div style={{ position: "relative", margin: "0 18px", borderTop: "1.5px dashed rgba(20,19,18,.3)" }}></div>
-                          <div style={{ position: "relative", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "end", gap: "14px 20px", padding: "18px 26px 24px" }}>
-                            <div><p style={{ margin: "0 0 6px", fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "#5c574f" }}>REGISTRATION ID</p><p style={{ margin: "0", fontWeight: "800", fontVariantNumeric: "tabular-nums", fontSize: "26px", letterSpacing: ".04em" }}>{v.passId}</p></div>
-                            <span style={{ padding: "7px 10px", border: "1.5px solid #141312", fontSize: "11px", fontWeight: "700", letterSpacing: ".14em" }}>{v.passStatus}</span>
-                          </div>
-                          <span style={{ position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none" }}><span data-scan="pass" style={{ position: "absolute", inset: "0", opacity: "0" }}><span style={{ position: "absolute", left: "0", right: "0", top: "-64px", height: "64px", background: "linear-gradient(rgba(220,183,106,0),rgba(220,183,106,.3))" }}></span><span style={{ position: "absolute", left: "0", right: "0", top: "0", height: "2px", background: "#F3DFA8" }}></span></span></span>
-                        </div>
-                      </div>
-                      {v.passQr ? <EntryPassCard key={`${v.passId}-${v.passStatus}`} /> : null}
-                      {v.refCode ? (
-                        <div data-s-in="" style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "18px 20px", border: "1.5px solid rgba(236,232,223,.22)", background: "rgba(236,232,223,.03)" }}>
-                          <span style={{ fontSize: "12px", fontWeight: "700", letterSpacing: ".16em", color: "rgba(236,232,223,.86)" }}>YOUR REFERRAL CODE</span>
-                          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px 20px" }}>
-                            <span style={{ fontWeight: "800", fontSize: "28px", letterSpacing: ".18em", fontVariantNumeric: "tabular-nums", color: "oklch(0.8 0.12 85)" }}>{v.refCode}</span>
-                            <span style={{ display: "flex", gap: "18px" }}>
-                              <button type="button" onClick={v.copyRefCode} aria-live="polite" style={{ padding: "6px 0", border: "0", background: "none", cursor: "pointer", fontWeight: "700", fontSize: "12px", letterSpacing: ".14em", color: "#ECE8DF", textDecoration: "underline", textUnderlineOffset: "4px" }} style-hover="color:oklch(0.8 0.12 85)">{v.refCodeLbl}</button>
-                            </span>
-                          </div>
-                          <span style={{ fontSize: "14px", lineHeight: "1.5", color: "rgba(236,232,223,.7)", textWrap: "pretty" }}>Share it with friends. When they register with your code and their registration is approved, it counts as your referral.</span>
-                        </div>
-                      ) : null}
-                      <p data-s-in="" style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "rgba(236,232,223,.78)", textWrap: "pretty", overflowWrap: "anywhere" }}>{v.passNote}</p>
-                      <div data-s-in="" style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                        <a href="#/worlds/takeoff" onClick={v.exploreFromPass} onMouseEnter={v.hover} style={{ flex: "1", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 28px", textDecoration: "none", fontWeight: "700", fontSize: "15px", letterSpacing: ".08em", whiteSpace: "nowrap", color: "#141312", background: "#ECE8DF", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)", transition: "background-color .4s" }} style-hover="background:oklch(0.8 0.12 85)"><span data-scr="">EXPLORE THE WORLDS</span></a>
-                        <button type="button" onClick={v.closeAuthH} onMouseEnter={v.hover} style={{ position: "relative", isolation: "isolate", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "58px", padding: "0 26px", border: "0", cursor: "pointer", fontWeight: "700", fontSize: "14px", letterSpacing: ".08em", color: "#ECE8DF", background: "rgba(236,232,223,.7)", clipPath: "polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)" }} style-active="transform:scale(.98)"><span style={{ position: "absolute", inset: "1.5px", zIndex: "-1", background: "#100f0e", clipPath: "polygon(11.4px 0,100% 0,100% calc(100% - 11.4px),calc(100% - 11.4px) 100%,0 100%,0 11.4px)" }}></span><span data-scr="">DONE</span></button>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={v.closeAuthH}
+                          className="mt-3 text-xs font-mono uppercase tracking-wider text-[#ECE8DF]/60 hover:text-[#ECE8DF] transition-colors flex items-center gap-1.5"
+                        >
+                          <span>← Back to Fest Worlds</span>
+                        </button>
                       </div>
                     </div>
 
@@ -353,6 +388,40 @@ export default function AuthOverlay({ v }: { v: V }) {
     </section>
   </div>
 
+  {/* Payment QR Lightbox */}
+  {payQrOpen && (
+    <div
+      onClick={() => setPayQrOpen(false)}
+      style={{
+        position: "fixed", inset: "0", zIndex: "200",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "rgba(7,6,5,0.88)",
+        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+        cursor: "pointer",
+        animation: "fadeInLb .15s ease",
+      }}
+      role="dialog" aria-modal="true" aria-label="Payment QR code enlarged"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative", padding: "16px", background: "#ECE8DF",
+          borderRadius: "10px", cursor: "default",
+          boxShadow: "0 0 0 2px oklch(0.8 0.12 85), 0 40px 100px rgba(0,0,0,0.7)",
+          animation: "popInLb .22s cubic-bezier(.34,1.56,.64,1)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
+        }}
+      >
+        <img src={v.upiQr} alt={`UPI QR — pay ₹${v.fee} to ${v.upi}`} style={{ display: "block", width: "min(72vw,300px)", height: "auto" }} />
+        <p style={{ margin: "0", fontSize: "11px", fontWeight: "700", letterSpacing: ".14em", color: "rgba(20,19,18,.5)", textTransform: "uppercase" }}>Tap outside to close</p>
+      </div>
+      <style>{`
+        @keyframes fadeInLb { from { opacity:0 } to { opacity:1 } }
+        @keyframes popInLb  { from { transform:scale(.78);opacity:0 } to { transform:scale(1);opacity:1 } }
+      `}</style>
+    </div>
+  )}
+    </>
   );
 }
 
